@@ -1,0 +1,65 @@
+name: Build Native
+on: [push, pull_request]
+
+jobs:
+  build-native-win-x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: |
+          cd pinmame
+          copy CMakeLists_win-x64.txt CMakeLists.txt
+          cmake -G "Visual Studio 16 2019" -A x64 -B build
+          cmake --build build --config Release
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libpinmame-win-x64
+          path: pinmame/build/lib/
+          
+  build-native-win-x86:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: |
+          cd pinmame
+          copy CMakeLists_win-x86.txt CMakeLists.txt
+          cmake -G "Visual Studio 16 2019" -A Win32 -B build
+          cmake --build build --config Release
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libpinmame-win-x86
+          path: pinmame/build/lib/
+        
+  build-native-osx-x64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: nuget/setup-nuget@v1
+      - name: Build
+        run: |
+          cd pinmame
+          cp CMakeLists_osx-x64.txt CMakeLists.txt
+          cmake -B build
+          cmake --build build
+      - uses: actions/upload-artifact@v2
+        with:
+          name: libpinmame-osx-x64
+          path: pinmame/build/lib/
+        
+#  build-native-linux-x64:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: nuget/setup-nuget@v1
+#      - name: Build
+#        run: |
+#          cd pinmame
+#          cp CMakeLists_linux-x64.txt CMakeLists.txt
+#          cmake -B build
+#          cmake --build build
+#      - uses: actions/upload-artifact@v2
+#        with:
+#          name: libpinmame-linux-x64
+#          path: pinmame/build/lib/

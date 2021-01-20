@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>  
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PlatformTarget)' != 'x86'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PlatformTarget)' == 'x86'">win-x86</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('OSX'))">osx-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform" Version="16.8.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.1.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PinMame\PinMame.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PlatformTarget)' == 'x86'">
+    <Content Include="..\..\deps\win-x86\libpinmame-0.0.1.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PlatformTarget)' != 'x86'">
+    <Content Include="..\..\deps\win-x64\libpinmame-0.0.1.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Content Include="..\..\deps\osx-x64\libpinmame.0.0.1.dylib" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <Content Include="..\..\deps\linux-x64\libpinmame.so.0.0.1" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  -->
+
+</Project>
