@@ -6,7 +6,7 @@
 
 Add the `PinMame` package references to your project file:
 
-```
+```xml
   <ItemGroup>
     <PackageReference Include="PinMame" Version="0.0.3" />
     <PackageReference Include="PinMame.Native" Version="0.0.3" />
@@ -17,7 +17,7 @@ Add the `PinMame` package references to your project file:
 
 Create a `PinMame` instance, and then start a game. 
 
-```
+```c#
 using PinMame;
 .
 .
@@ -34,4 +34,4 @@ See the [example project](https://github.com/VisualPinball/pinmame-dotnet/blob/m
 
 ## License
 
-[BSD-3-Clause](LICENSE.txt)
+[MAME/BSD-3-Clause](LICENSE.txt)
