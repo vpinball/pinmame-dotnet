@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.14)
 
 include(FetchContent)
 
-set(PROJECT_VERSION "0.0.1")
-set(PINMAME_SHA "b88f1fd0a5e6bf66f78c149dfd7105158459f3be")
+set(PROJECT_VERSION "0.0.2")
+set(PINMAME_SHA "6d2c468f6cf6cfc7bf361a65854a0555d3474420")
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_STANDARD 99)
@@ -624,5 +624,5 @@ set_target_properties(libpinmame_win
    RUNTIME_OUTPUT_NAME "libpinmame-${PROJECT_VERSION}"
 )
 
-file(COPY ${pinmame_SOURCE_DIR}/release/license.txt
+file(COPY ../LICENSE.txt
      DESTINATION ${CMAKE_BINARY_DIR}/lib)

@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+
 //============================================================
 //
 //	osinline.h - Win32 inline functions

@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+
 /* Miscelancelous utility functions
 
    Copyright 2000 Hans de Goede

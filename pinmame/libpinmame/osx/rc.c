@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+
 /* A simple rcfile and commandline parsing mechanism
 
    Copyright 1999,2000 Hans de Goede
