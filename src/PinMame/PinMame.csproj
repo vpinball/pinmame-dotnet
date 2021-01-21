@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <DefaultItemExcludes>$(DefaultItemExcludes);Interop\Libraries.*.cs</DefaultItemExcludes>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Description>Cross platform .NET Wrapper of PinMAME</Description>
-    <AssemblyVersion>0.0.1</AssemblyVersion>
+    <AssemblyVersion>0.0.2</AssemblyVersion>
     <Authors>Jason Millard</Authors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackOnBuild>true</PackOnBuild>
@@ -27,7 +28,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="System.Memory" Version="4.5.4" />
     <PackageReference Include="NLog" Version="4.7.6" />
   </ItemGroup>
@@ -43,7 +44,7 @@
         <Link>Interop\Libraries.cs</Link>
     </Compile>
   </ItemGroup>
-
+  
   <!-- Include .NET Standard packages on Linux and macOS -->
   <ItemGroup>
     <!--

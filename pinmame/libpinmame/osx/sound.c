@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+
 #include "driver.h"
 #include "osdepend.h"
 #include "window.h"

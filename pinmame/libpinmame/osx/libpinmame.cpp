@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+
 #include "libpinmame.h"
 
 #define MAX_PATH          1024
