@@ -17,7 +17,6 @@
     <PackageVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</PackageVersion>
     <PackageProjectUrl>https://github.com/VisualPinball/pinmame-dotnet</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
     <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
   </PropertyGroup>
 
