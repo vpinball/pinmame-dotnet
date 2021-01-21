@@ -4,14 +4,14 @@
     <!-- package -->
     <id>PinMame.Native.osx-x64</id>
     <title>PinMame - Native binaries for osx-x64</title>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
     <description>This package complements the PinMame package and contains native binaries of libpinmame for osx-x64</description>
     <summary>Native binaries of libpinmame for osx-x64</summary>
     <projectUrl>https://github.com/VisualPinball/pinmame-dotnet</projectUrl>
     <repository type="git" url="https://github.com/VisualPinball/pinmame-dotnet" />
     <tags>libpinmame binaries</tags>
     <!-- legal -->
-    <license type="expression">BSD-3</license>
+    <license type="expression">BSD-3-Clause</license>
     <authors>Jason Millard</authors>
     <owners>PinMAME development team and contributors</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

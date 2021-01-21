@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.14)
 
 include(FetchContent)
 
-set(PROJECT_VERSION "0.0.2")
-set(PINMAME_SHA "6d2c468f6cf6cfc7bf361a65854a0555d3474420")
+set(PROJECT_VERSION "0.0.3")
+set(PINMAME_SHA "8e33c0c5295a5375d52d9ff182b91adb68eee12a")
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_STANDARD 99)

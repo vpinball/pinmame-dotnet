@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyVersion>0.0.2</AssemblyVersion>
+    <AssemblyVersion>0.0.3</AssemblyVersion>
   </PropertyGroup>
     
   <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
@@ -17,18 +17,18 @@
   </ItemGroup>
     
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PlatformTarget)' == 'x86'">
-    <Content Include="..\..\deps\win-x86\libpinmame-0.0.2.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\deps\win-x86\libpinmame-0.0.3.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PlatformTarget)' != 'x86'">
-    <Content Include="..\..\deps\win-x64\libpinmame-0.0.2.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\deps\win-x64\libpinmame-0.0.3.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-    <Content Include="..\..\deps\osx-x64\libpinmame.0.0.2.dylib" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\deps\osx-x64\libpinmame.0.0.3.dylib" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   
   <!--
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-    <Content Include="..\..\deps\linux-x64\libpinmame.so.0.0.2" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\deps\linux-x64\libpinmame.so.0.0.3" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   -->
     

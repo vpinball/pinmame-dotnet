@@ -6,7 +6,7 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Description>Cross platform .NET Wrapper of PinMAME</Description>
-    <AssemblyVersion>0.0.2</AssemblyVersion>
+    <AssemblyVersion>0.0.3</AssemblyVersion>
     <Authors>Jason Millard</Authors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackOnBuild>true</PackOnBuild>
@@ -17,6 +17,7 @@
     <PackageVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</PackageVersion>
     <PackageProjectUrl>https://github.com/VisualPinball/pinmame-dotnet</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
     <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
   </PropertyGroup>
 
@@ -47,23 +48,12 @@
   
   <!-- Include .NET Standard packages on Linux and macOS -->
   <ItemGroup>
-    <!--
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\Linux\PinMame.dll">
-      <Pack>true</Pack>
-      <PackagePath>runtimes\linux\lib\netstandard2.0</PackagePath>
-    </None>
-    -->
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\OSX\PinMame.dll">
-      <Pack>true</Pack>
-      <PackagePath>runtimes\osx\lib\netstandard2.0</PackagePath>
-    </None>
+    <!-- <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.0" /> -->
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\OSX\PinMame.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\LICENSE.txt">
-      <PackagePath></PackagePath>
-      <Pack>true</Pack>
-    </None>
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
   </ItemGroup>
 
 </Project>

@@ -4,24 +4,24 @@
     <!-- package -->
     <id>PinMame.Native</id>
     <title>PinMame - Native binaries</title>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
     <description>This package complements the PinMame package and contains native binaries of libpinmame</description>
     <summary>Native binaries of libpinmame</summary>
     <projectUrl>https://github.com/VisualPinball/pinmame-dotnet</projectUrl>
     <repository type="git" url="https://github.com/VisualPinball/pinmame-dotnet" />
     <tags>libpinmame binaries</tags>
     <!-- legal -->
-    <license type="expression">BSD-3</license>
+    <license type="expression">BSD-3-Clause</license>
     <authors>Jason Millard</authors>
     <owners>PinMAME development team and contributors</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <copyright>PinMAME development team and contributors</copyright>
     <dependencies>
       <group targetFramework="netstandard2.0">
-        <dependency id="PinMame.Native.win-x64" version="0.0.2" include="native" />
-        <dependency id="PinMame.Native.win-x86" version="0.0.2" include="native" />
-        <dependency id="PinMame.Native.osx-x64" version="0.0.2" include="native" />
-        <!-- <dependency id="PinMame.Native.linux-x64" version="0.0.2" include="native" /> -->
+        <dependency id="PinMame.Native.win-x64" version="0.0.3" include="native" />
+        <dependency id="PinMame.Native.win-x86" version="0.0.3" include="native" />
+        <dependency id="PinMame.Native.osx-x64" version="0.0.3" include="native" />
+        <!-- <dependency id="PinMame.Native.linux-x64" version="0.0.3" include="native" /> -->
       </group>
     </dependencies>
   </metadata>
