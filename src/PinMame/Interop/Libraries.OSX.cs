@@ -33,6 +33,6 @@ namespace PinMame.Interop
 {
 	internal static partial class Libraries
 	{
-		internal const string PinMame = "libpinmame.0.0.3.dylib";
+		internal const string PinMame = "libpinmame.3.4.dylib";
 	}
 }

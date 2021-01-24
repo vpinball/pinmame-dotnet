@@ -6,14 +6,14 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Description>Cross platform .NET Wrapper of PinMAME</Description>
-    <AssemblyVersion>0.0.3</AssemblyVersion>
+    <AssemblyVersion>0.1.0</AssemblyVersion>
     <Authors>Jason Millard</Authors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackOnBuild>true</PackOnBuild>
     <Copyright>Copyright 2021</Copyright>
     <AssemblyName>PinMame</AssemblyName>
     <PackageId>PinMame</PackageId>
-    <PackagePrereleaseIdentifier></PackagePrereleaseIdentifier>
+    <PackagePrereleaseIdentifier>-preview.1</PackagePrereleaseIdentifier>
     <PackageVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</PackageVersion>
     <PackageProjectUrl>https://github.com/VisualPinball/pinmame-dotnet</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
@@ -30,7 +30,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="System.Memory" Version="4.5.4" />
-    <PackageReference Include="NLog" Version="4.7.6" />
+    <PackageReference Include="NLog" Version="4.7.7" />
   </ItemGroup>
 
   <!-- Append target operating system to output path -->
