@@ -1,0 +1,125 @@
+name: PinMame
+on:
+  push:
+    paths-ignore:
+    - "pinmame/**"
+    - ".github/workflows/pinmame-native.yml"
+
+env:
+  PUBLISH: ${{ secrets.PUBLISH }}
+
+jobs:
+  build-win-x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: Build
+        run: |
+          cd src/PinMame 
+          dotnet build -c Release -r win-x64
+      - name: Setup Test
+        run: |
+          mkdir $HOME\.pinmame\roms
+          C:\msys64\usr\bin\wget.exe https://www.ipdb.org/files/4032/mm_109c.zip -P $HOME\.pinmame\roms
+      - name: Test
+        run: |
+          cd src/PinMame.Tests
+          dotnet test -r win-x64
+        shell: bash
+
+  build-win-x86:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: Build
+        run: |
+          cd src/PinMame 
+          dotnet build -c Release -r win-x86
+      - name: Setup Test
+        run: |
+          mkdir $HOME\.pinmame\roms
+          C:\msys64\usr\bin\wget.exe https://www.ipdb.org/files/4032/mm_109c.zip -P $HOME\.pinmame\roms
+      - name: Test
+        run: |
+          cd src/PinMame.Tests
+          dotnet test -r win-x86
+
+  build-osx-x64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+      - name: Force 3.1.x
+        run: |
+          echo "{ \"sdk\": { \"version\": \"3.1.0\", \"rollForward\": \"latestFeature\" } }" > global.json
+      - name: Build
+        run: |
+          cd src/PinMame 
+          dotnet build -c Release -r osx-x64
+      - name: Setup Test
+        run: |
+          mkdir -p ~/.pinmame/roms
+          wget https://www.ipdb.org/files/4032/mm_109c.zip -P ~/.pinmame/roms
+      - name: Test
+        run: |
+          cd src/PinMame.Tests
+          dotnet test -r osx-x64
+
+#  build-linux-x64:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: actions/setup-dotnet@v1
+#        with:
+#          dotnet-version: '3.1.x'
+#      - name: Build
+#        run: |
+#          cd src/PinMame 
+#          dotnet build -c Release -r linux-x64
+#      - name: Setup Test
+#        run: |
+#          mkdir -p ~/.pinmame/roms
+#          wget https://www.ipdb.org/files/4032/mm_109c.zip -P ~/.pinmame/roms
+#      - name: Test
+#        run: |
+#          cd src/PinMame.Tests
+#          dotnet test -r linux-x64 
+
+  build-nuget:
+    runs-on: ubuntu-latest
+    needs: [ build-win-x64, build-win-x86, build-osx-x64 ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: |
+          cd src/PinMame 
+          dotnet build -c Release /p:TargetOS=OSX
+#         dotnet build -c Release /p:TargetOS=Linux
+      - name: Pack
+        run: |
+          cd src/PinMame 
+          dotnet pack -c Release /p:TargetOS=Windows -o nupkg
+      - uses: actions/upload-artifact@v2
+        with:
+          name: nupkg
+          path: src/PinMame/nupkg
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [ build-nuget ]
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: nuget/setup-nuget@v1
+      - uses: actions/download-artifact@v2
+      - name: Publish
+        if: ${{ env.PUBLISH == 'true' }}
+        run: |
+          nuget push nupkg/PinMame.*.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json

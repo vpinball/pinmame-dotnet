@@ -147,4 +147,4 @@ jobs:
           nuget push nupkg/PinMame.Native.win-x64.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
           nuget push nupkg/PinMame.Native.win-x86.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
           nuget push nupkg/PinMame.Native.osx-x64.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
-          nuget push nupkg/PinMame.Native.linux-x64.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
+          # nuget push nupkg/PinMame.Native.linux-x64.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json

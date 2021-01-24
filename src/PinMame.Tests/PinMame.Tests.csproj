@@ -21,21 +21,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PinMame\PinMame.csproj" />
   </ItemGroup>
-
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PlatformTarget)' == 'x86'">
-    <Content Include="..\..\deps\win-x86\libpinmame-0.0.3.dll" CopyToOutputDirectory="PreserveNewest" />
+    
+  <ItemGroup>
+    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.71" />
   </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(PlatformTarget)' != 'x86'">
-    <Content Include="..\..\deps\win-x64\libpinmame-0.0.3.dll" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
-    <Content Include="..\..\deps\osx-x64\libpinmame.0.0.3.dylib" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
-  <!--
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-    <Content Include="..\..\deps\linux-x64\libpinmame.so.0.0.3" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  -->
-
+    
 </Project>
