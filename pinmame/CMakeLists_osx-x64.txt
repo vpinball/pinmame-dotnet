@@ -2,23 +2,24 @@ cmake_minimum_required(VERSION 3.14)
 
 include(FetchContent)
 
-set(PROJECT_VERSION "0.0.3")
-set(PINMAME_SHA "8e33c0c5295a5375d52d9ff182b91adb68eee12a")
-
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_C_STANDARD 99)
-
-project(libpinmame_osx VERSION ${PROJECT_VERSION})
-
 FetchContent_Declare(pinmame
-   URL "https://github.com/vpinball/pinmame/archive/${PINMAME_SHA}.zip"
+   URL "https://github.com/vpinball/pinmame/archive/master.zip"
 )
 
 FetchContent_Populate(pinmame)
 
+file(READ ${pinmame_SOURCE_DIR}/src/version.c version)
+string(REGEX MATCH "[0-9\\.]+" PROJECT_VERSION ${version})
+
+file(WRITE version.txt ${PROJECT_VERSION})
+
+project(libpinmame_osx VERSION ${PROJECT_VERSION})
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_STANDARD 99)
+
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/patch/ext DESTINATION ${pinmame_SOURCE_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/patch/src DESTINATION ${pinmame_SOURCE_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/libpinmame DESTINATION ${pinmame_SOURCE_DIR}/src)
 
 add_compile_definitions(
    HAS_M6809=1
@@ -85,12 +86,12 @@ add_compile_definitions(
    HAS_MEA8000=1
    HAS_SAA1099=1
    HAS_QSOUND=1
-   PINMAME=1 
    MAMEVER=7300 
-   LSB_FIRST=1 
    INLINE=static __inline
-   PINMAME_NO_UNUSED=1
-   LIBPINMAME=1
+   LSB_FIRST
+   PINMAME
+   PINMAME_NO_UNUSED
+   LIBPINMAME
 )
 
 add_library(libpinmame_osx SHARED
@@ -564,42 +565,41 @@ add_library(libpinmame_osx SHARED
    ${pinmame_SOURCE_DIR}/src/wpc/zacproto.c
    ${pinmame_SOURCE_DIR}/src/wpc/zacsnd.c
    ${pinmame_SOURCE_DIR}/src/wpc/zacsnd.h
-#  ${pinmame_SOURCE_DIR}/ext/vgm/vgmwrite.c
+
+   ${pinmame_SOURCE_DIR}/ext/vgm/vgmwrite.c
    ${pinmame_SOURCE_DIR}/ext/vgm/vgmwrite.h
 
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/video.h
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/video.c
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/osx.h
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/joystick.c
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/keyboard.c
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/fileio.c
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/ticker.c
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/sound.h
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/sound.c
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/minimalconfig.h
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/minimalconfig.c
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/rc.h
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/rc.c
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/misc.h
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/misc.c
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/fronthlp.c
+   ${pinmame_SOURCE_DIR}/src/ios/fronthlp.c
+   ${pinmame_SOURCE_DIR}/src/ios/rc.c
+   ${pinmame_SOURCE_DIR}/src/ios/rc.h
+   ${pinmame_SOURCE_DIR}/src/ios/ticker.c
 
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/libpinmame.h
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx/libpinmame.cpp
+   ${pinmame_SOURCE_DIR}/src/dll/video.c
+   ${pinmame_SOURCE_DIR}/src/dll/video.h
+   ${pinmame_SOURCE_DIR}/src/dll/joystick.c
+   ${pinmame_SOURCE_DIR}/src/dll/keyboard.c
+   ${pinmame_SOURCE_DIR}/src/dll/fileio.c
+   ${pinmame_SOURCE_DIR}/src/dll/sound.c
+   ${pinmame_SOURCE_DIR}/src/dll/sound.h
+   ${pinmame_SOURCE_DIR}/src/dll/minimalconfig.c
+   ${pinmame_SOURCE_DIR}/src/dll/minimalconfig.h
+   ${pinmame_SOURCE_DIR}/src/dll/misc.c
+   ${pinmame_SOURCE_DIR}/src/dll/misc.h
+   ${pinmame_SOURCE_DIR}/src/dll/libpinmame.cpp
+   ${pinmame_SOURCE_DIR}/src/dll/libpinmame.h
 )
 
 target_include_directories(libpinmame_osx PUBLIC
    ${pinmame_SOURCE_DIR}/src
    ${pinmame_SOURCE_DIR}/src/wpc
    ${pinmame_SOURCE_DIR}/src/cpu/m68000/generated_by_m68kmake
-   ${pinmame_SOURCE_DIR}/src/libpinmame/osx
+   ${pinmame_SOURCE_DIR}/src/ios
+   ${pinmame_SOURCE_DIR}/src/dll
 )
 
 find_package(ZLIB)
 
 target_link_libraries(libpinmame_osx ZLIB::ZLIB)
-
-set (CMAKE_SHARED_LINKER_FLAGS "-framework AudioToolbox -framework CoreFoundation")
 
 set_target_properties(libpinmame_osx
    PROPERTIES VERSION ${PROJECT_VERSION}

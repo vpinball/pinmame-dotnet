@@ -2,23 +2,22 @@ cmake_minimum_required(VERSION 3.14)
 
 include(FetchContent)
 
-set(PROJECT_VERSION "0.0.3")
-set(PINMAME_SHA "8e33c0c5295a5375d52d9ff182b91adb68eee12a")
-
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_C_STANDARD 99)
-
-project(libpinmame_win VERSION ${PROJECT_VERSION})
-
 FetchContent_Declare(pinmame
-   URL "https://github.com/vpinball/pinmame/archive/${PINMAME_SHA}.zip"
+   URL "https://github.com/vpinball/pinmame/archive/master.zip"
 )
 
 FetchContent_Populate(pinmame)
 
+file(READ ${pinmame_SOURCE_DIR}/src/version.c version)
+string(REGEX MATCH "[0-9\\.]+" PROJECT_VERSION ${version})
+
+project(libpinmame_osx VERSION ${PROJECT_VERSION})
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_STANDARD 99)
+
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/patch/ext DESTINATION ${pinmame_SOURCE_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/patch/src DESTINATION ${pinmame_SOURCE_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/libpinmame DESTINATION ${pinmame_SOURCE_DIR}/src)
 
 add_compile_definitions(
    HAS_M6809=1
@@ -86,17 +85,15 @@ add_compile_definitions(
    HAS_SAA1099=1
    HAS_QSOUND=1
    MAMEVER=7300    
-
+   LSB_FIRST
    _CRT_SECURE_NO_WARNINGS
    __LP64__
    WIN32
    _MBCS
-   LSB_FIRST
    ZLIB_WINAPI
-
    PINMAME 
-   PINMAME_DLL
    PINMAME_NO_UNUSED
+   LIBPINMAME
 )
 
 add_library(libpinmame_win SHARED
@@ -570,10 +567,10 @@ add_library(libpinmame_win SHARED
    ${pinmame_SOURCE_DIR}/src/wpc/zacproto.c
    ${pinmame_SOURCE_DIR}/src/wpc/zacsnd.c
    ${pinmame_SOURCE_DIR}/src/wpc/zacsnd.h
+
    ${pinmame_SOURCE_DIR}/ext/vgm/vgmwrite.c
    ${pinmame_SOURCE_DIR}/ext/vgm/vgmwrite.h
 
-   ${pinmame_SOURCE_DIR}/src/wpc/dmddevice.cpp
    ${pinmame_SOURCE_DIR}/src/vc/dirent.c
 
    ${pinmame_SOURCE_DIR}/src/win32com/Alias.cpp
@@ -591,16 +588,15 @@ add_library(libpinmame_win SHARED
    ${pinmame_SOURCE_DIR}/src/dll/video.h
    ${pinmame_SOURCE_DIR}/src/dll/joystick.c
    ${pinmame_SOURCE_DIR}/src/dll/keyboard.c
-   ${pinmame_SOURCE_DIR}/src/dll/dllfileio.c
+   ${pinmame_SOURCE_DIR}/src/dll/fileio.c
    ${pinmame_SOURCE_DIR}/src/dll/sound.c
-   ${pinmame_SOURCE_DIR}/src/dll/dllsound.h
+   ${pinmame_SOURCE_DIR}/src/dll/sound.h
    ${pinmame_SOURCE_DIR}/src/dll/minimalconfig.c
    ${pinmame_SOURCE_DIR}/src/dll/minimalconfig.h
    ${pinmame_SOURCE_DIR}/src/dll/misc.c
    ${pinmame_SOURCE_DIR}/src/dll/misc.h
-
-   ${pinmame_SOURCE_DIR}/src/dll/PinMAMEdll.h
-   ${pinmame_SOURCE_DIR}/src/dll/PinMAMEdll.cpp
+   ${pinmame_SOURCE_DIR}/src/dll/libpinmame.cpp
+   ${pinmame_SOURCE_DIR}/src/dll/libpinmame.h
 )
 
 target_include_directories(libpinmame_win PUBLIC

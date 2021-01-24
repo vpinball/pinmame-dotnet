@@ -2,11 +2,11 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/01/nuspec.xsd">
   <metadata>
     <!-- package -->
-    <id>PinMame.Native.linux-x64</id>
-    <title>PinMame - Native binaries for linux-x64</title>
-    <version>0.0.3</version>
-    <description>This package complements the PinMame package and contains native binaries of libpinmame for linux-x64</description>
-    <summary>Native binaries of libpinmame for linux-x64</summary>
+    <id>PinMame.Native.win-x86</id>
+    <title>PinMame - Native binaries for win-x86</title>
+    <version>__VERSION__</version>
+    <description>This package complements the PinMame package and contains native binaries of libpinmame for win-x86</description>
+    <summary>Native binaries of libpinmame for win-x86</summary>
     <projectUrl>https://github.com/VisualPinball/pinmame-dotnet</projectUrl>
     <repository type="git" url="https://github.com/VisualPinball/pinmame-dotnet" />
     <tags>libpinmame binaries</tags>
@@ -16,12 +16,15 @@
     <owners>PinMAME development team and contributors</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <copyright>PinMAME development team and contributors</copyright>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0" />
+    </dependencies>
   </metadata>
   <files>
     <!-- The build bits -->
-    <file src="targets\PinMame.Native.linux-x64.targets" target="build\netstandard2.0" />
-    <!-- Include libpinmame linux-x64 binaries -->
-    <file src="..\..\pinmame\build\lib\libpinmame.so.*" target="runtimes\linux-x64\native" />
+    <file src="targets\PinMame.Native.win-x86.targets" target="build\netstandard2.0" />
+    <!-- Include libpinmame win-x86 binaries -->
+    <file src="win-x86\libpinmame-*.dll" target="runtimes\win-x86\native" />
     <!-- Include the license -->
     <file src="..\..\LICENSE.txt" />
     <!-- A dummy reference which prevents NuGet from adding any compilation references when this package is imported -->
