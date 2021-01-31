@@ -21,7 +21,7 @@
         <dependency id="PinMame.Native.win-x64" version="__VERSION__" include="native" />
         <dependency id="PinMame.Native.win-x86" version="__VERSION__" include="native" />
         <dependency id="PinMame.Native.osx-x64" version="__VERSION__" include="native" />
-        <!-- <dependency id="PinMame.Native.linux-x64" version="__VERSION__" include="native" /> -->
+        <dependency id="PinMame.Native.linux-x64" version="__VERSION__" include="native" />
       </group>
     </dependencies>
   </metadata>
