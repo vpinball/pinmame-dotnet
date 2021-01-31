@@ -84,15 +84,19 @@ add_compile_definitions(
    HAS_MEA8000=1
    HAS_SAA1099=1
    HAS_QSOUND=1
+
+   UNIX
+   INLINE=static __inline__
+   PI=M_PI
    MAMEVER=7300 
-   INLINE=static __inline
    LSB_FIRST
    PINMAME
    PINMAME_NO_UNUSED
    LIBPINMAME
+   NAME="LIBPINMAME"
 )
 
-add_library(pinmame SHARED
+add_library(pinmame SHARED 
    ${pinmamesrc_SOURCE_DIR}/src/artwork.c 
    ${pinmamesrc_SOURCE_DIR}/src/artwork.h 
    ${pinmamesrc_SOURCE_DIR}/src/audit.c 
@@ -117,9 +121,9 @@ add_library(pinmame SHARED
    ${pinmamesrc_SOURCE_DIR}/src/cpu/cdp1802/cdp1802.h
    ${pinmamesrc_SOURCE_DIR}/src/cpu/cop400/410ops.c
    ${pinmamesrc_SOURCE_DIR}/src/cpu/cop400/420ops.c
-   ${pinmamesrc_SOURCE_DIR}/src/cpu/cop400/cop400.h
    ${pinmamesrc_SOURCE_DIR}/src/cpu/cop400/cop420.c
    ${pinmamesrc_SOURCE_DIR}/src/cpu/cop400/cop420ds.c
+   ${pinmamesrc_SOURCE_DIR}/src/cpu/cop400/cop400.h
    ${pinmamesrc_SOURCE_DIR}/src/cpu/i86/i86.c
    ${pinmamesrc_SOURCE_DIR}/src/cpu/i86/i86.h
    ${pinmamesrc_SOURCE_DIR}/src/cpu/i86/i86dasm.c
@@ -567,10 +571,10 @@ add_library(pinmame SHARED
    ${pinmamesrc_SOURCE_DIR}/ext/vgm/vgmwrite.c
    ${pinmamesrc_SOURCE_DIR}/ext/vgm/vgmwrite.h
 
-   ${pinmamesrc_SOURCE_DIR}/src/ios/fronthlp.c
-   ${pinmamesrc_SOURCE_DIR}/src/ios/rc.c
-   ${pinmamesrc_SOURCE_DIR}/src/ios/rc.h
-   ${pinmamesrc_SOURCE_DIR}/src/ios/ticker.c
+   ${pinmamesrc_SOURCE_DIR}/src/unix/fronthlp.c
+   ${pinmamesrc_SOURCE_DIR}/src/unix/sysdep/rc.c
+   ${pinmamesrc_SOURCE_DIR}/src/unix/sysdep/rc.h
+   ${pinmamesrc_SOURCE_DIR}/src/unix/ticker.c
 
    ${pinmamesrc_SOURCE_DIR}/src/dll/video.c
    ${pinmamesrc_SOURCE_DIR}/src/dll/video.h
@@ -591,14 +595,16 @@ target_include_directories(pinmame PUBLIC
    ${pinmamesrc_SOURCE_DIR}/src
    ${pinmamesrc_SOURCE_DIR}/src/wpc
    ${pinmamesrc_SOURCE_DIR}/src/cpu/m68000/generated_by_m68kmake
-   ${pinmamesrc_SOURCE_DIR}/src/ios
    ${pinmamesrc_SOURCE_DIR}/src/dll
+   ${pinmamesrc_SOURCE_DIR}/src/unix
+   ${pinmamesrc_SOURCE_DIR}/src/unix/sysdep
 )
 
 find_package(ZLIB)
 
 target_link_libraries(pinmame 
-   ZLIB::ZLIB
+   ZLIB::ZLIB 
+   pthread
 )
 
 set_target_properties(pinmame

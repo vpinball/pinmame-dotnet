@@ -8,8 +8,8 @@ Add the `PinMame` package references to your project file:
 
 ```xml
   <ItemGroup>
-    <PackageReference Include="PinMame" Version="0.1.0-preview.1" />
-    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.71" />
+    <PackageReference Include="PinMame" Version="0.1.0-preview.2" />
+    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.87" />
   </ItemGroup>
 ```
 
