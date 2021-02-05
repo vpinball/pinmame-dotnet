@@ -40,6 +40,14 @@ namespace PinMame
 	public class Tests
 	{
 		[TestMethod]
+		public void GetGames()
+		{
+			PinMameGame[] games = PinMame.GetGames();
+
+			Assert.IsTrue(games.Length > 650);
+		}
+
+		[TestMethod]
 		public void Start()
 		{
 			var profilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

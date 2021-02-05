@@ -29,74 +29,31 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 // POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Threading;
-
 namespace PinMame
 {
-	class Example
+	using System.Linq;
+	using Internal;
+
+	public class PinMameGame
 	{
-		static Dictionary<byte, string> DOTS = new Dictionary<byte, string>() {
-			{ 0x00, " " },
-			{ 0x14, "░" },
-			{ 0x21, "▒" },
-			{ 0x43, "▓" },
-			{ 0x64, "▓" }
-		};
+		public string name;
+		public string description;
+		public string year;
+		public string manufacturer;
+		public PinMameGame[] clones;
 
-		static void DumpGames()
+		internal PinMameGame(PinMameApi.GameInfoStruct gameInfoStruct)
 		{
-			foreach (var game in PinMame.GetGames())
-			{
-				Console.WriteLine($"PARENT: name={game.name}, description={game.description}, year={game.year}, manufacturer={game.manufacturer}");
-
-				foreach (var clone in game.clones)
-				{
-					Console.WriteLine($"  CLONE: name={clone.name}, description={clone.description}, year={clone.year}, manufacturer={clone.manufacturer}");
-				}
-			}
+			name = gameInfoStruct.name;
+			description = gameInfoStruct.description;
+			year = gameInfoStruct.year;
+			manufacturer = gameInfoStruct.manufacturer;
 		}
 
-		static void Main(string[] args)
+		internal void addClone(PinMameGame game)
 		{
-			DumpGames();
-
-			var _pinMame = PinMame.Instance();
-
-			_pinMame.StartGame("mm_109c", showConsole: true);
-
-			while (true)
-			{
-				if (_pinMame.IsRunning)
-				{
-					if (_pinMame.NeedsDmdUpdate())
-					{
-						var dimensions = _pinMame.GetDmdDimensions();
-						var buffer = _pinMame.GetDmdPixels();
-
-						var dmd = "";
-
-						for (var y = 0; y < dimensions.Height; y++)
-						{
-							for (var x = 0; x < dimensions.Width; x++)
-							{
-								var pixel = y * dimensions.Width + x;
-								var value = buffer[pixel];
-
-								dmd += DOTS[value];
-							}
-
-							dmd += "\n";
-						}
-
-						Console.SetCursorPosition(0, 0);
-						Console.WriteLine(dmd);
-					}
-				}
-
-				Thread.Sleep(100);
-			}
+			clones = clones.Append(game).OrderBy(
+				cloneGameInfo => cloneGameInfo.description).ToArray();
 		}
 	}
 }

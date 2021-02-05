@@ -40,6 +40,8 @@ namespace PinMame
 	using NLog;
 	using Logger = NLog.Logger;
 	using Internal;
+	using System.Collections.Generic;
+	using System.Linq;
 
 	/// <summary>
 	/// PinMAME, a pinball ROM emulator.
@@ -69,6 +71,41 @@ namespace PinMame
 		private static PinMame _instance;
 
 		/// <summary>
+		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
+
+		public static PinMameGame[] GetGames() {
+			Dictionary<string, PinMameGame> games = new Dictionary<string, PinMameGame>();
+
+			PinMameApi.GetGames((gameInfoStructPtr) =>
+			{
+				PinMameApi.GameInfoStruct gameInfoStruct = (PinMameApi.GameInfoStruct)Marshal.PtrToStructure(gameInfoStructPtr, typeof(PinMameApi.GameInfoStruct));
+
+				if (string.IsNullOrEmpty(gameInfoStruct.cloneOf))
+				{
+					games.Add(gameInfoStruct.name, new PinMameGame(gameInfoStruct)
+					{
+						clones = Array.Empty<PinMameGame>()
+					}); 
+				}
+			});
+
+			PinMameApi.GetGames((gameInfoStructPtr) =>
+			{
+				PinMameApi.GameInfoStruct gameInfoStruct = (PinMameApi.GameInfoStruct)Marshal.PtrToStructure(gameInfoStructPtr, typeof(PinMameApi.GameInfoStruct));
+
+				if (!string.IsNullOrEmpty(gameInfoStruct.cloneOf))
+				{
+					if (games.TryGetValue(gameInfoStruct.cloneOf, out PinMameGame game))
+					{
+						game.addClone(new PinMameGame(gameInfoStruct));
+					}
+				}
+			});
+
+			return games.Values.OrderBy(game => game.description).ToArray();
+		}
+
+		/// <summary>
 		/// Creates or retrieves the PinMame instance.
 		/// </summary>
 		/// <param name="sampleRate">Audio sample rate</param>
@@ -79,6 +116,7 @@ namespace PinMame
 
 		private PinMame(int sampleRate, string vpmPath)
 		{
+                       
 			var path = vpmPath ?? GetVpmPath();
 			if (path == null)
 			{

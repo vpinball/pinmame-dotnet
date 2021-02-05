@@ -13,7 +13,7 @@
     <Copyright>Copyright 2021</Copyright>
     <AssemblyName>PinMame</AssemblyName>
     <PackageId>PinMame</PackageId>
-    <PackagePrereleaseIdentifier>-preview.2</PackagePrereleaseIdentifier>
+    <PackagePrereleaseIdentifier>-preview.3</PackagePrereleaseIdentifier>
     <PackageVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</PackageVersion>
     <PackageProjectUrl>https://github.com/VisualPinball/pinmame-dotnet</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
