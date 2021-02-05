@@ -1,6 +1,5 @@
-# This workflow runs after a push or when recieving a
-# repository_dispatch event. Currently vpinball/pinmame will
-# do this after a successful build of libpinmame.
+# This workflow runs when recieving a "libpinmame-build"
+# repository_dispatch event from vpinball/pinmame.
 #
 # To determine the nuget version:
 #
@@ -13,14 +12,7 @@
 name: PinMame-Native
 on:
   repository_dispatch:
-    types: [build]
-  push:
-    paths:
-    - "native/**"
-    - ".github/workflows/pinmame-native.yml"
-
-env:
-  PUBLISH: ${{ secrets.PUBLISH }}
+    types: [ libpinmame-build ]
 
 jobs:
   version:
@@ -41,112 +33,19 @@ jobs:
           EXISTS=$(if [[ $(curl https://api.nuget.org/v3-flatcontainer/pinmame.native/index.json | grep \"${SEMVER}\") ]]; then echo "true"; else echo "false"; fi)
           echo "::set-output name=semver::${SEMVER}"
           echo "::set-output name=exists::${EXISTS}"
-      - uses: actions/upload-artifact@v2
-        with:
-          name: pinmame 
-          path: |
-            ./
-            !.git
-
-  build-win-x64:
-    runs-on: windows-latest
-    needs: [ version ]
-    if: github.event_name == 'repository_dispatch' || github.event_name == 'push'
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-           name: pinmame
-      - name: Build
-        run: |
-          cd cmake\libpinmame
-          copy CMakeLists_win-x64.txt CMakeLists.txt
-          cmake -G "Visual Studio 16 2019" -A x64 .
-          cmake --build . --config Release
-      - uses: actions/upload-artifact@v2
-        with:
-          name: win-x64
-          path: cmake/libpinmame/lib/libpinmame-*.dll
-          
-  build-win-x86:
-    runs-on: windows-latest
-    needs: [ version ]
-    if: github.event_name == 'repository_dispatch' || github.event_name == 'push'
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-           name: pinmame
-      - name: Build
-        run: |
-          cd cmake\libpinmame
-          copy CMakeLists_win-x86.txt CMakeLists.txt
-          cmake -G "Visual Studio 16 2019" -A Win32 .
-          cmake --build . --config Release
-      - uses: actions/upload-artifact@v2
-        with:
-          name: win-x86
-          path: cmake/libpinmame/lib/libpinmame-*.dll
-        
-  build-osx-x64:
-    runs-on: macos-latest
-    needs: [ version ]
-    if: github.event_name == 'repository_dispatch' || github.event_name == 'push'
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-           name: pinmame
-      - name: Build
-        run: |
-          cd cmake/libpinmame
-          cp CMakeLists_osx-x64.txt CMakeLists.txt
-          cmake -DCMAKE_BUILD_TYPE=Release .
-          cmake --build . 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: osx-x64
-          path: cmake/libpinmame/lib/libpinmame.*.dylib
-
-  build-linux-x64:
-    runs-on: ubuntu-latest
-    needs: [ version ]
-    if: github.event_name == 'repository_dispatch' || github.event_name == 'push'
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-           name: pinmame
-      - name: Build
-        run: |
-          cd cmake/libpinmame
-          cp CMakeLists_linux-x64.txt CMakeLists.txt
-          cmake -DCMAKE_BUILD_TYPE=Release . 
-          cmake --build .
-      - uses: actions/upload-artifact@v2
-        with:
-          name: linux-x64
-          path: cmake/libpinmame/lib/libpinmame.so.*
 
   build-nuget:
     runs-on: ubuntu-latest
-    needs: [ version, build-win-x64, build-win-x86, build-osx-x64, build-linux-x64 ]
-    if: github.event_name == 'repository_dispatch' || github.event_name == 'push'
+    needs: [ version ]
     steps:
       - uses: nuget/setup-nuget@v1
       - uses: actions/checkout@v2
-      - uses: actions/download-artifact@v2
+      - uses: dawidd6/action-download-artifact@v2
         with:
-          name: win-x64
-          path: native/nuget/win-x64
-      - uses: actions/download-artifact@v2
-        with:
-          name: win-x86
-          path: native/nuget/win-x86
-      - uses: actions/download-artifact@v2
-        with:
-          name: osx-x64
-          path: native/nuget/osx-x64
-      - uses: actions/download-artifact@v2
-        with:
-          name: linux-x64
-          path: native/nuget/linux-x64
+          workflow: libpinmame
+          run_id: ${{ github.event.client_payload.run_id }}
+          repo: vpinball/pinmame
+          path: native/nuget
       - name: Pack
         run: |
           cd native/nuget
@@ -164,14 +63,13 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: [ version, build-nuget ]
-    if: needs.version.outputs.exists == 'false' && (github.event_name == 'repository_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
+    if: needs.version.outputs.exists == 'false' 
     steps:
       - uses: nuget/setup-nuget@v1
       - uses: actions/download-artifact@v2
         with:
           name: nupkg
       - name: Publish
-        if: ${{ env.PUBLISH == 'true' }}
         run: |
           nuget push PinMame.Native.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
           nuget push PinMame.Native.win-x64.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
