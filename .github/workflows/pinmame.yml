@@ -2,7 +2,11 @@ name: PinMame
 on:
   push:
     paths-ignore:
-    - "pinmame/**"
+    - "native/**"
+    - ".github/workflows/pinmame-native.yml"
+  pull_request:
+    paths-ignore:
+    - "native/**"
     - ".github/workflows/pinmame-native.yml"
 
 env:
@@ -119,7 +123,9 @@ jobs:
     steps:
       - uses: nuget/setup-nuget@v1
       - uses: actions/download-artifact@v2
+        with:
+          name: nupkg
       - name: Publish
         if: ${{ env.PUBLISH == 'true' }}
         run: |
-          nuget push nupkg/PinMame.*.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
+          nuget push PinMame.*.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
