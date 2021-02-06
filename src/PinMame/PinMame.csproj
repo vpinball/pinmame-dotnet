@@ -13,11 +13,11 @@
     <Copyright>Copyright 2021</Copyright>
     <AssemblyName>PinMame</AssemblyName>
     <PackageId>PinMame</PackageId>
-    <PackagePrereleaseIdentifier>-preview.3</PackagePrereleaseIdentifier>
+    <PackagePrereleaseIdentifier>-preview.13</PackagePrereleaseIdentifier>
     <PackageVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</PackageVersion>
     <PackageProjectUrl>https://github.com/VisualPinball/pinmame-dotnet</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
+    <InformationalVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</InformationalVersion>
   </PropertyGroup>
 
   <!-- Give an initial value based on the operating system where it's currently running on. -->
