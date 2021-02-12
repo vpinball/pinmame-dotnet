@@ -24,7 +24,7 @@
     <!-- The build bits -->
     <file src="targets\PinMame.Native.linux-x64.targets" target="build\netstandard2.0" />
     <!-- Include libpinmame linux-x64 binaries -->
-    <file src="linux-x64\libpinmame.so.*" target="runtimes\linux-x64\native" />
+    <file src="libpinmame-linux-x64\libpinmame.so.*" target="runtimes\linux-x64\native" />
     <!-- Include the license -->
     <file src="..\..\LICENSE.txt" />
     <!-- A dummy reference which prevents NuGet from adding any compilation references when this package is imported -->
