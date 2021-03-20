@@ -35,6 +35,10 @@ jobs:
       - name: Pack
         run: |
           cd native/nuget
+          mv libpinmame-*-win-x64 libpinmame-win-x64
+          mv libpinmame-*-win-x86 libpinmame-win-x86
+          mv libpinmame-*-osx-x64 libpinmame-osx-x64
+          mv libpinmame-*-linux-x64 libpinmame-linux-x64
           sed -i 's/__VERSION__/${{ needs.version.outputs.semver }}/g' *.nuspec
           nuget pack PinMame.Native.win-x64.nuspec -OutputDirectory nupkg
           nuget pack PinMame.Native.win-x86.nuspec -OutputDirectory nupkg
