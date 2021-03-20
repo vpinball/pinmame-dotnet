@@ -129,7 +129,7 @@ jobs:
     steps:
       - uses: peter-evans/repository-dispatch@v1
         with:
-          token: ${{ secrets.PAT_PINMAME_DOTNET }}
+          token: ${{ secrets.GH_PAT }}
           repository: VisualPinball/VisualPinball.Engine.PinMAME
           event-type: update-pinmame
           client-payload: '{"run_id": "${{ github.run_id }}"}'
