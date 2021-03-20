@@ -1,13 +1,5 @@
 # This workflow runs when recieving a "libpinmame-build"
 # repository_dispatch event from vpinball/pinmame.
-#
-# To determine the nuget version:
-#
-# Clone PinMAME
-# Parse version from src/version.c
-# Get commit count since start of 3.4. 
-# Generate semver from version and commit count, ex: 3.4.0-preview.20
-# Query nuget api to see if package matching semver already exists
 
 name: pinmame-native
 on:
@@ -21,15 +13,9 @@ jobs:
       semver: ${{ steps.version.outputs.semver }}
       exists: ${{ steps.version.outputs.exists }}
     steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: vpinball/pinmame 
-          fetch-depth: 0
       - id: version
         run: |
-          VERSION=$(npx semver -c $(grep -o "[0-9\.]\+" src/version.c | head -1))
-          PREVIEW=$(git rev-list 06fbe2826c1563f10576ae68984672dcffa481ac..HEAD --count)
-          SEMVER="${VERSION}-preview.${PREVIEW}"
+          SEMVER="${{ github.event.client_payload.version }}-preview.${{ github.event.client_payload.revision }}"
           EXISTS=$(if [[ $(curl https://api.nuget.org/v3-flatcontainer/pinmame.native/index.json | grep \"${SEMVER}\") ]]; then echo "true"; else echo "false"; fi)
           echo "::set-output name=semver::${SEMVER}"
           echo "::set-output name=exists::${EXISTS}"
@@ -82,7 +68,7 @@ jobs:
     steps:
       - uses: peter-evans/repository-dispatch@v1
         with:
-          token: ${{ secrets.PAT_PINMAME_DOTNET }}
+          token: ${{ secrets.GH_PAT }}
           repository: VisualPinball/VisualPinball.Engine.PinMAME
           event-type: update-pinmame-native
           client-payload: '{"run_id": "${{ github.run_id }}"}'
