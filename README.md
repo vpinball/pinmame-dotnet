@@ -8,8 +8,8 @@ Add the `PinMame` package references to your project file:
 
 ```xml
   <ItemGroup>
-    <PackageReference Include="PinMame" Version="0.1.0-preview.13" />
-    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.101" />
+    <PackageReference Include="PinMame" Version="0.1.0-preview.14" />
+    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.182" />
   </ItemGroup>
 ```
 
@@ -24,10 +24,25 @@ using PinMame;
 .
 	var _pinMame = PinMame.PinMame.Instance();
 
-	_pinMame.StartGame("mm_109c", showConsole: false);
+	_pinMame.StartGame("mm_109c");
 ```
 
-You will need to build an event loop and process DMD Updates. 
+You can add event handlers for `OnGameStarted`, `OnRegisterDisplay`, `OnSolenoid`, and `OnGameEnded`.
+
+To process display data, in your event loop call `GetDisplays`: 
+
+```
+	_pinMame.GetDisplays((index, displayLayout, frame) => {
+		if (displayLayout.type == PinMameDisplayType.DMD)
+		{
+			// Handle DMD displays
+		}
+		else
+		{
+			// Handle Alphanumeric displays
+		}
+	});
+```
 
 See the [example project](https://github.com/VisualPinball/pinmame-dotnet/blob/master/src/PinMame.Example/Example.cs) for more information.
 

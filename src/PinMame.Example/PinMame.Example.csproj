@@ -16,7 +16,16 @@
   </ItemGroup>
     
   <ItemGroup>
-    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.101" />
+    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.182" />
   </ItemGroup>
+
+  <!--
+  <Target Name="Deploy" AfterTargets="Build">
+    <Copy Condition="'$(RuntimeIdentifier)' == 'win-x64'" SourceFiles="libpinmame-3.4.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy Condition="'$(RuntimeIdentifier)' == 'win-x86'" SourceFiles="libpinmame-3.4.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy Condition="'$(RuntimeIdentifier)' == 'osx-x64'" SourceFiles="libpinmame.3.4.dylib" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <Copy Condition="'$(RuntimeIdentifier)' == 'linux-x64'" SourceFiles="libpinmame.so.3.4" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+  -->
 
 </Project>
