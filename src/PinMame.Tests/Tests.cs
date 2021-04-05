@@ -55,7 +55,7 @@ namespace PinMame
 
 			var _pinMame = PinMame.Instance(48000, path);
 
-			_pinMame.StartGame("mm_109c", showConsole: true);
+			_pinMame.StartGame("mm_109c");
 
 			var i = 0;
 

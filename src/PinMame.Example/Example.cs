@@ -30,20 +30,13 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace PinMame
 {
 	class Example
 	{
-		static Dictionary<byte, string> DOTS = new Dictionary<byte, string>() {
-			{ 0x00, " " },
-			{ 0x14, "░" },
-			{ 0x21, "▒" },
-			{ 0x43, "▓" },
-			{ 0x64, "▓" }
-		};
+		static bool _isRunning = false;
 
 		static void DumpGames()
 		{
@@ -58,42 +51,131 @@ namespace PinMame
 			}
 		}
 
+		static void DumpDmd(PinMameDisplayLayout displayLayout, byte[] frame)
+		{
+			for (var y = 0; y < displayLayout.height; y++)
+			{
+				var dmd = "";
+
+				for (var x = 0; x < displayLayout.width; x++)
+				{
+					switch (frame[y * displayLayout.width + x])
+					{
+						case 0x00:
+							dmd += " ";
+							break;
+						case 0x14:
+							dmd += "░";
+							break;
+						case 0x21:
+							dmd += "▒";
+							break;
+						case 0x43:
+							dmd += "▓";
+							break;
+						case 0x64:
+							dmd += "▓";
+							break;
+					}
+				}
+
+				Console.SetCursorPosition(0, y);
+				Console.Write(dmd);
+			}
+		}
+
+		static void DumpAlpha(int index, PinMameDisplayLayout displayLayout, byte[] frame)
+		{
+			for (var position = 0; position < displayLayout.length; position++)
+			{
+				ushort value = (ushort)((frame[position * 2 + 1] << 8) + frame[(position * 2)]);
+
+				var segments = new string[8] {
+					" AAAAA   " ,
+					"FI J KB  " ,
+					"F IJK B  " ,
+					" GG LL   " ,
+					"E ONM C  " ,
+					"EO N MC P" , 
+					" DDDDD  H" ,
+					"       H " ,
+				};
+
+				for (var row = 0; row < 8; row++)
+				{
+					for (var column = 0; column < segments[row].Length; column++)
+					{
+						for (var bit = 0; bit < 16; bit++)
+						{
+							segments[row] = segments[row].Replace("" + (char)('A' + bit), (value & (1 << bit)) > 0 ? "▓" : " ");
+						}
+					}
+
+					Console.SetCursorPosition(position * 10, index * 8 + row);
+					Console.Write(segments[row] + " ");
+				}
+			}
+		}
+
+		static void OnRegisterDisplay(object sender, EventArgs e, int index, PinMameDisplayLayout displayLayout)
+		{
+			Console.WriteLine("OnRegisterDisplay: index={0}, type={1}, top={2}, left={3}, length={4}, height={5}, width={6}",
+				index,
+				displayLayout.type,
+				displayLayout.top,
+				displayLayout.left,
+				displayLayout.length,
+				displayLayout.height,
+				displayLayout.width);
+		}
+
+		static void OnSolenoid(object sender, EventArgs e, int solenoid, bool isActive)
+		{
+			Console.WriteLine("OnSolenoid: solenoid={0}, isActive={1}",
+				solenoid,
+				isActive);
+		}
+
+		static void OnGameStarted(object sender, EventArgs e)
+		{
+			Console.WriteLine("OnGameStarted");
+		}
+
+		static void OnGameEnded(object sender, EventArgs e)
+		{
+			Console.WriteLine("OnGameEnded");
+
+			_isRunning = false;
+		}
+
 		static void Main(string[] args)
 		{
 			DumpGames();
 
 			var _pinMame = PinMame.Instance();
 
-			_pinMame.StartGame("mm_109c", showConsole: true);
+			_pinMame.OnGameStarted += OnGameStarted;
+			_pinMame.OnRegisterDisplay += OnRegisterDisplay;
+			_pinMame.OnSolenoid += OnSolenoid;
+			_pinMame.OnGameEnded += OnGameEnded;
 
-			while (true)
+			//_pinMame.StartGame("mm_109c");
+			_pinMame.StartGame("fh_906h");
+
+			_isRunning = true;
+
+			while (_isRunning)
 			{
-				if (_pinMame.IsRunning)
-				{
-					if (_pinMame.NeedsDmdUpdate())
+				_pinMame.GetDisplays((index, displayLayout, frame) => {
+					if (displayLayout.type == PinMameDisplayType.DMD)
 					{
-						var dimensions = _pinMame.GetDmdDimensions();
-						var buffer = _pinMame.GetDmdPixels();
-
-						var dmd = "";
-
-						for (var y = 0; y < dimensions.Height; y++)
-						{
-							for (var x = 0; x < dimensions.Width; x++)
-							{
-								var pixel = y * dimensions.Width + x;
-								var value = buffer[pixel];
-
-								dmd += DOTS[value];
-							}
-
-							dmd += "\n";
-						}
-
-						Console.SetCursorPosition(0, 0);
-						Console.WriteLine(dmd);
+						DumpDmd(displayLayout, frame);
 					}
-				}
+					else
+					{
+						DumpAlpha(index, displayLayout, frame);
+					}
+				});
 
 				Thread.Sleep(100);
 			}

@@ -33,8 +33,6 @@ namespace PinMame
 {
 	using System;
 	using System.IO;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using System.Runtime.InteropServices;
 	using Registry = Microsoft.Win32.Registry;
 	using NLog;
@@ -54,55 +52,73 @@ namespace PinMame
 
 	public class PinMame
 	{
-		public bool IsRunning => _isRunning;
-		public event EventHandler OnGameStarted;
-		public event EventHandler<string> OnGameStartFailed;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		private int _gameIndex = -1;
-		private DmdDimensions _dmd;
+		public delegate void DisplayHandler(int index,
+											PinMameDisplayLayout displayLayout,
+											byte[] frame);
+
+		public delegate void RegisterDisplayEventHandler(object sender,
+														 EventArgs e,
+														 int index,
+														 PinMameDisplayLayout displayLayout);
+
+		public delegate void SolenoidEventHandler(object sender,
+												  EventArgs e,
+											  	  int solenoid,
+												  bool isActive);
+
+		public event EventHandler OnGameStarted;
+		public event RegisterDisplayEventHandler OnRegisterDisplay;
+		public event SolenoidEventHandler OnSolenoid;
+		public event EventHandler OnGameEnded;
+
+		private PinMameApi.PinmameConfig _config;
 		private byte[] _frame;
 		private int[] _changedLamps;
 		private int[] _changedSolenoids;
 		private int[] _changedGIs;
-		private bool _isRunning;
-
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private static PinMame _instance;
 
 		/// <summary>
 		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
-
 		public static PinMameGame[] GetGames() {
+			Logger.Info("GetGames");
+
 			Dictionary<string, PinMameGame> games = new Dictionary<string, PinMameGame>();
 
-			PinMameApi.GetGames((gameInfoStructPtr) =>
+			PinMameApi.PinmameGetGames((gamePtr) =>
 			{
-				PinMameApi.GameInfoStruct gameInfoStruct = (PinMameApi.GameInfoStruct)Marshal.PtrToStructure(gameInfoStructPtr, typeof(PinMameApi.GameInfoStruct));
+				PinMameApi.PinmameGame pinmameGame = (PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
 
-				if (string.IsNullOrEmpty(gameInfoStruct.cloneOf))
+				if (string.IsNullOrEmpty(pinmameGame.cloneOf))
 				{
-					games.Add(gameInfoStruct.name, new PinMameGame(gameInfoStruct)
+					games.Add(pinmameGame.name, new PinMameGame(pinmameGame)
 					{
 						clones = Array.Empty<PinMameGame>()
 					}); 
 				}
 			});
 
-			PinMameApi.GetGames((gameInfoStructPtr) =>
+			PinMameApi.PinmameGetGames((gamePtr) =>
 			{
-				PinMameApi.GameInfoStruct gameInfoStruct = (PinMameApi.GameInfoStruct)Marshal.PtrToStructure(gameInfoStructPtr, typeof(PinMameApi.GameInfoStruct));
+				PinMameApi.PinmameGame pinmameGame = (PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
 
-				if (!string.IsNullOrEmpty(gameInfoStruct.cloneOf))
+				if (!string.IsNullOrEmpty(pinmameGame.cloneOf))
 				{
-					if (games.TryGetValue(gameInfoStruct.cloneOf, out PinMameGame game))
+					if (games.TryGetValue(pinmameGame.cloneOf, out PinMameGame game))
 					{
-						game.addClone(new PinMameGame(gameInfoStruct));
+						game.addClone(new PinMameGame(pinmameGame));
 					}
 				}
 			});
 
-			return games.Values.OrderBy(game => game.description).ToArray();
+			PinMameGame[] array = games.Values.OrderBy(game => game.description).ToArray();
+
+			Logger.Info("GetGames - total={0}", array.Length);
+
+			return array;
 		}
 
 		/// <summary>
@@ -116,7 +132,8 @@ namespace PinMame
 
 		private PinMame(int sampleRate, string vpmPath)
 		{
-                       
+			Logger.Info("PinMame - sampleRate={0}, vpmPath={1}", vpmPath);
+
 			var path = vpmPath ?? GetVpmPath();
 			if (path == null)
 			{
@@ -127,8 +144,47 @@ namespace PinMame
 				throw new InvalidOperationException($"Could not find VPM path {path} does not exist.");
 			}
 
-			PinMameApi.SetVPMPath(path + Path.DirectorySeparatorChar);
-			PinMameApi.SetSampleRate(sampleRate);
+			_config = new PinMameApi.PinmameConfig {
+				sampleRate = 48000,
+				vpmPath = path + Path.DirectorySeparatorChar,
+				onStateChange = OnStateChangeCallback,
+				onSolenoid = OnSolenoidCallback,
+			};
+
+			PinMameApi.PinmameSetConfig(ref _config);
+		}
+
+		private void OnStateChangeCallback(int state)
+		{
+			Logger.Info("OnStateChangeCallback - state={0}, isActive={1}", state);
+
+			if (state == 1)
+			{
+				_changedLamps = new int[PinMameApi.PinmameGetMaxLamps() * 2];
+				_changedSolenoids = new int[PinMameApi.PinmameGetMaxSolenoids() * 2];
+				_changedGIs = new int[PinMameApi.PinmameGetMaxGIs() * 2];
+				_frame = new byte[128 * 32];
+
+				PinMameApi.PinmameGetDisplayLayouts((index, displayLayoutPtr) =>
+				{
+					PinMameApi.PinmameDisplayLayout displayLayout = (PinMameApi.PinmameDisplayLayout)Marshal.PtrToStructure(displayLayoutPtr, typeof(PinMameApi.PinmameDisplayLayout));
+
+					OnRegisterDisplay?.Invoke(this, EventArgs.Empty, index, new PinMameDisplayLayout(displayLayout));
+				});
+
+				OnGameStarted?.Invoke(this, EventArgs.Empty);
+			}
+			else
+			{
+				OnGameEnded?.Invoke(this, EventArgs.Empty);
+			}
+		}
+
+		private void OnSolenoidCallback(int solenoid, int isActive)
+		{
+			Logger.Info("OnSolenoidCallback - solenoid={0}, isActive={1}", solenoid, isActive);
+
+			OnSolenoid?.Invoke(this, EventArgs.Empty, solenoid, isActive == 1);
 		}
 
 		/// <summary>
@@ -137,110 +193,80 @@ namespace PinMame
 		/// When the game has successfully started, the `GameStarted` event is triggered.
 		/// </summary>
 		/// <param name="gameName">Name of the game, e.g. "tz_94h"</param>
-		/// <param name="timeout">Timeout in milliseconds to wait for game to start</param>
-		/// <param name="showConsole">If true, open PinMAME console</param>
 		/// <exception cref="InvalidOperationException">If there is already a game running.</exception>
 		/// <exception cref="ArgumentException">If the game name is invalid.</exception>
-		public void StartGame(string gameName, int timeout = 5000, bool showConsole = false)
+		public void StartGame(string gameName)
 		{
-			if (_isRunning)
+			Logger.Info("StartGame");
+
+			PinMameApi.PinmameStatus status = PinMameApi.PinmameRun(gameName);
+
+			if (status != PinMameApi.PinmameStatus.OK)
 			{
-				throw new InvalidOperationException("Game is running, must stop first.");
+				throw new InvalidOperationException("Unable to start game, status=" + status);
 			}
+		}
 
-			Logger.Info("StartThreadedGame {0}", showConsole);
-
-			_gameIndex = PinMameApi.StartThreadedGame(gameName, showConsole);
-
-			if (_gameIndex < 0)
+		/// <summary>
+		/// GetDisplays
+		/// </summary>
+		public void GetDisplays(DisplayHandler callback)
+		{
+			PinMameApi.PinmameGetDisplays(_frame, (index, displayLayoutPtr) =>
 			{
-				throw new ArgumentException("Unknown game \"" + gameName + "\".");
-			}
+				PinMameApi.PinmameDisplayLayout displayLayout = (PinMameApi.PinmameDisplayLayout)Marshal.PtrToStructure(displayLayoutPtr, typeof(PinMameApi.PinmameDisplayLayout));
 
-			// start game async, and notify via event
-			Task.Run(() =>
-			{
-				const int sleep = 10;
-				var n = timeout / sleep;
-				var i = 0;
-				while (i++ < n && !PinMameApi.IsGameReady())
-				{
-					Thread.Sleep(sleep);
-				}
-
-				if (!PinMameApi.IsGameReady())
-				{
-					Logger.Info("Timed out waiting");
-
-					OnGameStartFailed?.Invoke(this, "Timed out waiting for game to start.");
-					return;
-				}
-				OnGameStarted?.Invoke(this, EventArgs.Empty);
-
-				_isRunning = true;
-				_dmd = GetDmdDimensions();
-
-				Logger.Info("DMD {0} {1}", _dmd.Width, _dmd.Height);
-
-				_frame = new byte[_dmd.Width * _dmd.Height];
-				_changedLamps = new int[GetMaxLamps() * 2];
-				_changedSolenoids = new int[GetMaxSolenoids() * 2];
-				_changedGIs = new int[GetMaxGIs() * 2];
+				callback(index, new PinMameDisplayLayout(displayLayout), _frame);
 			});
 		}
 
-		public void StopGame()
-		{
-			Logger.Info("StopGame");
-
-			_isRunning = false;
-			PinMameApi.StopThreadedGame(true);
-		}
-
+		/// <summary>
+		/// Resets a game.
+		/// </summary>
 		public void ResetGame()
 		{
 			Logger.Info("ResetGame");
 
-			PinMameApi.ResetGame();
+			PinMameApi.PinmameReset();
 		}
 
 		/// <summary>
-		/// Returns the dimensions of the DMD in pixels.
+		/// Stops a game.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">If there is no game running.</exception>
-		/// <returns>Dimensions</returns>
-		public DmdDimensions GetDmdDimensions()
+		public void StopGame()
 		{
-			AssertRunningGame();
-			return new DmdDimensions(PinMameApi.GetRawDMDWidth(), PinMameApi.GetRawDMDHeight());
+			Logger.Info("StopGame");
+
+			PinMameApi.PinmameStop();
 		}
 
-		/// <summary>
-		/// Returns whether the DMD changed since the pixels were last
-		/// retrieved.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">If there is no game running.</exception>
-		/// <returns>True if DMD changed, false otherwise.</returns>
-		public bool NeedsDmdUpdate()
+		public bool IsRunning()
 		{
-			AssertRunningGame();
-			return PinMameApi.NeedsDMDUpdate();
+			return (PinMameApi.PinmameIsRunning() == 1);
 		}
 
-		/// <summary>
-		/// Returns the pixels of the DMD.
-		/// </summary>
-		/// <returns>Current DMD frame</returns>
-		/// <exception cref="InvalidOperationException">If there is no game running.</exception>
-		/// <exception cref="InvalidOperationException">If retrieving the pixels failed otherwise.</exception>
-		public byte[] GetDmdPixels()
+		public void Pause()
 		{
-			var res = PinMameApi.GetRawDMDPixels(_frame);
-			if (res < 0)
+			Logger.Info("Pause");
+
+			PinMameApi.PinmameStatus status = PinMameApi.PinmamePause(1);
+
+			if (status != PinMameApi.PinmameStatus.OK)
 			{
-				throw new InvalidOperationException($"Got {res} from GetRawDMDPixels().");
+				throw new InvalidOperationException("Unable to pause game, status=" + status);
 			}
-			return _frame;
+		}
+
+		public void Continue()
+		{
+			Logger.Info("Continue");
+
+			PinMameApi.PinmameStatus status = PinMameApi.PinmamePause(0);
+
+			if (status != PinMameApi.PinmameStatus.OK)
+			{
+				throw new InvalidOperationException("Unable to continue game, status=" + status);
+			}
 		}
 
 		/// <summary>
@@ -248,20 +274,20 @@ namespace PinMame
 		/// </summary>
 		/// <param name="slot">Slot number of the switch</param>
 		/// <returns>Value of the switch</returns>
-		public bool GetSwitch(int slot) => PinMameApi.GetSwitch(slot);
+		public bool GetSwitch(int slot) => PinMameApi.PinmameGetSwitch(slot) == 1;
 
 		/// <summary>
 		/// Sets the state of a given switch.
 		/// </summary>
 		/// <param name="slot">Slot number of the switch</param>
 		/// <param name="state">New value of the switch</param>
-		public void SetSwitch(int slot, bool state) => PinMameApi.SetSwitch(slot, state);
+		public void SetSwitch(int slot, bool state) => PinMameApi.PinmameSetSwitch(slot, state ? 1 : 0);
 
 		/// <summary>
 		/// Returns the maximal supported number of lamps.
 		/// </summary>
 		/// <returns>Number of lamps</returns>
-		public int GetMaxLamps() => PinMameApi.GetMaxLamps();
+		public int GetMaxLamps() => PinMameApi.PinmameGetMaxLamps();
 
 		/// <summary>
 		/// Returns an array of all changed lamps since the last call. <p/>
@@ -271,7 +297,7 @@ namespace PinMame
 		/// </summary>
 		public Span<int> GetChangedLamps()
 		{
-			var num = PinMameApi.GetChangedLamps(_changedLamps);
+			var num = PinMameApi.PinmameGetChangedLamps(_changedLamps);
 			return _changedLamps.AsSpan().Slice(0, num * 2);
 		}
 
@@ -279,7 +305,7 @@ namespace PinMame
 		/// Returns the maximal supported number of solenoids.
 		/// </summary>
 		/// <returns>Number of solenoids</returns>
-		public int GetMaxSolenoids() => PinMameApi.GetMaxSolenoids();
+		public int GetMaxSolenoids() => PinMameApi.PinmameGetMaxSolenoids();
 
 		/// <summary>
 		/// Returns an array of all changed solenoids since the last call. <p/>
@@ -289,7 +315,7 @@ namespace PinMame
 		/// </summary>
 		public Span<int> GetChangedSolenoids()
 		{
-			var num = PinMameApi.GetChangedSolenoids(_changedSolenoids);
+			var num = PinMameApi.PinmameGetChangedSolenoids(_changedSolenoids);
 			return _changedSolenoids.AsSpan().Slice(0, num * 2);
 		}
 
@@ -297,7 +323,7 @@ namespace PinMame
 		/// Returns the maximal supported number of GIs.
 		/// </summary>
 		/// <returns>Number of GIs</returns>
-		public int GetMaxGIs() => PinMameApi.GetMaxGIStrings();
+		public int GetMaxGIs() => PinMameApi.PinmameGetMaxGIs();
 
 		/// <summary>
 		/// Returns an array of all changed GIs since the last call. <p/>
@@ -307,16 +333,8 @@ namespace PinMame
 		/// </summary>
 		public Span<int> GetChangedGIs()
 		{
-			var num = PinMameApi.GetChangedGIs(_changedGIs);
+			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
 			return _changedGIs.AsSpan().Slice(0, num * 2);
-		}
-
-		private void AssertRunningGame()
-		{
-			if (!_isRunning)
-			{
-				throw new InvalidOperationException("Game must be running.");
-			}
 		}
 
 		private static string GetVpmPath()
@@ -364,25 +382,6 @@ namespace PinMame
 			}
 
 			return null;
-		}
-	}
-
-	public struct DmdDimensions
-	{
-		/// <summary>
-		/// Width in pixels
-		/// </summary>
-		public readonly int Width;
-
-		/// <summary>
-		/// Height in pixels
-		/// </summary>
-		public readonly int Height;
-
-		public DmdDimensions(int width, int height)
-		{
-			Width = width;
-			Height = height;
 		}
 	}
 }

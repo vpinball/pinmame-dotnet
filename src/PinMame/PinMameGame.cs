@@ -42,12 +42,12 @@ namespace PinMame
 		public string manufacturer;
 		public PinMameGame[] clones;
 
-		internal PinMameGame(PinMameApi.GameInfoStruct gameInfoStruct)
+		internal PinMameGame(PinMameApi.PinmameGame game)
 		{
-			name = gameInfoStruct.name;
-			description = gameInfoStruct.description;
-			year = gameInfoStruct.year;
-			manufacturer = gameInfoStruct.manufacturer;
+			name = game.name;
+			description = game.description;
+			year = game.year;
+			manufacturer = game.manufacturer;
 		}
 
 		internal void addClone(PinMameGame game)
