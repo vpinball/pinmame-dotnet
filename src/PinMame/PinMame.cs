@@ -54,19 +54,9 @@ namespace PinMame
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public delegate void DisplayHandler(int index,
-											PinMameDisplayLayout displayLayout,
-											byte[] frame);
-
-		public delegate void RegisterDisplayEventHandler(object sender,
-														 EventArgs e,
-														 int index,
-														 PinMameDisplayLayout displayLayout);
-
-		public delegate void SolenoidEventHandler(object sender,
-												  EventArgs e,
-											  	  int solenoid,
-												  bool isActive);
+		public delegate void DisplayHandler(int index, PinMameDisplayLayout displayLayout, byte[] frame);
+		public delegate void RegisterDisplayEventHandler(object sender, EventArgs e, int index, PinMameDisplayLayout displayLayout);
+		public delegate void SolenoidEventHandler(object sender, EventArgs e, int solenoid, bool isActive);
 
 		public event EventHandler OnGameStarted;
 		public event RegisterDisplayEventHandler OnRegisterDisplay;
@@ -240,10 +230,7 @@ namespace PinMame
 			PinMameApi.PinmameStop();
 		}
 
-		public bool IsRunning()
-		{
-			return (PinMameApi.PinmameIsRunning() == 1);
-		}
+		public bool IsRunning() => PinMameApi.PinmameIsRunning() == 1;
 
 		public void Pause()
 		{
