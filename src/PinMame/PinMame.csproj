@@ -43,6 +43,7 @@
   <!-- Include .NET Standard packages on Linux and macOS -->
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.0"/>
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\OSX\PinMame.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.0" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
