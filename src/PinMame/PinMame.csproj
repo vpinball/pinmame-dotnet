@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,52 +7,44 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Description>Cross platform .NET Wrapper of PinMAME</Description>
-    <AssemblyVersion>0.1.0</AssemblyVersion>
     <Authors>Jason Millard</Authors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackOnBuild>true</PackOnBuild>
     <Copyright>Copyright 2021</Copyright>
     <AssemblyName>PinMame</AssemblyName>
+    <AssemblyVersion>0.1.0</AssemblyVersion>
     <PackageId>PinMame</PackageId>
-    <PackagePrereleaseIdentifier>-preview.13</PackagePrereleaseIdentifier>
-    <PackageVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</PackageVersion>
+    <PackageVersion>0.1.0-preview.13</PackageVersion>
     <PackageProjectUrl>https://github.com/VisualPinball/pinmame-dotnet</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <InformationalVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</InformationalVersion>
   </PropertyGroup>
-
   <!-- Give an initial value based on the operating system where it's currently running on. -->
   <PropertyGroup Condition="'$(TargetOS)' == ''">
     <TargetOS Condition="$([MSBuild]::IsOSPlatform('Linux'))">Linux</TargetOS>
     <TargetOS Condition="$([MSBuild]::IsOSPlatform('OSX'))">OSX</TargetOS>
     <TargetOS Condition="$([MSBuild]::IsOSPlatform('Windows'))">Windows</TargetOS>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-    <PackageReference Include="System.Memory" Version="4.5.4" />
-    <PackageReference Include="NLog" Version="4.7.9" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0"/>
+    <PackageReference Include="System.Memory" Version="4.5.4"/>
+    <PackageReference Include="NLog" Version="4.7.9"/>
   </ItemGroup>
-
   <!-- Append target operating system to output path -->
   <PropertyGroup>
     <OutputPath>$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\$(TargetFramework)\$(TargetOS)</OutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Platform)\$(Configuration)\$(TargetFramework)\$(TargetOS)\</IntermediateOutputPath>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="Interop\Libraries.$(TargetOS).cs">
-        <Link>Interop\Libraries.cs</Link>
+      <Link>Interop\Libraries.cs</Link>
     </Compile>
   </ItemGroup>
-  
   <!-- Include .NET Standard packages on Linux and macOS -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.0" /> 
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.0"/>
   </ItemGroup>
-
   <ItemGroup>
-    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
   </ItemGroup>
-
 </Project>

@@ -1,0 +1,18 @@
+name: Publish
+on:
+  repository_dispatch:
+    types: [ release-complete ]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.client_payload.commitish }}
+      - run: |
+          cd src/PinMame
+          dotnet build -c Release /p:TargetOS=OSX
+          dotnet build -c Release /p:TargetOS=Linux
+          dotnet pack -c Release /p:TargetOS=Windows -o nupkg
+          nuget push PinMame.*.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
