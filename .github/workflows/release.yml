@@ -7,6 +7,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
+      nextVersion: ${{ steps.nextVersion.outputs.nextVersion }}
       nextTag: ${{ steps.nextVersion.outputs.nextTag }}
       commitish: ${{ steps.commit.outputs.commitish }}
     steps:
@@ -19,14 +20,15 @@ jobs:
           cd src/PinMame
           VERSION=$(npx semver -i prerelease $(xmlstarlet sel -t -v "//Project/PropertyGroup/PackageVersion" PinMame.csproj))
           xmlstarlet ed -L -u "//Project/PropertyGroup/PackageVersion" -v $VERSION PinMame.csproj
-          echo ::set-output name=nextTag::${VERSION}
+          echo ::set-output name=nextVersion::${VERSION}
+          echo ::set-output name=nextTag::"v${VERSION}"
       - name: Commit
         id: commit
         run: |
           git config user.name "github-actions"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/PinMame/PinMame.csproj
-          git commit -m "release: v${{ steps.nextVersion.outputs.nextTag }}."
+          git commit -m "release: ${{ steps.nextVersion.outputs.nextTag }}."
           git push
           commitish=$(git rev-parse HEAD)
           echo ::set-output name=commitish::${commitish}
@@ -51,5 +53,6 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           event-type: release-complete
           client-payload: '{ "run_id": "${{ github.run_id }}",
+            "nextVersion": "${{ needs.release.outputs.nextVersion }}",
             "nextTag": "${{ needs.release.outputs.nextTag }}",
             "commitish": "${{ needs.release.outputs.commitish }}" }'
