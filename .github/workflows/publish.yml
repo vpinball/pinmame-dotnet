@@ -15,4 +15,4 @@ jobs:
           dotnet build -c Release /p:TargetOS=OSX
           dotnet build -c Release /p:TargetOS=Linux
           dotnet pack -c Release /p:TargetOS=Windows -o nupkg
-          nuget push PinMame.*.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
+          nuget push nupkg/PinMame.*.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json

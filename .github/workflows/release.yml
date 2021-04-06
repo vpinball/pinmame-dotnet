@@ -7,6 +7,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
+      nextTag: ${{ steps.nextVersion.outputs.nextTag }}
       commitish: ${{ steps.commit.outputs.commitish }}
     steps:
       - uses: actions/checkout@v2
@@ -50,4 +51,5 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           event-type: release-complete
           client-payload: '{ "run_id": "${{ github.run_id }}",
+            "nextTag": "${{ needs.release.outputs.nextTag }}",
             "commitish": "${{ needs.release.outputs.commitish }}" }'
