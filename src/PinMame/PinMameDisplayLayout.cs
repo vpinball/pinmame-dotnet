@@ -33,28 +33,6 @@ namespace PinMame
 {
 	using Internal;
 
-	public enum PinMameDisplayType
-	{
-		SEG16 = PinMameApi.PinmameDisplayType.SEG16,     // 16 segments
-		SEG16R = PinMameApi.PinmameDisplayType.SEG16R,   // 16 segments with comma and period reversed
-		SEG10 = PinMameApi.PinmameDisplayType.SEG10,     // 9  segments and comma
-		SEG9 = PinMameApi.PinmameDisplayType.SEG9,       // 9  segments
-		SEG8 = PinMameApi.PinmameDisplayType.SEG8,       // 7  segments and comma
-		SEG8D = PinMameApi.PinmameDisplayType.SEG8D,     // 7  segments and period
-		SEG7 = PinMameApi.PinmameDisplayType.SEG7,       // 7  segments
-		SEG87 = PinMameApi.PinmameDisplayType.SEG87,     // 7  segments, comma every three
-		SEG87F = PinMameApi.PinmameDisplayType.SEG87F,   // 7  segments, forced comma every three
-		SEG98 = PinMameApi.PinmameDisplayType.SEG98,     // 9  segments, comma every three
-		SEG98F = PinMameApi.PinmameDisplayType.SEG98F,   // 9  segments, forced comma every three
-		SEG7S = PinMameApi.PinmameDisplayType.SEG7S,     // 7  segments, small
-		SEG7SC = PinMameApi.PinmameDisplayType.SEG7SC,   // 7  segments, small, with comma
-		SEG16S = PinMameApi.PinmameDisplayType.SEG16S,   // 16 segments with split top and bottom line
-		DMD = PinMameApi.PinmameDisplayType.DMD,         // DMD Display
-		VIDEO = PinMameApi.PinmameDisplayType.VIDEO,     // VIDEO Display
-		SEG16N = PinMameApi.PinmameDisplayType.SEG16N,   // 16 segments without commas
-		SEG16D = PinMameApi.PinmameDisplayType.SEG16D    // 16 segments with periods only
-	}
-
 	public struct PinMameDisplayLayout
 	{
 		public PinMameDisplayType type;
@@ -63,6 +41,7 @@ namespace PinMame
 		public int length;
 		public int height;
 		public int width;
+		public int depth;
 
 		internal PinMameDisplayLayout(PinMameApi.PinmameDisplayLayout displayLayout)
 		{
@@ -72,6 +51,7 @@ namespace PinMame
 			length = displayLayout.length;
 			height = displayLayout.height;
 			width = displayLayout.width;
+			depth = displayLayout.depth;
 		}
 	}
 }
