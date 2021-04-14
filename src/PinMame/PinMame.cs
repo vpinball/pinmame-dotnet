@@ -54,19 +54,16 @@ namespace PinMame
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public delegate void DisplayHandler(int index, PinMameDisplayLayout displayLayout, byte[] frame);
-		public delegate void RegisterDisplayEventHandler(object sender, EventArgs e, int index, PinMameDisplayLayout displayLayout);
+		public delegate void DisplayUpdateEventHandler(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
 		public delegate void SolenoidEventHandler(object sender, EventArgs e, int solenoid, bool isActive);
 
 		public event EventHandler OnGameStarted;
-		public event RegisterDisplayEventHandler OnRegisterDisplay;
+		public event DisplayUpdateEventHandler OnDisplayUpdate;
 		public event SolenoidEventHandler OnSolenoid;
 		public event EventHandler OnGameEnded;
 
 		private PinMameApi.PinmameConfig _config;
-		private byte[] _frame;
 		private int[] _changedLamps;
-		private int[] _changedSolenoids;
 		private int[] _changedGIs;
 
 		private static PinMame _instance;
@@ -139,6 +136,7 @@ namespace PinMame
 				vpmPath = path + Path.DirectorySeparatorChar,
 				onStateChange = OnStateChangeCallback,
 				onSolenoid = OnSolenoidCallback,
+				onDisplayUpdate = OnDisplayUpdateCallback
 			};
 
 			PinMameApi.PinmameSetConfig(ref _config);
@@ -151,23 +149,21 @@ namespace PinMame
 			if (state == 1)
 			{
 				_changedLamps = new int[PinMameApi.PinmameGetMaxLamps() * 2];
-				_changedSolenoids = new int[PinMameApi.PinmameGetMaxSolenoids() * 2];
 				_changedGIs = new int[PinMameApi.PinmameGetMaxGIs() * 2];
-				_frame = new byte[128 * 32];
-
-				PinMameApi.PinmameGetDisplayLayouts((index, displayLayoutPtr) =>
-				{
-					PinMameApi.PinmameDisplayLayout displayLayout = (PinMameApi.PinmameDisplayLayout)Marshal.PtrToStructure(displayLayoutPtr, typeof(PinMameApi.PinmameDisplayLayout));
-
-					OnRegisterDisplay?.Invoke(this, EventArgs.Empty, index, new PinMameDisplayLayout(displayLayout));
-				});
-
+				
 				OnGameStarted?.Invoke(this, EventArgs.Empty);
 			}
 			else
 			{
 				OnGameEnded?.Invoke(this, EventArgs.Empty);
 			}
+		}
+
+		private void OnDisplayUpdateCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayout)
+		{
+			Logger.Info("OnDisplayUpdateCallback - index={0}", index);
+
+			OnDisplayUpdate?.Invoke(this, EventArgs.Empty, index, framePtr, new PinMameDisplayLayout(displayLayout));
 		}
 
 		private void OnSolenoidCallback(int solenoid, int isActive)
@@ -195,19 +191,6 @@ namespace PinMame
 			{
 				throw new InvalidOperationException("Unable to start game, status=" + status);
 			}
-		}
-
-		/// <summary>
-		/// GetDisplays
-		/// </summary>
-		public void GetDisplays(DisplayHandler callback)
-		{
-			PinMameApi.PinmameGetDisplays(_frame, (index, displayLayoutPtr) =>
-			{
-				PinMameApi.PinmameDisplayLayout displayLayout = (PinMameApi.PinmameDisplayLayout)Marshal.PtrToStructure(displayLayoutPtr, typeof(PinMameApi.PinmameDisplayLayout));
-
-				callback(index, new PinMameDisplayLayout(displayLayout), _frame);
-			});
 		}
 
 		/// <summary>
@@ -257,6 +240,12 @@ namespace PinMame
 		}
 
 		/// <summary>
+		/// Returns the hardware generation
+		/// </summary>
+		/// <returns>Value of the hardware generation</returns>
+		public PinMameHardwareGen GetHardwareGen() => (PinMameHardwareGen)PinMameApi.PinmameGetHardwareGen();
+
+		/// <summary>
 		/// Returns the state of a given switch.
 		/// </summary>
 		/// <param name="slot">Slot number of the switch</param>
@@ -286,24 +275,6 @@ namespace PinMame
 		{
 			var num = PinMameApi.PinmameGetChangedLamps(_changedLamps);
 			return _changedLamps.AsSpan().Slice(0, num * 2);
-		}
-
-		/// <summary>
-		/// Returns the maximal supported number of solenoids.
-		/// </summary>
-		/// <returns>Number of solenoids</returns>
-		public int GetMaxSolenoids() => PinMameApi.PinmameGetMaxSolenoids();
-
-		/// <summary>
-		/// Returns an array of all changed solenoids since the last call. <p/>
-		///
-		/// The returned array contains pairs, where the first element is the
-		/// solenoid number, and the second element the value.
-		/// </summary>
-		public Span<int> GetChangedSolenoids()
-		{
-			var num = PinMameApi.PinmameGetChangedSolenoids(_changedSolenoids);
-			return _changedSolenoids.AsSpan().Slice(0, num * 2);
 		}
 
 		/// <summary>
