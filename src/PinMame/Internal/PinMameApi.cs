@@ -205,9 +205,12 @@ namespace PinMame.Internal
 		internal static extern void PinmameStop();
 		#endregion
 
-		#region Game related functions
+		#region Hardware related functions
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern PinmameHardwareGen PinmameGetHardwareGen();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int PinmameGetDisplayCount();
 		#endregion
 
 		#region Switch related functions

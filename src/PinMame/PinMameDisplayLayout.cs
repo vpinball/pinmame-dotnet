@@ -58,5 +58,8 @@ namespace PinMame
 			type == PinMameDisplayType.DMD 
 			|| type == (PinMameDisplayType.DMD | PinMameDisplayType.DMDNOAA)
 			|| type == (PinMameDisplayType.DMD | PinMameDisplayType.DMDNOAA | PinMameDisplayType.NODISP);
+
+		public override string ToString() =>
+			$"type={type}, top={top}, left={left}, length={length}, width={width}, height={height}, depth={depth}";
 	}
 }

@@ -8,8 +8,8 @@ Add the `PinMame` package references to your project file:
 
 ```xml
   <ItemGroup>
-    <PackageReference Include="PinMame" Version="0.1.0-preview.19" />
-    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.191" />
+    <PackageReference Include="PinMame" Version="0.1.0-preview.20" />
+    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.193" />
   </ItemGroup>
 ```
 
@@ -32,7 +32,7 @@ You can add event handlers for `OnGameStarted`, `OnDisplayUpdated`, `OnSolenoidU
 To process display data, in your `OnDisplayUpdated` callback:
 
 ```
-	void OnDisplayUpdate(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout) 
+	void OnDisplayUpdated(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout) 
 	{
 		if (displayLayout.IsDmd)
 		{
