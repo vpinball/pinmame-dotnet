@@ -8,8 +8,8 @@ Add the `PinMame` package references to your project file:
 
 ```xml
   <ItemGroup>
-    <PackageReference Include="PinMame" Version="0.1.0-preview.18" />
-    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.189" />
+    <PackageReference Include="PinMame" Version="0.1.0-preview.19" />
+    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.191" />
   </ItemGroup>
 ```
 
@@ -27,14 +27,14 @@ using PinMame;
 	_pinMame.StartGame("mm_109c");
 ```
 
-You can add event handlers for `OnGameStarted`, `OnDisplayUpdate`, `OnSolenoid`, and `OnGameEnded`.
+You can add event handlers for `OnGameStarted`, `OnDisplayUpdated`, `OnSolenoidUpdated`, and `OnGameEnded`.
 
-To process display data, in your `OnDisplayUpdate` callback: 
+To process display data, in your `OnDisplayUpdated` callback:
 
 ```
 	void OnDisplayUpdate(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout) 
 	{
-		if ((displayLayout.type & PinMameDisplayType.DMD) > 0)
+		if (displayLayout.IsDmd)
 		{
 			// Handle DMD displays (framePtr is byte*)
 		}

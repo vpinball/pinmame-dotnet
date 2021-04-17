@@ -1,4 +1,4 @@
-// pinmame-dotnet
+﻿// pinmame-dotnet
 // Copyright (C) 1999-2021 PinMAME development team and contributors
 //
 // Redistribution and use in source and binary forms, with or without
@@ -54,12 +54,12 @@ namespace PinMame
 	{
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		public delegate void DisplayUpdateEventHandler(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
-		public delegate void SolenoidEventHandler(object sender, EventArgs e, int solenoid, bool isActive);
+		public delegate void OnDisplayUpdatedEventHandler(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
+		public delegate void OnSolenoidUpdatedEventHandler(object sender, EventArgs e, int solenoid, bool isActive);
 
 		public event EventHandler OnGameStarted;
-		public event DisplayUpdateEventHandler OnDisplayUpdate;
-		public event SolenoidEventHandler OnSolenoid;
+		public event OnDisplayUpdatedEventHandler OnDisplayUpdated;
+		public event OnSolenoidUpdatedEventHandler OnSolenoidUpdated;
 		public event EventHandler OnGameEnded;
 
 		private PinMameApi.PinmameConfig _config;
@@ -134,17 +134,17 @@ namespace PinMame
 			_config = new PinMameApi.PinmameConfig {
 				sampleRate = 48000,
 				vpmPath = path + Path.DirectorySeparatorChar,
-				onStateChange = OnStateChangeCallback,
-				onSolenoid = OnSolenoidCallback,
-				onDisplayUpdate = OnDisplayUpdateCallback
+				onStateUpdated = OnStateUpdatedCallback,
+				onDisplayUpdated = OnDisplayUpdatedCallback,
+				onSolenoidUpdated = OnSolenoidUpdatedCallback
 			};
 
 			PinMameApi.PinmameSetConfig(ref _config);
 		}
 
-		private void OnStateChangeCallback(int state)
+		private void OnStateUpdatedCallback(int state)
 		{
-			Logger.Info("OnStateChangeCallback - state={0}, isActive={1}", state);
+			Logger.Info("OnStateUpdatedCallback - state={0}, isActive={1}", state);
 
 			if (state == 1)
 			{
@@ -159,18 +159,18 @@ namespace PinMame
 			}
 		}
 
-		private void OnDisplayUpdateCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayout)
+		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayout)
 		{
-			Logger.Info("OnDisplayUpdateCallback - index={0}", index);
+			Logger.Info("OnDisplayUpdatedCallback - index={0}", index);
 
-			OnDisplayUpdate?.Invoke(this, EventArgs.Empty, index, framePtr, new PinMameDisplayLayout(displayLayout));
+			OnDisplayUpdated?.Invoke(this, EventArgs.Empty, index, framePtr, new PinMameDisplayLayout(displayLayout));
 		}
 
-		private void OnSolenoidCallback(int solenoid, int isActive)
+		private void OnSolenoidUpdatedCallback(int solenoid, int isActive)
 		{
-			Logger.Info("OnSolenoidCallback - solenoid={0}, isActive={1}", solenoid, isActive);
+			Logger.Info("OnSolenoidUpdatedCallback - solenoid={0}, isActive={1}", solenoid, isActive);
 
-			OnSolenoid?.Invoke(this, EventArgs.Empty, solenoid, isActive == 1);
+			OnSolenoidUpdated?.Invoke(this, EventArgs.Empty, solenoid, isActive == 1);
 		}
 
 		/// <summary>

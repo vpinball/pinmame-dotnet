@@ -39,8 +39,8 @@ namespace PinMame
 		public int top;
 		public int left;
 		public int length;
-		public int height;
 		public int width;
+		public int height;
 		public int depth;
 
 		internal PinMameDisplayLayout(PinMameApi.PinmameDisplayLayout displayLayout)
@@ -49,9 +49,14 @@ namespace PinMame
 			top = displayLayout.top;
 			left = displayLayout.left;
 			length = displayLayout.length;
-			height = displayLayout.height;
 			width = displayLayout.width;
+			height = displayLayout.height;
 			depth = displayLayout.depth;
 		}
+
+		public bool IsDmd =>
+			type == PinMameDisplayType.DMD 
+			|| type == (PinMameDisplayType.DMD | PinMameDisplayType.DMDNOAA)
+			|| type == (PinMameDisplayType.DMD | PinMameDisplayType.DMDNOAA | PinMameDisplayType.NODISP);
 	}
 }

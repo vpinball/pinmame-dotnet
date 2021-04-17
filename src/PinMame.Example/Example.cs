@@ -53,7 +53,7 @@ namespace PinMame
 			}
 		}
 
-		static void DumpDmd(int index, PinMameDisplayLayout displayLayout, IntPtr framePtr)
+		static void DumpDmd(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
 		{
 			Dictionary<byte, string> map;
 
@@ -65,7 +65,7 @@ namespace PinMame
 					{ 0x14, "░" },
 					{ 0x21, "▒" },
 					{ 0x43, "▓" },
-					{ 0x64, "▓" },
+					{ 0x64, "▓" }
 				};
 			}
 			else
@@ -93,7 +93,7 @@ namespace PinMame
 						{ 0x4B, "▓" },
 						{ 0x50, "▓" },
 						{ 0x5A, "▓" },
-						{ 0x64, "▓" },
+						{ 0x64, "▓" }
 					};
 				}
 				else
@@ -119,7 +119,7 @@ namespace PinMame
 						{ 0x55, "▓" },
 						{ 0x5A, "▓" },
 						{ 0x5F, "▓" },
-						{ 0x64, "▓" },
+						{ 0x64, "▓" }
 					};
 				}
 			}
@@ -143,7 +143,7 @@ namespace PinMame
 			}
 		}
 
-		static void DumpAlpha(int index, PinMameDisplayLayout displayLayout, IntPtr framePtr)
+		static void DumpAlpha(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
 		{
 			unsafe
 			{
@@ -159,7 +159,7 @@ namespace PinMame
 						"E ONM C  " ,
 						"EO N MC P" ,
 						" DDDDD  H" ,
-						"       H " ,
+						"       H " 
 					};
 
 					for (var row = 0; row < 8; row++)
@@ -180,9 +180,14 @@ namespace PinMame
 			}
 		}
 
-		static void OnDisplayUpdate(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
+		static void OnGameStarted(object sender, EventArgs e)
 		{
-			Console.WriteLine("OnDisplayUpdate: index={0}, type={1}, top={2}, left={3}, length={4}, height={5}, width={6}, depth={7}",
+			Console.WriteLine("OnGameStarted");
+		}
+
+		static void OnDisplayUpdated(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
+		{
+			Console.WriteLine("OnDisplayUpdated: index={0}, type={1}, top={2}, left={3}, length={4}, height={5}, width={6}, depth={7}",
 				index,
 				displayLayout.type,
 				displayLayout.top,
@@ -192,26 +197,21 @@ namespace PinMame
 				displayLayout.width,
 				displayLayout.depth);
 
-			if ((displayLayout.type & PinMameDisplayType.DMD) > 0)
+			if (displayLayout.IsDmd)
 			{
-				DumpDmd(index, displayLayout, framePtr);
+				DumpDmd(index, framePtr, displayLayout);
 			}
 			else
 			{
-				DumpAlpha(index, displayLayout, framePtr);
+				DumpAlpha(index, framePtr, displayLayout);
 			}
 		}
 
-		static void OnSolenoid(object sender, EventArgs e, int solenoid, bool isActive)
+		static void OnSolenoidUpdated(object sender, EventArgs e, int solenoid, bool isActive)
 		{
-			Console.WriteLine("OnSolenoid: solenoid={0}, isActive={1}",
+			Console.WriteLine("OnSolenoidUpdated: solenoid={0}, isActive={1}",
 				solenoid,
 				isActive);
-		}
-
-		static void OnGameStarted(object sender, EventArgs e)
-		{
-			Console.WriteLine("OnGameStarted");
 		}
 
 		static void OnGameEnded(object sender, EventArgs e)
@@ -228,13 +228,13 @@ namespace PinMame
 			_pinMame = PinMame.Instance();
 
 			_pinMame.OnGameStarted += OnGameStarted;
-			_pinMame.OnDisplayUpdate += OnDisplayUpdate;
-			_pinMame.OnSolenoid += OnSolenoid;
+			_pinMame.OnDisplayUpdated += OnDisplayUpdated;
+			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
 
-			_pinMame.StartGame("tf_180h");
+			//_pinMame.StartGame("flashgdn");
 			//_pinMame.StartGame("mm_109c");
-			//_pinMame.StartGame("fh_906h");
+			_pinMame.StartGame("fh_906h");
 
 			_isRunning = true;
 
