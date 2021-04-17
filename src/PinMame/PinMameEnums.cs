@@ -35,24 +35,37 @@ namespace PinMame
 
 	public enum PinMameDisplayType : int
 	{
-		SEG16 = PinMameApi.PinmameDisplayType.SEG16,   // 16 segments
-		SEG16R = PinMameApi.PinmameDisplayType.SEG16R, // 16 segments with comma and period reversed
-		SEG10 = PinMameApi.PinmameDisplayType.SEG10,   // 9 segments and comma
-		SEG9 = PinMameApi.PinmameDisplayType.SEG9,     // 9 segments
-		SEG8 = PinMameApi.PinmameDisplayType.SEG8,     // 7 segments and comma
-		SEG8D = PinMameApi.PinmameDisplayType.SEG8D,   // 7 segments and period
-		SEG7 = PinMameApi.PinmameDisplayType.SEG7,     // 7 segments
-		SEG87 = PinMameApi.PinmameDisplayType.SEG87,   // 7 segments, comma every three
-		SEG87F = PinMameApi.PinmameDisplayType.SEG87F, // 7 segments, forced comma every three
-		SEG98 = PinMameApi.PinmameDisplayType.SEG98,   // 9 segments, comma every three
-		SEG98F = PinMameApi.PinmameDisplayType.SEG98F, // 9 segments, forced comma every three
-		SEG7S = PinMameApi.PinmameDisplayType.SEG7S,   // 7 segments, small
-		SEG7SC = PinMameApi.PinmameDisplayType.SEG7SC, // 7 segments, small, with comma
-		SEG16S = PinMameApi.PinmameDisplayType.SEG16S, // 16 segments with split top and bottom line
-		DMD = PinMameApi.PinmameDisplayType.DMD,       // DMD Display
-		VIDEO = PinMameApi.PinmameDisplayType.VIDEO,   // VIDEO Display
-		SEG16N = PinMameApi.PinmameDisplayType.SEG16N, // 16 segments without commas
-		SEG16D = PinMameApi.PinmameDisplayType.SEG16D  // 16 segments with periods only
+		SEG16 = PinMameApi.PinmameDisplayType.SEG16,       // 16 segments
+		SEG16R = PinMameApi.PinmameDisplayType.SEG16R,     // 16 segments with comma and period reversed
+		SEG10 = PinMameApi.PinmameDisplayType.SEG10,       // 9 segments and comma
+		SEG9 = PinMameApi.PinmameDisplayType.SEG9,         // 9 segments
+		SEG8 = PinMameApi.PinmameDisplayType.SEG8,         // 7 segments and comma
+		SEG8D = PinMameApi.PinmameDisplayType.SEG8D,       // 7 segments and period
+		SEG7 = PinMameApi.PinmameDisplayType.SEG7,         // 7 segments
+		SEG87 = PinMameApi.PinmameDisplayType.SEG87,       // 7 segments, comma every three
+		SEG87F = PinMameApi.PinmameDisplayType.SEG87F,     // 7 segments, forced comma every three
+		SEG98 = PinMameApi.PinmameDisplayType.SEG98,       // 9 segments, comma every three
+		SEG98F = PinMameApi.PinmameDisplayType.SEG98F,     // 9 segments, forced comma every three
+		SEG7S = PinMameApi.PinmameDisplayType.SEG7S,       // 7 segments, small
+		SEG7SC = PinMameApi.PinmameDisplayType.SEG7SC,     // 7 segments, small, with comma
+		SEG16S = PinMameApi.PinmameDisplayType.SEG16S,     // 16 segments with split top and bottom line
+		DMD = PinMameApi.PinmameDisplayType.DMD,           // DMD Display
+		VIDEO = PinMameApi.PinmameDisplayType.VIDEO,       // VIDEO Display
+		SEG16N = PinMameApi.PinmameDisplayType.SEG16N,     // 16 segments without commas
+		SEG16D = PinMameApi.PinmameDisplayType.SEG16D,     // 16 segments with periods only,
+		SEGALL = PinMameApi.PinmameDisplayType.SEGALL,     // maximum segment definition number
+		IMPORT = PinMameApi.PinmameDisplayType.IMPORT,     // Link to another display layout
+		SEGMASK = PinMameApi.PinmameDisplayType.SEGMASK,   // Note that CORE_IMPORT must be part of the segmask as well!
+		SEGHIBIT = PinMameApi.PinmameDisplayType.SEGHIBIT,
+		SEGREV = PinMameApi.PinmameDisplayType.SEGREV,
+		DMDNOAA = PinMameApi.PinmameDisplayType.DMDNOAA,
+		NODISP = PinMameApi.PinmameDisplayType.NODISP,
+		SEG8H = PinMameApi.PinmameDisplayType.SEG8H,
+		SEG7H = PinMameApi.PinmameDisplayType.SEG7H,
+		SEG87H = PinMameApi.PinmameDisplayType.SEG87H,
+		SEG87FH = PinMameApi.PinmameDisplayType.SEG87FH,
+		SEG7SH = PinMameApi.PinmameDisplayType.SEG7SH,
+		SEG7SCH = PinMameApi.PinmameDisplayType.SEG7SCH
 	}
 
 	public enum PinMameHardwareGen : ulong

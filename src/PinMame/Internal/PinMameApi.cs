@@ -47,24 +47,37 @@ namespace PinMame.Internal
 
 		internal enum PinmameDisplayType : int
 		{
-			SEG16 = 0,   // 16 segments
-			SEG16R = 1,  // 16 segments with comma and period reversed
-			SEG10 = 2,   // 9 segments and comma
-			SEG9 = 3,    // 9 segments
-			SEG8 = 4,    // 7 segments and comma
-			SEG8D = 5,   // 7 segments and period
-			SEG7 = 6,    // 7 segments
-			SEG87 = 7,   // 7 segments, comma every three
-			SEG87F = 8,  // 7 segments, forced comma every three
-			SEG98 = 9,   // 9 segments, comma every three
-			SEG98F = 10, // 9 segments, forced comma every three
-			SEG7S = 11,  // 7 segments, small
-			SEG7SC = 12, // 7 segments, small, with comma
-			SEG16S = 13, // 16 segments with split top and bottom line
-			DMD = 14,    // DMD Display
-			VIDEO = 15,  // VIDEO Display
-			SEG16N = 16, // 16 segments without commas
-			SEG16D = 17  // 16 segments with periods only
+			SEG16 = 0,                  // 16 segments
+			SEG16R = 1,                 // 16 segments with comma and period reversed
+			SEG10 = 2,                  // 9 segments and comma
+			SEG9 = 3,                   // 9 segments
+			SEG8 = 4,                   // 7 segments and comma
+			SEG8D = 5,                  // 7 segments and period
+			SEG7 = 6,                   // 7 segments
+			SEG87 = 7,                  // 7 segments, comma every three
+			SEG87F = 8,                 // 7 segments, forced comma every three
+			SEG98 = 9,                  // 9 segments, comma every three
+			SEG98F = 10,                // 9 segments, forced comma every three
+			SEG7S = 11,                 // 7 segments, small
+			SEG7SC = 12,                // 7 segments, small, with comma
+			SEG16S = 13,                // 16 segments with split top and bottom line
+			DMD = 14,                   // DMD Display
+			VIDEO = 15,                 // VIDEO Display
+			SEG16N = 16,                // 16 segments without commas
+			SEG16D = 17,                // 16 segments with periods only
+			SEGALL = 0x1f,              // maximum segment definition number
+			IMPORT = 0x20,              // Link to another display layout
+			SEGMASK = 0x3f,             // Note that CORE_IMPORT must be part of the segmask as well!
+			SEGHIBIT = 0x40,
+			SEGREV = 0x80,
+			DMDNOAA = 0x100,
+			NODISP = 0x200,
+			SEG8H = SEG8 | SEGHIBIT,
+			SEG7H = SEG7 | SEGHIBIT,
+			SEG87H = SEG87 | SEGHIBIT,
+			SEG87FH = SEG87F| SEGHIBIT,
+			SEG7SH = SEG7S | SEGHIBIT,
+			SEG7SCH = SEG7SC| SEGHIBIT
 		}
 
 		internal enum PinmameHardwareGen : ulong
@@ -124,13 +137,13 @@ namespace PinMame.Internal
 			ALLS11 = 0x000008000ff00,      // All Sys11
 			ALLBY35 = 0x0000047e00000,     // All Bally35 and derivatives
 			ALLS80 = 0x0000600000000,      // All GTS80
-			ALLWS = 0x001c000000000,       // All Whitestar
+			ALLWS = 0x001c000000000        // All Whitestar
 		}
 
 		internal delegate void PinmameGameCallback(IntPtr gamePtr);
-		internal delegate void PinmameOnStateChangeCallback(int change);
-		internal delegate void PinmameOnSolenoidCallback(int solenoid, int isActive);
-		internal unsafe delegate void PinmameOnDisplayUpdateCallback(int index, IntPtr framePtr, ref PinmameDisplayLayout displayLayout);
+		internal delegate void PinmameOnStateUpdatedCallback(int change);
+		internal delegate void PinmameOnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinmameDisplayLayout displayLayout);
+		internal delegate void PinmameOnSolenoidUpdatedCallback(int solenoid, int isActive);
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		internal struct PinmameGame
@@ -148,9 +161,9 @@ namespace PinMame.Internal
 			internal int sampleRate;
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
 			internal string vpmPath;
-			internal PinmameOnStateChangeCallback onStateChange;
-			internal PinmameOnDisplayUpdateCallback onDisplayUpdate;
-			internal PinmameOnSolenoidCallback onSolenoid;
+			internal PinmameOnStateUpdatedCallback onStateUpdated;
+			internal PinmameOnDisplayUpdatedCallback onDisplayUpdated;
+			internal PinmameOnSolenoidUpdatedCallback onSolenoidUpdated;
 		};
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
