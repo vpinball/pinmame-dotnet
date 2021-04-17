@@ -32,11 +32,16 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using NLog;
+using Logger = NLog.Logger;
 
 namespace PinMame
 {
+
 	class Example
 	{
+		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		static PinMame _pinMame;
 		static bool _isRunning = false;
 
@@ -44,11 +49,11 @@ namespace PinMame
 		{
 			foreach (var game in PinMame.GetGames())
 			{
-				Console.WriteLine($"PARENT: name={game.name}, description={game.description}, year={game.year}, manufacturer={game.manufacturer}");
+				Logger.Info($"PARENT: name={game.name}, description={game.description}, year={game.year}, manufacturer={game.manufacturer}");
 
 				foreach (var clone in game.clones)
 				{
-					Console.WriteLine($"  CLONE: name={clone.name}, description={clone.description}, year={clone.year}, manufacturer={clone.manufacturer}");
+					Logger.Info($"  CLONE: name={clone.name}, description={clone.description}, year={clone.year}, manufacturer={clone.manufacturer}");
 				}
 			}
 		}
@@ -175,27 +180,18 @@ namespace PinMame
 						Console.SetCursorPosition(position * 10, index * 8 + row);
 						Console.Write(segments[row] + " ");
 					}
-
 				}
 			}
 		}
 
 		static void OnGameStarted(object sender, EventArgs e)
 		{
-			Console.WriteLine("OnGameStarted");
+			Logger.Info($"OnGameStarted: displayCount={_pinMame.GetDisplayCount()}");
 		}
 
 		static void OnDisplayUpdated(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
 		{
-			Console.WriteLine("OnDisplayUpdated: index={0}, type={1}, top={2}, left={3}, length={4}, height={5}, width={6}, depth={7}",
-				index,
-				displayLayout.type,
-				displayLayout.top,
-				displayLayout.left,
-				displayLayout.length,
-				displayLayout.height,
-				displayLayout.width,
-				displayLayout.depth);
+			Logger.Info($"OnDisplayUpdated: index={index}, displayLayout={displayLayout}");
 
 			if (displayLayout.IsDmd)
 			{
@@ -209,32 +205,39 @@ namespace PinMame
 
 		static void OnSolenoidUpdated(object sender, EventArgs e, int solenoid, bool isActive)
 		{
-			Console.WriteLine("OnSolenoidUpdated: solenoid={0}, isActive={1}",
-				solenoid,
-				isActive);
+			Logger.Info($"OnSolenoidUpdated: solenoid={solenoid}, isActive={isActive}");
 		}
 
 		static void OnGameEnded(object sender, EventArgs e)
 		{
-			Console.WriteLine("OnGameEnded");
+			Logger.Info("OnGameEnded");
 
 			_isRunning = false;
 		}
 
 		static void Main(string[] args)
 		{
-			DumpGames();
+			LogManager.Configuration = new NLog.Config.LoggingConfiguration();
+
+			var target = new NLog.Targets.ConsoleTarget("PinMame");
+
+			LogManager.Configuration.AddTarget(target);
+			LogManager.Configuration.AddRule(LogLevel.Info, LogLevel.Fatal, target);
+
+			LogManager.ReconfigExistingLoggers();
 
 			_pinMame = PinMame.Instance();
+
+			DumpGames();
 
 			_pinMame.OnGameStarted += OnGameStarted;
 			_pinMame.OnDisplayUpdated += OnDisplayUpdated;
 			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
 
-			//_pinMame.StartGame("flashgdn");
+			_pinMame.StartGame("mm_109c");
 			//_pinMame.StartGame("mm_109c");
-			_pinMame.StartGame("fh_906h");
+			//_pinMame.StartGame("fh_906h");
 
 			_isRunning = true;
 

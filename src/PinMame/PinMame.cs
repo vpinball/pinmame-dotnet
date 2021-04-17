@@ -35,11 +35,11 @@ namespace PinMame
 	using System.IO;
 	using System.Runtime.InteropServices;
 	using Registry = Microsoft.Win32.Registry;
-	using NLog;
-	using Logger = NLog.Logger;
 	using Internal;
 	using System.Collections.Generic;
 	using System.Linq;
+	using NLog;
+	using Logger = NLog.Logger;
 
 	/// <summary>
 	/// PinMAME, a pinball ROM emulator.
@@ -52,7 +52,7 @@ namespace PinMame
 
 	public class PinMame
 	{
-		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public delegate void OnDisplayUpdatedEventHandler(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
 		public delegate void OnSolenoidUpdatedEventHandler(object sender, EventArgs e, int solenoid, bool isActive);
@@ -103,7 +103,7 @@ namespace PinMame
 
 			PinMameGame[] array = games.Values.OrderBy(game => game.description).ToArray();
 
-			Logger.Info("GetGames - total={0}", array.Length);
+			Logger.Info($"GetGames - total={array.Length}");
 
 			return array;
 		}
@@ -119,7 +119,7 @@ namespace PinMame
 
 		private PinMame(int sampleRate, string vpmPath)
 		{
-			Logger.Info("PinMame - sampleRate={0}, vpmPath={1}", vpmPath);
+			Logger.Info($"PinMame - sampleRate={sampleRate}, vpmPath={vpmPath}");
 
 			var path = vpmPath ?? GetVpmPath();
 			if (path == null)
@@ -144,7 +144,7 @@ namespace PinMame
 
 		private void OnStateUpdatedCallback(int state)
 		{
-			Logger.Info("OnStateUpdatedCallback - state={0}, isActive={1}", state);
+			Logger.Debug($"OnStateUpdatedCallback - state={state}");
 
 			if (state == 1)
 			{
@@ -159,16 +159,18 @@ namespace PinMame
 			}
 		}
 
-		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayout)
+		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
 		{
-			Logger.Info("OnDisplayUpdatedCallback - index={0}", index);
+			var displayLayout = new PinMameDisplayLayout(displayLayoutRef);
 
-			OnDisplayUpdated?.Invoke(this, EventArgs.Empty, index, framePtr, new PinMameDisplayLayout(displayLayout));
+			Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayLayout={displayLayout}");
+
+			OnDisplayUpdated?.Invoke(this, EventArgs.Empty, index, framePtr, displayLayout);
 		}
 
 		private void OnSolenoidUpdatedCallback(int solenoid, int isActive)
 		{
-			Logger.Info("OnSolenoidUpdatedCallback - solenoid={0}, isActive={1}", solenoid, isActive);
+			Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
 
 			OnSolenoidUpdated?.Invoke(this, EventArgs.Empty, solenoid, isActive == 1);
 		}
@@ -189,7 +191,7 @@ namespace PinMame
 
 			if (status != PinMameApi.PinmameStatus.OK)
 			{
-				throw new InvalidOperationException("Unable to start game, status=" + status);
+				throw new InvalidOperationException($"Unable to start game, status={status}");
 			}
 		}
 
@@ -223,7 +225,7 @@ namespace PinMame
 
 			if (status != PinMameApi.PinmameStatus.OK)
 			{
-				throw new InvalidOperationException("Unable to pause game, status=" + status);
+				throw new InvalidOperationException($"Unable to pause game, status={status}");
 			}
 		}
 
@@ -235,7 +237,7 @@ namespace PinMame
 
 			if (status != PinMameApi.PinmameStatus.OK)
 			{
-				throw new InvalidOperationException("Unable to continue game, status=" + status);
+				throw new InvalidOperationException($"Unable to continue game, status={status}");
 			}
 		}
 
@@ -244,6 +246,12 @@ namespace PinMame
 		/// </summary>
 		/// <returns>Value of the hardware generation</returns>
 		public PinMameHardwareGen GetHardwareGen() => (PinMameHardwareGen)PinMameApi.PinmameGetHardwareGen();
+
+		/// <summary>
+		/// Returns the display count
+		/// </summary>
+		/// <returns>Total number of displays</returns>
+		public int GetDisplayCount() => PinMameApi.PinmameGetDisplayCount();
 
 		/// <summary>
 		/// Returns the state of a given switch.
@@ -309,9 +317,30 @@ namespace PinMame
 						reg = Registry.ClassesRoot.OpenSubKey(x64Suffix + @"CLSID\" + clsId + @"\InprocServer32");
 						if (reg != null)
 						{
-							return Path.GetDirectoryName(reg.GetValue(null).ToString());
+							reg = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Freeware\Visual PinMame\globals");
+
+							if (reg != null)
+							{
+								var path = reg.GetValue("rompath").ToString();
+
+								if (path.EndsWith(@"\roms"))
+								{
+									return path.Substring(0, path.Length - 5);
+								}
+								else
+								{
+									Logger.Warn($"Rom Path {path} last folder is not 'roms'");
+								}
+							}
+							else
+							{
+								Logger.Warn($"Could not Rom Path in registry.");
+							}
 						}
-						Logger.Warn($"Could not find CLSID {clsId} of VPinMAME.dll.");
+						else
+						{
+							Logger.Warn($"Could not find CLSID {clsId} of VPinMAME.dll.");
+						}
 					}
 					else
 					{
@@ -336,7 +365,7 @@ namespace PinMame
 
 			catch (Exception e)
 			{
-				Logger.Error("ERROR: " + e);
+				Logger.Error($"ERROR: {e}");
 			}
 
 			return null;
