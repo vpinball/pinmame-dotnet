@@ -142,6 +142,7 @@ namespace PinMame.Internal
 
 		internal delegate void PinmameGameCallback(IntPtr gamePtr);
 		internal delegate void PinmameOnStateUpdatedCallback(int change);
+		internal delegate void PinmameOnDisplayAvailableCallback(int index, int displayCount, ref PinmameDisplayLayout displayLayout);
 		internal delegate void PinmameOnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinmameDisplayLayout displayLayout);
 		internal delegate void PinmameOnSolenoidUpdatedCallback(int solenoid, int isActive);
 
@@ -162,6 +163,7 @@ namespace PinMame.Internal
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
 			internal string vpmPath;
 			internal PinmameOnStateUpdatedCallback onStateUpdated;
+			internal PinmameOnDisplayAvailableCallback onDisplayAvailable;
 			internal PinmameOnDisplayUpdatedCallback onDisplayUpdated;
 			internal PinmameOnSolenoidUpdatedCallback onSolenoidUpdated;
 		};
@@ -208,9 +210,6 @@ namespace PinMame.Internal
 		#region Hardware related functions
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern PinmameHardwareGen PinmameGetHardwareGen();
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetDisplayCount();
 		#endregion
 
 		#region Switch related functions
