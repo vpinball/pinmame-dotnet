@@ -59,13 +59,11 @@ namespace PinMame
 		private static Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public delegate void OnDisplayAvailableEventHandler(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout);
-		public delegate void OnDisplaysAvailableEventHandler(object sender, EventArgs e, Dictionary<int, PinMameDisplayLayout> displayLayouts);
 		public delegate void OnDisplayUpdatedEventHandler(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
 		public delegate void OnSolenoidUpdatedEventHandler(object sender, EventArgs e, int solenoid, bool isActive);
 
 		public event EventHandler OnGameStarted;
 		public event OnDisplayAvailableEventHandler OnDisplayAvailable;
-		public event OnDisplaysAvailableEventHandler OnDisplaysAvailable;
 		public event OnDisplayUpdatedEventHandler OnDisplayUpdated;
 		public event OnSolenoidUpdatedEventHandler OnSolenoidUpdated;
 		public event EventHandler OnGameEnded;
@@ -177,15 +175,6 @@ namespace PinMame
 			Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
 
 			OnDisplayAvailable?.Invoke(this, EventArgs.Empty, index, displayCount, displayLayout);
-
-			lock (_availableDisplays) {
-				_availableDisplays[index] = displayLayout;
-			}
-			if (_availableDisplays.Count == displayCount) {
-				_availableDisplaysToken.Cancel();
-				OnDisplaysAvailable?.Invoke(this, EventArgs.Empty, _availableDisplays);
-			}
-
 		}
 
 		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
@@ -215,12 +204,47 @@ namespace PinMame
 		public void StartGame(string gameName)
 		{
 			Logger.Info("StartGame");
-			StartWaitingForAvailableDisplays();
 			PinMameApi.PinmameStatus status = PinMameApi.PinmameRun(gameName);
 
 			if (status != PinMameApi.PinmameStatus.OK)
 			{
 				throw new InvalidOperationException($"Unable to start game, status={status}");
+			}
+		}
+
+		public Dictionary<int, PinMameDisplayLayout> GetAvailableDisplays(string romId)
+		{
+			_availableDisplays.Clear();
+			OnDisplayAvailable += ProbeOnDisplayAvailable;
+			try {
+				StartGame(romId);
+				WaitForAvailableDisplays();
+				return _availableDisplays;
+
+			} finally {
+				StopGame();
+				OnDisplayAvailable -= ProbeOnDisplayAvailable;
+			}
+		}
+
+		private void WaitForAvailableDisplays()
+		{
+			_availableDisplaysToken = new CancellationTokenSource();
+			var t = Task.Run(async () => {
+				await Task.Delay(DisplayAvailableTimeoutMs, _availableDisplaysToken.Token);
+			});
+			try {
+				t.Wait();
+			} catch (AggregateException) {
+				// task was cancelled, all good.
+			}
+		}
+
+		private void ProbeOnDisplayAvailable(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout)
+		{
+			_availableDisplays[index] = displayLayout;
+			if (displayCount == _availableDisplays.Count) {
+				_availableDisplaysToken.Cancel();
 			}
 		}
 
@@ -324,21 +348,6 @@ namespace PinMame
 		{
 			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
 			return _changedGIs.AsSpan().Slice(0, num * 2);
-		}
-
-		private void StartWaitingForAvailableDisplays()
-		{
-			lock (_availableDisplays) {
-				_availableDisplays.Clear();
-			}
-			_availableDisplaysToken = new CancellationTokenSource();
-			Task.Run(async delegate {
-				await Task.Delay(DisplayAvailableTimeoutMs, _availableDisplaysToken.Token);
-				lock (_availableDisplays) {
-					Logger.Warn($"Stopped waiting for available displays after {DisplayAvailableTimeoutMs}ms, announcing the {_availableDisplays.Count} we have so far.");
-					OnDisplaysAvailable?.Invoke(this, EventArgs.Empty, _availableDisplays);
-				}
-			});
 		}
 
 		private static string GetVpmPath()
