@@ -54,10 +54,12 @@ namespace PinMame
 	{
 		private static Logger Logger = LogManager.GetCurrentClassLogger();
 
+		public delegate void OnDisplayAvailableEventHandler(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout);
 		public delegate void OnDisplayUpdatedEventHandler(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
 		public delegate void OnSolenoidUpdatedEventHandler(object sender, EventArgs e, int solenoid, bool isActive);
 
 		public event EventHandler OnGameStarted;
+		public event OnDisplayAvailableEventHandler OnDisplayAvailable;
 		public event OnDisplayUpdatedEventHandler OnDisplayUpdated;
 		public event OnSolenoidUpdatedEventHandler OnSolenoidUpdated;
 		public event EventHandler OnGameEnded;
@@ -135,6 +137,7 @@ namespace PinMame
 				sampleRate = 48000,
 				vpmPath = path + Path.DirectorySeparatorChar,
 				onStateUpdated = OnStateUpdatedCallback,
+				onDisplayAvailable = OnDisplayAvailableCallback,
 				onDisplayUpdated = OnDisplayUpdatedCallback,
 				onSolenoidUpdated = OnSolenoidUpdatedCallback
 			};
@@ -157,6 +160,15 @@ namespace PinMame
 			{
 				OnGameEnded?.Invoke(this, EventArgs.Empty);
 			}
+		}
+
+		private void OnDisplayAvailableCallback(int index, int displayCount, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
+		{
+			var displayLayout = new PinMameDisplayLayout(displayLayoutRef);
+
+			Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
+
+			OnDisplayAvailable?.Invoke(this, EventArgs.Empty, index, displayCount, displayLayout);
 		}
 
 		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
@@ -246,12 +258,6 @@ namespace PinMame
 		/// </summary>
 		/// <returns>Value of the hardware generation</returns>
 		public PinMameHardwareGen GetHardwareGen() => (PinMameHardwareGen)PinMameApi.PinmameGetHardwareGen();
-
-		/// <summary>
-		/// Returns the display count
-		/// </summary>
-		/// <returns>Total number of displays</returns>
-		public int GetDisplayCount() => PinMameApi.PinmameGetDisplayCount();
 
 		/// <summary>
 		/// Returns the state of a given switch.

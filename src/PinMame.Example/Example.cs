@@ -186,7 +186,12 @@ namespace PinMame
 
 		static void OnGameStarted(object sender, EventArgs e)
 		{
-			Logger.Info($"OnGameStarted: displayCount={_pinMame.GetDisplayCount()}");
+			Logger.Info($"OnGameStarted");
+		}
+
+		static void OnDisplayAvailable(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout)
+		{
+			Logger.Info($"OnDisplayAvailable: index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
 		}
 
 		static void OnDisplayUpdated(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
@@ -231,13 +236,14 @@ namespace PinMame
 			DumpGames();
 
 			_pinMame.OnGameStarted += OnGameStarted;
+			_pinMame.OnDisplayAvailable += OnDisplayAvailable;
 			_pinMame.OnDisplayUpdated += OnDisplayUpdated;
 			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
 
-			_pinMame.StartGame("mm_109c");
 			//_pinMame.StartGame("mm_109c");
 			//_pinMame.StartGame("fh_906h");
+			_pinMame.StartGame("flashgdn");
 
 			_isRunning = true;
 
