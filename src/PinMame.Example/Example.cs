@@ -190,12 +190,6 @@ namespace PinMame
 			Logger.Info($"OnGameStarted");
 		}
 
-		static void OnDisplaysAvailable(object sender, EventArgs e, Dictionary<int, PinMameDisplayLayout> displayLayouts)
-		{
-			var str = string.Join("\n", displayLayouts.Keys.Select(t => $"{t}: {displayLayouts[t]}"));
-			Logger.Info($"OnDisplaysAvailable ({displayLayouts.Count}): displays={str}");
-		}
-
 		static void OnDisplayAvailable(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout)
 		{
 			Logger.Info($"OnDisplayAvailable: index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
@@ -244,7 +238,6 @@ namespace PinMame
 
 			_pinMame.OnGameStarted += OnGameStarted;
 			_pinMame.OnDisplayAvailable += OnDisplayAvailable;
-			_pinMame.OnDisplaysAvailable += OnDisplaysAvailable;
 			_pinMame.OnDisplayUpdated += OnDisplayUpdated;
 			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
