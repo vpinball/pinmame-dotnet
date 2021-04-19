@@ -212,8 +212,22 @@ namespace PinMame
 			}
 		}
 
+		/// <summary>
+		/// Retrieves all available displays from a given game by running it.
+		/// </summary>
+		///
+		/// <remarks>
+		/// This is a blocking operation. No game must be currently running.
+		/// </remarks>
+		/// <param name="romId">ROM ID of the game to retrieve available displays for.</param>
+		/// <returns>A dictionary where keys are the displays IDs and values are the layouts. Result is always returned on the calling thread.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when a game is already running.</exception>
 		public Dictionary<int, PinMameDisplayLayout> GetAvailableDisplays(string romId)
 		{
+			if (IsRunning()) {
+				throw new InvalidOperationException("Cannot retrieve available displays while another game is already running.");
+			}
+
 			_availableDisplays.Clear();
 			OnDisplayAvailable += ProbeOnDisplayAvailable;
 			try {
@@ -224,27 +238,6 @@ namespace PinMame
 			} finally {
 				StopGame();
 				OnDisplayAvailable -= ProbeOnDisplayAvailable;
-			}
-		}
-
-		private void WaitForAvailableDisplays()
-		{
-			_availableDisplaysToken = new CancellationTokenSource();
-			var t = Task.Run(async () => {
-				await Task.Delay(DisplayAvailableTimeoutMs, _availableDisplaysToken.Token);
-			});
-			try {
-				t.Wait();
-			} catch (AggregateException) {
-				// task was cancelled, all good.
-			}
-		}
-
-		private void ProbeOnDisplayAvailable(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout)
-		{
-			_availableDisplays[index] = displayLayout;
-			if (displayCount == _availableDisplays.Count) {
-				_availableDisplaysToken.Cancel();
 			}
 		}
 
@@ -348,6 +341,30 @@ namespace PinMame
 		{
 			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
 			return _changedGIs.AsSpan().Slice(0, num * 2);
+		}
+
+		/// <summary>
+		/// Blocks until either all available displays have been announced, or <see cref="DisplayAvailableTimeoutMs"/> milliseconds pass.
+		/// </summary>
+		private void WaitForAvailableDisplays()
+		{
+			_availableDisplaysToken = new CancellationTokenSource();
+			var t = Task.Run(async () => {
+				await Task.Delay(DisplayAvailableTimeoutMs, _availableDisplaysToken.Token);
+			});
+			try {
+				t.Wait();
+			} catch (AggregateException) {
+				// task was cancelled, all good.
+			}
+		}
+
+		private void ProbeOnDisplayAvailable(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout)
+		{
+			_availableDisplays[index] = displayLayout;
+			if (displayCount == _availableDisplays.Count) {
+				_availableDisplaysToken.Cancel();
+			}
 		}
 
 		private static string GetVpmPath()

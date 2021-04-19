@@ -31,10 +31,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using NLog;
-using Logger = NLog.Logger;
+using NLog.Config;
+using NLog.Targets;
 
 namespace PinMame
 {
@@ -223,9 +223,9 @@ namespace PinMame
 
 		static void Main(string[] args)
 		{
-			LogManager.Configuration = new NLog.Config.LoggingConfiguration();
+			LogManager.Configuration = new LoggingConfiguration();
 
-			var target = new NLog.Targets.ConsoleTarget("PinMame");
+			var target = new ConsoleTarget("PinMame");
 
 			LogManager.Configuration.AddTarget(target);
 			LogManager.Configuration.AddRule(LogLevel.Info, LogLevel.Fatal, target);
