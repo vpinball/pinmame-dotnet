@@ -2,32 +2,35 @@
 // Copyright (C) 1999-2021 PinMAME development team and contributors
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
+// modification, are permitted provided that the following conditions
 // are met:
 //
-// 1. Redistributions of source code must retain the above copyright 
+// 1. Redistributions of source code must retain the above copyright
 // notice, this list of conditions and the following disclaimer.
 //
 // 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the 
+// notice, this list of conditions and the following disclaimer in the
 // documentation and/or other materials provided with the distribution.
 //
 // 3. Neither the name of the copyright holder nor the names of its
 // contributors may be used to endorse or promote products derived
 // from this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-// COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
-// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+// COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PinMame
 {
@@ -52,14 +55,17 @@ namespace PinMame
 
 	public class PinMame
 	{
+		public static int DisplayAvailableTimeoutMs = 1000;
 		private static Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public delegate void OnDisplayAvailableEventHandler(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout);
+		public delegate void OnDisplaysAvailableEventHandler(object sender, EventArgs e, Dictionary<int, PinMameDisplayLayout> displayLayouts);
 		public delegate void OnDisplayUpdatedEventHandler(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
 		public delegate void OnSolenoidUpdatedEventHandler(object sender, EventArgs e, int solenoid, bool isActive);
 
 		public event EventHandler OnGameStarted;
 		public event OnDisplayAvailableEventHandler OnDisplayAvailable;
+		public event OnDisplaysAvailableEventHandler OnDisplaysAvailable;
 		public event OnDisplayUpdatedEventHandler OnDisplayUpdated;
 		public event OnSolenoidUpdatedEventHandler OnSolenoidUpdated;
 		public event EventHandler OnGameEnded;
@@ -67,8 +73,10 @@ namespace PinMame
 		private PinMameApi.PinmameConfig _config;
 		private int[] _changedLamps;
 		private int[] _changedGIs;
+		private readonly Dictionary<int, PinMameDisplayLayout> _availableDisplays = new Dictionary<int, PinMameDisplayLayout>();
 
 		private static PinMame _instance;
+		private CancellationTokenSource _availableDisplaysToken;
 
 		/// <summary>
 		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
@@ -86,7 +94,7 @@ namespace PinMame
 					games.Add(pinmameGame.name, new PinMameGame(pinmameGame)
 					{
 						clones = Array.Empty<PinMameGame>()
-					}); 
+					});
 				}
 			});
 
@@ -153,7 +161,7 @@ namespace PinMame
 			{
 				_changedLamps = new int[PinMameApi.PinmameGetMaxLamps() * 2];
 				_changedGIs = new int[PinMameApi.PinmameGetMaxGIs() * 2];
-				
+
 				OnGameStarted?.Invoke(this, EventArgs.Empty);
 			}
 			else
@@ -169,6 +177,15 @@ namespace PinMame
 			Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
 
 			OnDisplayAvailable?.Invoke(this, EventArgs.Empty, index, displayCount, displayLayout);
+
+			lock (_availableDisplays) {
+				_availableDisplays[index] = displayLayout;
+			}
+			if (_availableDisplays.Count == displayCount) {
+				_availableDisplaysToken.Cancel();
+				OnDisplaysAvailable?.Invoke(this, EventArgs.Empty, _availableDisplays);
+			}
+
 		}
 
 		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
@@ -198,7 +215,7 @@ namespace PinMame
 		public void StartGame(string gameName)
 		{
 			Logger.Info("StartGame");
-
+			StartWaitingForAvailableDisplays();
 			PinMameApi.PinmameStatus status = PinMameApi.PinmameRun(gameName);
 
 			if (status != PinMameApi.PinmameStatus.OK)
@@ -307,6 +324,21 @@ namespace PinMame
 		{
 			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
 			return _changedGIs.AsSpan().Slice(0, num * 2);
+		}
+
+		private void StartWaitingForAvailableDisplays()
+		{
+			lock (_availableDisplays) {
+				_availableDisplays.Clear();
+			}
+			_availableDisplaysToken = new CancellationTokenSource();
+			Task.Run(async delegate {
+				await Task.Delay(DisplayAvailableTimeoutMs, _availableDisplaysToken.Token);
+				lock (_availableDisplays) {
+					Logger.Warn($"Stopped waiting for available displays after {DisplayAvailableTimeoutMs}ms, announcing the {_availableDisplays.Count} we have so far.");
+					OnDisplaysAvailable?.Invoke(this, EventArgs.Empty, _availableDisplays);
+				}
+			});
 		}
 
 		private static string GetVpmPath()
