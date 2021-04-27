@@ -38,7 +38,6 @@ using NLog.Targets;
 
 namespace PinMame
 {
-
 	class Example
 	{
 		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -48,7 +47,9 @@ namespace PinMame
 
 		static void DumpGames()
 		{
-			foreach (var game in PinMame.GetGames())
+			Logger.Info($"DumpGames");
+
+			foreach (var game in _pinMame.GetGames())
 			{
 				Logger.Info($"PARENT: name={game.name}, description={game.description}, year={game.year}, manufacturer={game.manufacturer}");
 
@@ -56,6 +57,16 @@ namespace PinMame
 				{
 					Logger.Info($"  CLONE: name={clone.name}, description={clone.description}, year={clone.year}, manufacturer={clone.manufacturer}");
 				}
+			}
+		}
+
+		static void DumpAvailableGames()
+		{
+			Logger.Info($"DumpAvailableGames");
+
+			foreach (var game in _pinMame.GetAvailableGames())
+			{
+				Logger.Info($"name={game.name}, description={game.description}, year={game.year}, manufacturer={game.manufacturer}");
 			}
 		}
 
@@ -235,6 +246,7 @@ namespace PinMame
 			_pinMame = PinMame.Instance();
 
 			DumpGames();
+			DumpAvailableGames();
 
 			_pinMame.OnGameStarted += OnGameStarted;
 			_pinMame.OnDisplayAvailable += OnDisplayAvailable;
@@ -242,9 +254,9 @@ namespace PinMame
 			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
 
-			//_pinMame.StartGame("mm_109c");
+			_pinMame.StartGame("mm_109c");
 			//_pinMame.StartGame("fh_906h");
-			_pinMame.StartGame("flashgdn");
+			//_pinMame.StartGame("flashgdn");
 
 			_isRunning = true;
 

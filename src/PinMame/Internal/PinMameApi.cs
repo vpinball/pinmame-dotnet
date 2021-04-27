@@ -154,6 +154,7 @@ namespace PinMame.Internal
 			internal string description;
 			internal string year;
 			internal string manufacturer;
+			internal bool found;
 		};
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -180,14 +181,14 @@ namespace PinMame.Internal
 			internal int depth;
 		};
 
-		#region Game library functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void PinmameGetGames(PinmameGameCallback callback);
-		#endregion
-
 		#region Setup functions
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void PinmameSetConfig(ref PinmameConfig config);
+		#endregion
+
+		#region Game library functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern PinmameStatus PinmameGetGames(PinmameGameCallback callback);
 		#endregion
 
 		#region Game functions

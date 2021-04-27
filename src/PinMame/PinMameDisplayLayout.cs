@@ -42,6 +42,7 @@ namespace PinMame
 		public int width;
 		public int height;
 		public int depth;
+		public byte[] levels;
 
 		internal PinMameDisplayLayout(PinMameApi.PinmameDisplayLayout displayLayout)
 		{
@@ -52,10 +53,36 @@ namespace PinMame
 			width = displayLayout.width;
 			height = displayLayout.height;
 			depth = displayLayout.depth;
+			levels = null;
+		}
+
+		internal PinMameDisplayLayout(PinMameApi.PinmameDisplayLayout displayLayout, PinMameHardwareGen hardwareGen)
+		{
+			type = (PinMameDisplayType)displayLayout.type;
+			top = displayLayout.top;
+			left = displayLayout.left;
+			length = displayLayout.length;
+			width = displayLayout.width;
+			height = displayLayout.height;
+			depth = displayLayout.depth;
+			levels = null;
+
+			if (IsDmd)
+			{
+				if (depth == 2)
+				{
+					levels = PinMameDmdLevels.Wpc;
+				}
+				else
+				{
+					levels = (hardwareGen & (PinMameHardwareGen.SAM | PinMameHardwareGen.SPA)) != 0 ?
+						PinMameDmdLevels.Sam : PinMameDmdLevels.Gts3;
+				}
+			}
 		}
 
 		public bool IsDmd =>
-			type == PinMameDisplayType.DMD 
+			type == PinMameDisplayType.DMD
 			|| type == (PinMameDisplayType.DMD | PinMameDisplayType.DMDNOAA)
 			|| type == (PinMameDisplayType.DMD | PinMameDisplayType.DMDNOAA | PinMameDisplayType.NODISP);
 
