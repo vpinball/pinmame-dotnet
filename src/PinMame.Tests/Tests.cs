@@ -39,22 +39,36 @@ namespace PinMame
 	[TestClass]
 	public class Tests
 	{
+		PinMame _pinMame;
+
+		[TestInitialize()]
+		public void Initialize()
+		{
+			var profilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+			var path = Path.GetFullPath(Path.Combine(profilePath, ".pinmame"));
+
+			_pinMame = PinMame.Instance(48000, path);
+		}
+
 		[TestMethod]
 		public void GetGames()
 		{
-			PinMameGame[] games = PinMame.GetGames();
+			PinMameGame[] games = _pinMame.GetGames();
 
 			Assert.IsTrue(games.Length > 650);
 		}
 
 		[TestMethod]
+		public void GetAvailableGames()
+		{
+			PinMameGame[] games = _pinMame.GetAvailableGames();
+
+			Assert.IsTrue(games.Length > 0);
+		}
+
+		[TestMethod]
 		public void Start()
 		{
-			var profilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-			var path = Path.GetFullPath(Path.Combine(profilePath, ".pinmame"));
-
-			var _pinMame = PinMame.Instance(48000, path);
-
 			_pinMame.StartGame("mm_109c");
 
 			var i = 0;

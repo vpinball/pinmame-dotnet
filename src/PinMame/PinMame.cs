@@ -77,46 +77,6 @@ namespace PinMame
 		private CancellationTokenSource _availableDisplaysToken;
 
 		/// <summary>
-		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
-		public static PinMameGame[] GetGames() {
-			Logger.Info("GetGames");
-
-			Dictionary<string, PinMameGame> games = new Dictionary<string, PinMameGame>();
-
-			PinMameApi.PinmameGetGames((gamePtr) =>
-			{
-				PinMameApi.PinmameGame pinmameGame = (PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
-
-				if (string.IsNullOrEmpty(pinmameGame.cloneOf))
-				{
-					games.Add(pinmameGame.name, new PinMameGame(pinmameGame)
-					{
-						clones = Array.Empty<PinMameGame>()
-					});
-				}
-			});
-
-			PinMameApi.PinmameGetGames((gamePtr) =>
-			{
-				PinMameApi.PinmameGame pinmameGame = (PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
-
-				if (!string.IsNullOrEmpty(pinmameGame.cloneOf))
-				{
-					if (games.TryGetValue(pinmameGame.cloneOf, out PinMameGame game))
-					{
-						game.addClone(new PinMameGame(pinmameGame));
-					}
-				}
-			});
-
-			PinMameGame[] array = games.Values.OrderBy(game => game.description).ToArray();
-
-			Logger.Info($"GetGames - total={array.Length}");
-
-			return array;
-		}
-
-		/// <summary>
 		/// Creates or retrieves the PinMame instance.
 		/// </summary>
 		/// <param name="sampleRate">Audio sample rate</param>
@@ -151,6 +111,93 @@ namespace PinMame
 			PinMameApi.PinmameSetConfig(ref _config);
 		}
 
+		/// <summary>
+		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception> 
+		public PinMameGame[] GetGames()
+		{
+			Logger.Info("GetGames");
+
+			Dictionary<string, PinMameGame> games = new Dictionary<string, PinMameGame>();
+			List<KeyValuePair<string, PinMameGame>> clones = new List<KeyValuePair<string, PinMameGame>>();
+
+			PinMameApi.PinmameStatus status = PinMameApi.PinmameGetGames((gamePtr) =>
+			{
+				PinMameApi.PinmameGame pinmameGame = (PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
+
+				var game = new PinMameGame(pinmameGame);
+
+				if (string.IsNullOrEmpty(pinmameGame.cloneOf))
+				{
+					game.clones = Array.Empty<PinMameGame>();
+
+					games.Add(pinmameGame.name, game);
+				}
+				else
+				{
+					clones.Add(new KeyValuePair<string, PinMameGame>(pinmameGame.cloneOf, game));
+				}
+			});
+
+			if (status != PinMameApi.PinmameStatus.OK)
+			{
+				throw new InvalidOperationException($"Unable to get games, status={status}");
+			}
+
+			foreach(var clone in clones)
+			{
+				if (games.TryGetValue(clone.Key, out PinMameGame game))
+				{
+					game.addClone(clone.Value);
+				}
+			}
+
+			PinMameGame[] array = games.Values.OrderBy(game => game.description).ToArray();
+
+			Logger.Info($"GetGames - total={array.Length}");
+
+			return array;
+		}
+
+		/// <summary>
+		/// Retrieves all available games sorted by description. Clones will not be populated.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception> 
+		public PinMameGame[] GetAvailableGames()
+		{
+			List<PinMameGame> games = new List<PinMameGame>();
+
+			PinMameApi.PinmameStatus status = PinMameApi.PinmameGetGames((gamePtr) =>
+			{
+				PinMameApi.PinmameGame pinmameGame = (PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
+
+				if (pinmameGame.found)
+				{
+					games.Add(new PinMameGame(pinmameGame));
+				}
+			});
+
+			if (status != PinMameApi.PinmameStatus.OK)
+			{
+				throw new InvalidOperationException($"Unable to get games, status={status}");
+			}
+
+			PinMameGame[] array = games.OrderBy(game => game.description).ToArray();
+
+			Logger.Info($"GetAvailableGames - total={array.Length}");
+
+			return array;
+		}
+
+		/// <summary>
+		/// Retrieves rom path which is vpmPath + roms.
+		/// </summary>
+		public string GetRomPath()
+		{
+			return _config.vpmPath + "roms";
+		}
+	
 		private void OnStateUpdatedCallback(int state)
 		{
 			Logger.Debug($"OnStateUpdatedCallback - state={state}");
@@ -170,7 +217,7 @@ namespace PinMame
 
 		private void OnDisplayAvailableCallback(int index, int displayCount, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
 		{
-			var displayLayout = new PinMameDisplayLayout(displayLayoutRef);
+			var displayLayout = new PinMameDisplayLayout(displayLayoutRef, GetHardwareGen());
 
 			Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
 

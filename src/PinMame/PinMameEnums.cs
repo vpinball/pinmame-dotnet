@@ -127,4 +127,21 @@ namespace PinMame
 		ALLS80 = PinMameApi.PinmameHardwareGen.ALLS80,           // All GTS80
 		ALLWS = PinMameApi.PinmameHardwareGen.ALLWS,             // All Whitestar
 	}
+
+	public struct PinMameDmdLevels
+	{
+		public readonly static byte[] Wpc = {
+			20, 33, 67, 100
+		};
+
+		public readonly static byte[] Sam =
+		{
+			0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 100
+		};
+
+		public readonly static byte[] Gts3 =
+		{
+			0, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100
+		};
+	}
 }
