@@ -2,34 +2,38 @@
 // Copyright (C) 1999-2021 PinMAME development team and contributors
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
+// modification, are permitted provided that the following conditions
 // are met:
 //
-// 1. Redistributions of source code must retain the above copyright 
+// 1. Redistributions of source code must retain the above copyright
 // notice, this list of conditions and the following disclaimer.
 //
 // 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the 
+// notice, this list of conditions and the following disclaimer in the
 // documentation and/or other materials provided with the distribution.
 //
 // 3. Neither the name of the copyright holder nor the names of its
 // contributors may be used to endorse or promote products derived
 // from this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-// COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
-// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+// COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-namespace PinMame.Internal
+// ReSharper disable InconsistentNaming
+// ReSharper disable IdentifierTypo
+// ReSharper disable CommentTypo
+
+namespace PinMame
 {
 	using System;
 	using System.Runtime.InteropServices;
@@ -80,7 +84,8 @@ namespace PinMame.Internal
 			SEG7SCH = SEG7SC| SEGHIBIT
 		}
 
-		internal enum PinmameHardwareGen : UInt64
+		[Flags]
+		internal enum PinmameHardwareGen : ulong
 		{
 			WPCALPHA_1 = 0x0000000000001,  // Alpha-numeric display S11 sound, Dr Dude 10/90
 			WPCALPHA_2 = 0x0000000000002,  // Alpha-numeric display,  - The Machine BOP 4/91
@@ -140,14 +145,14 @@ namespace PinMame.Internal
 			ALLWS = 0x001c000000000        // All Whitestar
 		}
 
-		internal enum PinmameGameDriverFlag : UInt32
+		internal enum PinmameGameDriverFlag : uint
 		{
 			ORIENTATION_MASK = 0x0007,
-			ORIENTATION_FLIP_X = 0x0001,          // mirror everything in the X direction 
-			ORIENTATION_FLIP_Y = 0x0002,          // mirror everything in the Y direction 
-			ORIENTATION_SWAP_XY = 0x0004,         // mirror along the top-left/bottom-right diagonal 
+			ORIENTATION_FLIP_X = 0x0001,          // mirror everything in the X direction
+			ORIENTATION_FLIP_Y = 0x0002,          // mirror everything in the Y direction
+			ORIENTATION_SWAP_XY = 0x0004,         // mirror along the top-left/bottom-right diagonal
 			GAME_NOT_WORKING = 0x0008,
-			GAME_UNEMULATED_PROTECTION = 0x0010,  // game's protection not fully emulated 
+			GAME_UNEMULATED_PROTECTION = 0x0010,  // game's protection not fully emulated
 			GAME_WRONG_COLORS = 0x0020,           // colors are totally wrong
 			GAME_IMPERFECT_COLORS = 0x0040,       // colors are not 100% accurate, but close
 			GAME_IMPERFECT_GRAPHICS = 0x0080,     // graphics are wrong/incomplete
@@ -159,16 +164,16 @@ namespace PinMame.Internal
 
 		internal struct PinmameDmdLevels
 		{
-			internal readonly static byte[] Wpc = {
+			internal static readonly byte[] Wpc = {
 				20, 33, 67, 100
 			};
 
-			internal readonly static byte[] Sam =
+			internal static readonly byte[] Sam =
 			{
 				0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 100
 			};
 
-			internal readonly static byte[] Gts3 =
+			internal static readonly byte[] Gts3 =
 			{
 				0, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100
 			};
@@ -181,15 +186,15 @@ namespace PinMame.Internal
 		internal delegate void PinmameOnSolenoidUpdatedCallback(int solenoid, int isActive);
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		internal struct PinmameGame
+		internal readonly struct PinmameGame
 		{
-			internal string name;
-			internal string cloneOf;
-			internal string description;
-			internal string year;
-			internal string manufacturer;
-			internal PinmameGameDriverFlag flags;
-			internal int found;
+			internal readonly string name;
+			internal readonly string cloneOf;
+			internal readonly string description;
+			internal readonly string year;
+			internal readonly string manufacturer;
+			internal readonly uint flags;
+			internal readonly int found;
 		};
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -205,15 +210,15 @@ namespace PinMame.Internal
 		};
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		internal struct PinmameDisplayLayout
+		internal readonly struct PinmameDisplayLayout
 		{
-			internal PinmameDisplayType type;
-			internal int top;
-			internal int left;
-			internal int length;
-			internal int width;
-			internal int height;
-			internal int depth;
+			internal readonly PinmameDisplayType type;
+			internal readonly int top;
+			internal readonly int left;
+			internal readonly int length;
+			internal readonly int width;
+			internal readonly int height;
+			internal readonly int depth;
 		};
 
 		#region Setup functions
