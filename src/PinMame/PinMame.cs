@@ -29,6 +29,8 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+// ReSharper disable MemberCanBeMadeStatic.Global
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -211,7 +213,7 @@ namespace PinMame
 		/// Retrieves a game by game name.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">If the configuration has not been set or the game name is not found.</exception>
-		public static PinMameGame GetGame(string name)
+		public PinMameGame GetGame(string name)
 		{
 			Logger.Info($"GetGame: name={name}");
 
@@ -231,7 +233,7 @@ namespace PinMame
 		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception>
-		public static ICollection<PinMameGame> GetGames()
+		public ICollection<PinMameGame> GetGames()
 		{
 			var games = new Dictionary<string, PinMameGame>();
 			var clones = new List<KeyValuePair<string, PinMameGame>>();
@@ -264,7 +266,7 @@ namespace PinMame
 		/// Retrieves all games found in roms folder sorted by description. Clones array will not be populated.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception>
-		public static ICollection<PinMameGame> GetFoundGames()
+		public ICollection<PinMameGame> GetFoundGames()
 		{
 			var games = new List<PinMameGame>();
 			var status = PinMameApi.PinmameGetGames(gamePtr => {

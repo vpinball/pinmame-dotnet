@@ -40,17 +40,17 @@ namespace PinMame
 {
 	class Example
 	{
-		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-		static PinMame _pinMame;
-		static Dictionary<byte, string> _dmdMap;
+		private static PinMame _pinMame;
+		private static Dictionary<byte, string> _dmdMap;
 		static bool _isRunning = false;
 
 		static void DumpGames()
 		{
 			Logger.Info($"DumpGames");
 
-			foreach (var game in PinMame.GetGames())
+			foreach (var game in _pinMame.GetGames())
 			{
 				Logger.Info($"PARENT: {game}");
 
@@ -65,7 +65,7 @@ namespace PinMame
 		{
 			Logger.Info($"DumpFoundGames");
 
-			foreach (var game in PinMame.GetFoundGames())
+			foreach (var game in _pinMame.GetFoundGames())
 			{
 				Logger.Info($"FOUND: {game}");
 			}
@@ -127,7 +127,7 @@ namespace PinMame
 			Logger.Info($"OnGameStarted");
 		}
 
-		static void OnDisplayAvailable(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout)
+		static void OnDisplayAvailable(int index, int displayCount, PinMameDisplayLayout displayLayout)
 		{
 			Logger.Info($"OnDisplayAvailable: index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
 
@@ -170,7 +170,7 @@ namespace PinMame
 			}
 		}
 
-		static void OnDisplayUpdated(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
+		static void OnDisplayUpdated(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
 		{
 			Logger.Info($"OnDisplayUpdated: index={index}, displayLayout={displayLayout}");
 
@@ -184,7 +184,7 @@ namespace PinMame
 			}
 		}
 
-		static void OnSolenoidUpdated(object sender, EventArgs e, int solenoid, bool isActive)
+		static void OnSolenoidUpdated(int solenoid, bool isActive)
 		{
 			Logger.Info($"OnSolenoidUpdated: solenoid={solenoid}, isActive={isActive}");
 		}
@@ -207,39 +207,28 @@ namespace PinMame
 
 			LogManager.ReconfigExistingLoggers();
 
-			_pinMame = PinMame.Instance();
+			DumpGames();
+			DumpFoundGames();
 
-			var games = PinMame.GetGames();
-			foreach (var game in games)
+			Logger.Info(_pinMame.GetGame("fh_906h"));
+
+			_pinMame.OnGameStarted += OnGameStarted;
+			_pinMame.OnDisplayAvailable += OnDisplayAvailable;
+			_pinMame.OnDisplayUpdated += OnDisplayUpdated;
+			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
+			_pinMame.OnGameEnded += OnGameEnded;
+
+			_pinMame.StartGame("tf_180h");
+			//_pinMame.StartGame("mm_109c");
+			//_pinMame.StartGame("fh_906h");
+			//_pinMame.StartGame("flashgdn");
+
+			_isRunning = true;
+
+			while (_isRunning)
 			{
-				if (game.HasFlag(PinMameGameDriverFlag.GameNotWorking)) {
-					Console.WriteLine($"Game not working: {game}");
-					//Console.WriteLine($"Game not working: {game.Name} - {game.Description} ({game.Manufacturer} {game.Year})");
-				}
+				Thread.Sleep(100);
 			}
-
-			// DumpGames();
-			// DumpFoundGames();
-			//
-			// Logger.Info(_pinMame.GetGame("fh_906h"));
-			//
-			// _pinMame.OnGameStarted += OnGameStarted;
-			// _pinMame.OnDisplayAvailable += OnDisplayAvailable;
-			// _pinMame.OnDisplayUpdated += OnDisplayUpdated;
-			// _pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
-			// _pinMame.OnGameEnded += OnGameEnded;
-			//
-			// _pinMame.StartGame("tf_180h");
-			// //_pinMame.StartGame("mm_109c");
-			// //_pinMame.StartGame("fh_906h");
-			// //_pinMame.StartGame("flashgdn");
-			//
-			// _isRunning = true;
-			//
-			// while (_isRunning)
-			// {
-			// 	Thread.Sleep(100);
-			// }
 		}
 	}
 }
