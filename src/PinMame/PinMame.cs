@@ -112,6 +112,29 @@ namespace PinMame
 		}
 
 		/// <summary>
+		/// Retrieves a game by game name.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">If the configuration has not been set or the game name is not found.</exception>
+		public PinMameGame GetGame(string name)
+		{
+			Logger.Info($"GetGame: name={name}");
+
+			PinMameGame game = null;
+
+			PinMameApi.PinmameStatus status = PinMameApi.PinmameGetGame(name, (gamePtr) =>
+			{
+				game = new PinMameGame(gamePtr);
+			});
+
+			if (status != PinMameApi.PinmameStatus.OK)
+			{
+				throw new InvalidOperationException($"Unable to get game, name={name}, status={status}");
+			}
+
+			return game;
+		}
+
+		/// <summary>
 		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception> 
@@ -124,19 +147,15 @@ namespace PinMame
 
 			PinMameApi.PinmameStatus status = PinMameApi.PinmameGetGames((gamePtr) =>
 			{
-				PinMameApi.PinmameGame pinmameGame = (PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
+				var game = new PinMameGame(gamePtr);
 
-				var game = new PinMameGame(pinmameGame);
-
-				if (string.IsNullOrEmpty(pinmameGame.cloneOf))
+				if (string.IsNullOrEmpty(game.cloneOf))
 				{
-					game.clones = Array.Empty<PinMameGame>();
-
-					games.Add(pinmameGame.name, game);
+					games.Add(game.name, game);
 				}
 				else
 				{
-					clones.Add(new KeyValuePair<string, PinMameGame>(pinmameGame.cloneOf, game));
+					clones.Add(new KeyValuePair<string, PinMameGame>(game.cloneOf, game));
 				}
 			});
 
@@ -161,20 +180,22 @@ namespace PinMame
 		}
 
 		/// <summary>
-		/// Retrieves all available games sorted by description. Clones will not be populated.
+		/// Retrieves all games found in roms folder sorted by description. Clones array will not be populated.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception> 
-		public PinMameGame[] GetAvailableGames()
+		public PinMameGame[] GetFoundGames()
 		{
-			List<PinMameGame> games = new List<PinMameGame>();
+			Logger.Info("GetFoundGames");
+
+			var games = new List<PinMameGame>();
 
 			PinMameApi.PinmameStatus status = PinMameApi.PinmameGetGames((gamePtr) =>
 			{
-				PinMameApi.PinmameGame pinmameGame = (PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
+				var game = new PinMameGame(gamePtr);
 
-				if (pinmameGame.found)
+				if (game.found)
 				{
-					games.Add(new PinMameGame(pinmameGame));
+					games.Add(game);
 				}
 			});
 
@@ -185,7 +206,7 @@ namespace PinMame
 
 			PinMameGame[] array = games.OrderBy(game => game.description).ToArray();
 
-			Logger.Info($"GetAvailableGames - total={array.Length}");
+			Logger.Info($"GetFoundGames - total={array.Length}");
 
 			return array;
 		}
@@ -217,9 +238,9 @@ namespace PinMame
 
 		private void OnDisplayAvailableCallback(int index, int displayCount, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
 		{
-			var displayLayout = new PinMameDisplayLayout(displayLayoutRef, GetHardwareGen());
+			var displayLayout = new PinMameDisplayLayout(displayLayoutRef, PinMameApi.PinmameGetHardwareGen());
 
-			Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
+			Logger.Trace($"OnDisplayAvailableCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
 
 			OnDisplayAvailable?.Invoke(this, EventArgs.Empty, index, displayCount, displayLayout);
 		}
