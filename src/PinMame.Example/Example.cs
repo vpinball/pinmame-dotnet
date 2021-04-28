@@ -122,7 +122,7 @@ namespace PinMame
 			}
 		}
 
-		static void OnGameStarted(object sender, EventArgs e)
+		static void OnGameStarted()
 		{
 			Logger.Info($"OnGameStarted");
 		}
@@ -189,7 +189,7 @@ namespace PinMame
 			Logger.Info($"OnSolenoidUpdated: solenoid={solenoid}, isActive={isActive}");
 		}
 
-		static void OnGameEnded(object sender, EventArgs e)
+		static void OnGameEnded()
 		{
 			Logger.Info("OnGameEnded");
 

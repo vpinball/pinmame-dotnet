@@ -55,6 +55,11 @@ namespace PinMame
 		#region Delegates Definition
 
 		/// <summary>
+		/// A delegate, called when a game starts.
+		/// </summary>
+		public delegate void OnGameStartedEventHandler();
+
+		/// <summary>
 		/// A delegate, called when displays are available.
 		/// </summary>
 		public delegate void OnDisplayAvailableEventHandler(int index, int displayCount, PinMameDisplayLayout displayLayout);
@@ -69,12 +74,17 @@ namespace PinMame
 		/// </summary>
 		public delegate void OnSolenoidUpdatedEventHandler(int solenoid, bool isActive);
 
+		/// <summary>
+		/// A delegate, called when a game ends.
+		/// </summary>
+		public delegate void OnGameEndedEventHandler();
+
 		#endregion
 
 		/// <summary>
 		/// Game is started and ready to receive switch changes.
 		/// </summary>
-		public event EventHandler OnGameStarted;
+		public event OnGameStartedEventHandler OnGameStarted;
 
 		/// <summary>
 		/// A new display is available. This is called as soon as possible,
@@ -95,7 +105,7 @@ namespace PinMame
 		/// <summary>
 		/// The game has ended.
 		/// </summary>
-		public event EventHandler OnGameEnded;
+		public event OnGameEndedEventHandler OnGameEnded;
 
 		/// <summary>
 		/// Retrieves rom path which is vpmPath + roms.
@@ -338,11 +348,11 @@ namespace PinMame
 				_changedLamps = new int[PinMameApi.PinmameGetMaxLamps() * 2];
 				_changedGIs = new int[PinMameApi.PinmameGetMaxGIs() * 2];
 
-				OnGameStarted?.Invoke(this, EventArgs.Empty);
+				OnGameStarted?.Invoke();
 			}
 			else
 			{
-				OnGameEnded?.Invoke(this, EventArgs.Empty);
+				OnGameEnded?.Invoke();
 				RunningGame = null;
 			}
 		}
