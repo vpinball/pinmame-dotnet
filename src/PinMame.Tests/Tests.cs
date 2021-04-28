@@ -59,11 +59,26 @@ namespace PinMame
 		}
 
 		[TestMethod]
-		public void GetAvailableGames()
+		public void GetFoundGames()
 		{
-			PinMameGame[] games = _pinMame.GetAvailableGames();
+			PinMameGame[] games = _pinMame.GetFoundGames();
 
 			Assert.IsTrue(games.Length > 0);
+		}
+
+		[TestMethod]
+		public void GetGame()
+		{
+			PinMameGame game = _pinMame.GetGame("tf_180h");
+
+			Assert.IsTrue(game != null);
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(InvalidOperationException))]
+		public void GetGameNotFound()
+		{
+			PinMameGame game = _pinMame.GetGame("unknown");
 		}
 
 		[TestMethod]

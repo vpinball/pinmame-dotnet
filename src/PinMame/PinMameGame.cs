@@ -31,7 +31,9 @@
 
 namespace PinMame
 {
+	using System;
 	using System.Linq;
+	using System.Runtime.InteropServices;
 	using Internal;
 
 	public class PinMameGame
@@ -40,14 +42,26 @@ namespace PinMame
 		public string description;
 		public string year;
 		public string manufacturer;
+		public PinMameGameDriverFlag flags;
+		public bool found;
 		public PinMameGame[] clones;
 
-		internal PinMameGame(PinMameApi.PinmameGame game)
+		internal string cloneOf;
+
+		internal PinMameGame(IntPtr gamePtr)
 		{
+			PinMameApi.PinmameGame game =
+				(PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
+
 			name = game.name;
 			description = game.description;
 			year = game.year;
 			manufacturer = game.manufacturer;
+			flags = (PinMameGameDriverFlag)game.flags;
+			found = game.found == 1;
+			clones = Array.Empty<PinMameGame>();
+
+			cloneOf = game.cloneOf;
 		}
 
 		internal void addClone(PinMameGame game)
@@ -55,5 +69,8 @@ namespace PinMame
 			clones = clones.Append(game).OrderBy(
 				cloneGameInfo => cloneGameInfo.description).ToArray();
 		}
+
+		public override string ToString() =>
+			$"name={name}, description={description}, year={year}, manufacturer={manufacturer}, flags={flags}, found={found}";
 	}
 }

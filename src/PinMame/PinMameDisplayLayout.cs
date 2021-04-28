@@ -56,7 +56,7 @@ namespace PinMame
 			levels = null;
 		}
 
-		internal PinMameDisplayLayout(PinMameApi.PinmameDisplayLayout displayLayout, PinMameHardwareGen hardwareGen)
+		internal PinMameDisplayLayout(PinMameApi.PinmameDisplayLayout displayLayout, PinMameApi.PinmameHardwareGen hardwareGen)
 		{
 			type = (PinMameDisplayType)displayLayout.type;
 			top = displayLayout.top;
@@ -71,12 +71,12 @@ namespace PinMame
 			{
 				if (depth == 2)
 				{
-					levels = PinMameDmdLevels.Wpc;
+					levels = PinMameApi.PinmameDmdLevels.Wpc;
 				}
 				else
 				{
-					levels = (hardwareGen & (PinMameHardwareGen.SAM | PinMameHardwareGen.SPA)) != 0 ?
-						PinMameDmdLevels.Sam : PinMameDmdLevels.Gts3;
+					levels = (hardwareGen & (PinMameApi.PinmameHardwareGen.SAM | PinMameApi.PinmameHardwareGen.SPA)) != 0 ?
+						PinMameApi.PinmameDmdLevels.Sam : PinMameApi.PinmameDmdLevels.Gts3;
 				}
 			}
 		}

@@ -128,20 +128,20 @@ namespace PinMame
 		ALLWS = PinMameApi.PinmameHardwareGen.ALLWS,             // All Whitestar
 	}
 
-	public struct PinMameDmdLevels
+	public enum PinMameGameDriverFlag : uint
 	{
-		public readonly static byte[] Wpc = {
-			20, 33, 67, 100
-		};
-
-		public readonly static byte[] Sam =
-		{
-			0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 100
-		};
-
-		public readonly static byte[] Gts3 =
-		{
-			0, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100
-		};
+		ORIENTATION_MASK = PinMameApi.PinmameGameDriverFlag.ORIENTATION_MASK,
+		ORIENTATION_FLIP_X = PinMameApi.PinmameGameDriverFlag.ORIENTATION_FLIP_X,                 // mirror everything in the X direction 
+		ORIENTATION_FLIP_Y = PinMameApi.PinmameGameDriverFlag.ORIENTATION_FLIP_Y,                 // mirror everything in the Y direction 
+		ORIENTATION_SWAP_XY = PinMameApi.PinmameGameDriverFlag.ORIENTATION_SWAP_XY,               // mirror along the top-left/bottom-right diagonal 
+		GAME_NOT_WORKING = PinMameApi.PinmameGameDriverFlag.GAME_NOT_WORKING,
+		GAME_UNEMULATED_PROTECTION = PinMameApi.PinmameGameDriverFlag.GAME_UNEMULATED_PROTECTION, // game's protection not fully emulated 
+		GAME_WRONG_COLORS = PinMameApi.PinmameGameDriverFlag.GAME_WRONG_COLORS,                   // colors are totally wrong
+		GAME_IMPERFECT_COLORS = PinMameApi.PinmameGameDriverFlag.GAME_IMPERFECT_COLORS,           // colors are not 100% accurate, but close
+		GAME_IMPERFECT_GRAPHICS = PinMameApi.PinmameGameDriverFlag.GAME_IMPERFECT_GRAPHICS,       // graphics are wrong/incomplete
+		GAME_NO_COCKTAIL = PinMameApi.PinmameGameDriverFlag.GAME_NO_COCKTAIL,                     // screen flip support is missing
+		GAME_NO_SOUND = PinMameApi.PinmameGameDriverFlag.GAME_NO_SOUND,                           // sound is missing
+		GAME_IMPERFECT_SOUND = PinMameApi.PinmameGameDriverFlag.GAME_IMPERFECT_SOUND,             // sound is known to be wrong
+		NOT_A_DRIVER = PinMameApi.PinmameGameDriverFlag.NOT_A_DRIVER,                             // set by the fake "root" driver_0 and by "containers"
 	}
 }

@@ -80,7 +80,7 @@ namespace PinMame.Internal
 			SEG7SCH = SEG7SC| SEGHIBIT
 		}
 
-		internal enum PinmameHardwareGen : ulong
+		internal enum PinmameHardwareGen : UInt64
 		{
 			WPCALPHA_1 = 0x0000000000001,  // Alpha-numeric display S11 sound, Dr Dude 10/90
 			WPCALPHA_2 = 0x0000000000002,  // Alpha-numeric display,  - The Machine BOP 4/91
@@ -140,6 +140,40 @@ namespace PinMame.Internal
 			ALLWS = 0x001c000000000        // All Whitestar
 		}
 
+		internal enum PinmameGameDriverFlag : UInt32
+		{
+			ORIENTATION_MASK = 0x0007,
+			ORIENTATION_FLIP_X = 0x0001,          // mirror everything in the X direction 
+			ORIENTATION_FLIP_Y = 0x0002,          // mirror everything in the Y direction 
+			ORIENTATION_SWAP_XY = 0x0004,         // mirror along the top-left/bottom-right diagonal 
+			GAME_NOT_WORKING = 0x0008,
+			GAME_UNEMULATED_PROTECTION = 0x0010,  // game's protection not fully emulated 
+			GAME_WRONG_COLORS = 0x0020,           // colors are totally wrong
+			GAME_IMPERFECT_COLORS = 0x0040,       // colors are not 100% accurate, but close
+			GAME_IMPERFECT_GRAPHICS = 0x0080,     // graphics are wrong/incomplete
+			GAME_NO_COCKTAIL = 0x0100,            // screen flip support is missing
+			GAME_NO_SOUND = 0x0200,               // sound is missing
+			GAME_IMPERFECT_SOUND = 0x0400,        // sound is known to be wrong
+			NOT_A_DRIVER = 0x4000,                // set by the fake "root" driver_0 and by "containers"
+		}
+
+		internal struct PinmameDmdLevels
+		{
+			internal readonly static byte[] Wpc = {
+				20, 33, 67, 100
+			};
+
+			internal readonly static byte[] Sam =
+			{
+				0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 100
+			};
+
+			internal readonly static byte[] Gts3 =
+			{
+				0, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100
+			};
+		}
+
 		internal delegate void PinmameGameCallback(IntPtr gamePtr);
 		internal delegate void PinmameOnStateUpdatedCallback(int change);
 		internal delegate void PinmameOnDisplayAvailableCallback(int index, int displayCount, ref PinmameDisplayLayout displayLayout);
@@ -154,7 +188,8 @@ namespace PinMame.Internal
 			internal string description;
 			internal string year;
 			internal string manufacturer;
-			internal bool found;
+			internal PinmameGameDriverFlag flags;
+			internal int found;
 		};
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -187,6 +222,9 @@ namespace PinMame.Internal
 		#endregion
 
 		#region Game library functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern PinmameStatus PinmameGetGame(string name, PinmameGameCallback callback);
+
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern PinmameStatus PinmameGetGames(PinmameGameCallback callback);
 		#endregion

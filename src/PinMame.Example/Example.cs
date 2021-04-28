@@ -43,6 +43,7 @@ namespace PinMame
 		static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		static PinMame _pinMame;
+		static Dictionary<byte, string> _dmdMap;
 		static bool _isRunning = false;
 
 		static void DumpGames()
@@ -51,147 +52,72 @@ namespace PinMame
 
 			foreach (var game in _pinMame.GetGames())
 			{
-				Logger.Info($"PARENT: name={game.name}, description={game.description}, year={game.year}, manufacturer={game.manufacturer}");
+				Logger.Info($"PARENT: {game}");
 
 				foreach (var clone in game.clones)
 				{
-					Logger.Info($"  CLONE: name={clone.name}, description={clone.description}, year={clone.year}, manufacturer={clone.manufacturer}");
+					Logger.Info($"  CLONE: {clone}");
 				}
 			}
 		}
 
-		static void DumpAvailableGames()
+		static void DumpFoundGames()
 		{
-			Logger.Info($"DumpAvailableGames");
+			Logger.Info($"DumpFoundGames");
 
-			foreach (var game in _pinMame.GetAvailableGames())
+			foreach (var game in _pinMame.GetFoundGames())
 			{
-				Logger.Info($"name={game.name}, description={game.description}, year={game.year}, manufacturer={game.manufacturer}");
+				Logger.Info($"FOUND: {game}");
 			}
 		}
 
-		static void DumpDmd(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
+		static unsafe void DumpDmd(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
 		{
-			Dictionary<byte, string> map;
+			byte* ptr = (byte*)framePtr;
 
-			if (displayLayout.depth == 2)
+			for (var y = 0; y < displayLayout.height; y++)
 			{
-				// 20, 33, 67, 100
+				var dmd = "";
 
-				map = new Dictionary<byte, string>() {
-					{ 0x14, "░" },
-					{ 0x21, "▒" },
-					{ 0x43, "▓" },
-					{ 0x64, "▓" }
+				for (var x = 0; x < displayLayout.width; x++)
+				{
+					dmd += _dmdMap[ptr[y * displayLayout.width + x]];
+				}
+
+				Console.SetCursorPosition(0, y);
+				Console.Write(dmd);
+			}
+		}
+
+		static unsafe void DumpAlpha(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
+		{
+			ushort* ptr = (ushort*)framePtr;
+
+			for (var position = 0; position < displayLayout.length; position++)
+			{
+				var segments = new string[8] {
+					" AAAAA   " ,
+					"FI J KB  " ,
+					"F IJK B  " ,
+					" GG LL   " ,
+					"E ONM C  " ,
+					"EO N MC P" ,
+					" DDDDD  H" ,
+					"       H "
 				};
-			}
-			else
-			{
-				if ((_pinMame.GetHardwareGen() & (PinMameHardwareGen.SAM | PinMameHardwareGen.SPA)) > 0)
+
+				for (var row = 0; row < 8; row++)
 				{
-					// SAM: 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 100
-
-					map = new Dictionary<byte, string>() {
-						{ 0x00, "░" },
-						{ 0x14, "░" },
-						{ 0x19, "░" },
-						{ 0x1E, "░" },
-
-						{ 0x23, "▒" },
-						{ 0x28, "▒" },
-						{ 0x2D, "▒" },
-						{ 0x32, "▒" },
-
-						{ 0x37, "▓" },
-						{ 0x3C, "▓" },
-						{ 0x41, "▓" },
-						{ 0x46, "▓" },
-
-						{ 0x4B, "▓" },
-						{ 0x50, "▓" },
-						{ 0x5A, "▓" },
-						{ 0x64, "▓" }
-					};
-				}
-				else
-				{
-					// GTS3: 0, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100
-
-					map = new Dictionary<byte, string>() {
-						{ 0x00, "░" },
-						{ 0x1E, "░" },
-						{ 0x23, "░" },
-						{ 0x28, "░" },
-
-						{ 0x2D, "▒" },
-						{ 0x32, "▒" },
-						{ 0x37, "▒" },
-						{ 0x3C, "▒" },
-
-						{ 0x41, "▓" },
-						{ 0x46, "▓" },
-						{ 0x4B, "▓" },
-						{ 0x50, "▓" },
-
-						{ 0x55, "▓" },
-						{ 0x5A, "▓" },
-						{ 0x5F, "▓" },
-						{ 0x64, "▓" }
-					};
-				}
-			}
-
-			unsafe
-			{
-				byte* ptr = (byte*)framePtr;
-
-				for (var y = 0; y < displayLayout.height; y++)
-				{
-					var dmd = "";
-
-					for (var x = 0; x < displayLayout.width; x++)
+					for (var column = 0; column < segments[row].Length; column++)
 					{
-						dmd += map[ptr[y * displayLayout.width + x]];
-					}
-
-					Console.SetCursorPosition(0, y);
-					Console.Write(dmd);
-				}
-			}
-		}
-
-		static void DumpAlpha(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
-		{
-			unsafe
-			{
-				ushort* ptr = (ushort*)framePtr;
-
-				for (var position = 0; position < displayLayout.length; position++)
-				{
-					var segments = new string[8] {
-						" AAAAA   " ,
-						"FI J KB  " ,
-						"F IJK B  " ,
-						" GG LL   " ,
-						"E ONM C  " ,
-						"EO N MC P" ,
-						" DDDDD  H" ,
-						"       H "
-					};
-
-					for (var row = 0; row < 8; row++)
-					{
-						for (var column = 0; column < segments[row].Length; column++)
+						for (var bit = 0; bit < 16; bit++)
 						{
-							for (var bit = 0; bit < 16; bit++)
-							{
-								segments[row] = segments[row].Replace("" + (char)('A' + bit), (ptr[position] & (1 << bit)) > 0 ? "▓" : " ");
-							}
+							segments[row] = segments[row].Replace("" + (char)('A' + bit), (ptr[position] & (1 << bit)) > 0 ? "▓" : " ");
 						}
-
-						Console.SetCursorPosition(position * 10, index * 8 + row);
-						Console.Write(segments[row] + " ");
 					}
+
+					Console.SetCursorPosition(position * 10, index * 8 + row);
+					Console.Write(segments[row] + " ");
 				}
 			}
 		}
@@ -204,13 +130,51 @@ namespace PinMame
 		static void OnDisplayAvailable(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout)
 		{
 			Logger.Info($"OnDisplayAvailable: index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
+
+			if (displayLayout.IsDmd)
+			{
+				if (displayLayout.depth == 2)
+				{
+					_dmdMap = new Dictionary<byte, string>() {
+						{ displayLayout.levels[0], "░" },
+						{ displayLayout.levels[1], "▒" },
+						{ displayLayout.levels[2], "▓" },
+						{ displayLayout.levels[3], "▓" }
+					};
+				}
+				else
+				{
+					_dmdMap = new Dictionary<byte, string>()
+					{
+						{ displayLayout.levels[0], "░" },
+						{ displayLayout.levels[1], "░" },
+						{ displayLayout.levels[2], "░" },
+						{ displayLayout.levels[3], "░" },
+
+						{ displayLayout.levels[4], "▒" },
+						{ displayLayout.levels[5], "▒" },
+						{ displayLayout.levels[6], "▒" },
+						{ displayLayout.levels[7], "▒" },
+
+						{ displayLayout.levels[8], "▓" },
+						{ displayLayout.levels[9], "▓" },
+						{ displayLayout.levels[10], "▓" },
+						{ displayLayout.levels[11], "▓" },
+
+						{ displayLayout.levels[12], "▓" },
+						{ displayLayout.levels[13], "▓" },
+						{ displayLayout.levels[14], "▓" },
+						{ displayLayout.levels[15], "▓" }
+					};
+				}
+			}
 		}
 
 		static void OnDisplayUpdated(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
 		{
 			Logger.Info($"OnDisplayUpdated: index={index}, displayLayout={displayLayout}");
 
-			if (displayLayout.IsDmd)
+			if (displayLayout.IsDmd && _dmdMap != null)
 			{
 				DumpDmd(index, framePtr, displayLayout);
 			}
@@ -246,7 +210,9 @@ namespace PinMame
 			_pinMame = PinMame.Instance();
 
 			DumpGames();
-			DumpAvailableGames();
+			DumpFoundGames();
+
+			Logger.Info(_pinMame.GetGame("fh_906h"));
 
 			_pinMame.OnGameStarted += OnGameStarted;
 			_pinMame.OnDisplayAvailable += OnDisplayAvailable;
@@ -254,7 +220,8 @@ namespace PinMame
 			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
 
-			_pinMame.StartGame("mm_109c");
+			_pinMame.StartGame("tf_180h");
+			//_pinMame.StartGame("mm_109c");
 			//_pinMame.StartGame("fh_906h");
 			//_pinMame.StartGame("flashgdn");
 
