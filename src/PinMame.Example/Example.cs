@@ -207,6 +207,8 @@ namespace PinMame
 
 			LogManager.ReconfigExistingLoggers();
 
+			_pinMame = PinMame.Instance();
+
 			DumpGames();
 			DumpFoundGames();
 
