@@ -20,12 +20,12 @@ This package is automatically built and published when the main project, PinMAME
 
 The native wrapper is a different package and contains pre-compiled binaries of LibPinMAME.
 
-|                                     | NuGet Package                                                       |
-|-------------------------------------|:-------------------------------------------------------------------:|
-| **Windows 64-bit**                  | [![PinMame.Native.win-x64-badge]][PinMame.Native.win-x64-nuget]     |
-| **Windows 32-bit**                  | [![PinMame.Native.win-x86-badge]][PinMame.Native.win-x86-nuget]     |
-| **Linux x64**                       | [![PinMame.Native.linux-x64-badge]][PinMame.Native.linux-x64-nuget] |
-| **macOS x64**                       | [![PinMame.Native.osx-x64-badge]][PinMame.Native.osx-x64-nuget]     |
+|                       | NuGet Package                                                       |
+|-----------------------|:-------------------------------------------------------------------:|
+| **Windows 64-bit**    | [![PinMame.Native.win-x64-badge]][PinMame.Native.win-x64-nuget]     |
+| **Windows 32-bit**    | [![PinMame.Native.win-x86-badge]][PinMame.Native.win-x86-nuget]     |
+| **Linux x64**         | [![PinMame.Native.linux-x64-badge]][PinMame.Native.linux-x64-nuget] |
+| **macOS x64**         | [![PinMame.Native.osx-x64-badge]][PinMame.Native.osx-x64-nuget]     |
 
 [PinMame.Native.win-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.win-x64.svg
 [PinMame.Native.win-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.win-x64
@@ -36,10 +36,11 @@ The native wrapper is a different package and contains pre-compiled binaries of 
 [PinMame.Native.osx-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.osx-x64.svg
 [PinMame.Native.osx-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.osx-x64
 
-Then just install this package:
+To install this package with the native dependency of your current platform, run:
 
 ```
 Install-Package PinMame
+Install-Package PinMame-Native
 ```
 
 ## Usage
