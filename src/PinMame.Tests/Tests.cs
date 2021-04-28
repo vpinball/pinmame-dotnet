@@ -53,7 +53,7 @@ namespace PinMame
 		[TestMethod]
 		public void GetGames()
 		{
-			var games = PinMame.GetGames();
+			var games = _pinMame.GetGames();
 
 			Assert.IsTrue(games.Count > 650);
 		}
@@ -61,7 +61,7 @@ namespace PinMame
 		[TestMethod]
 		public void GetFoundGames()
 		{
-			var games = PinMame.GetFoundGames();
+			var games = _pinMame.GetFoundGames();
 
 			Assert.IsTrue(games.Count > 0);
 		}
@@ -69,7 +69,7 @@ namespace PinMame
 		[TestMethod]
 		public void GetGame()
 		{
-			PinMameGame game = PinMame.GetGame("tf_180h");
+			PinMameGame game = _pinMame.GetGame("tf_180h");
 
 			Assert.IsTrue(game != null);
 		}
@@ -78,7 +78,7 @@ namespace PinMame
 		[ExpectedException(typeof(InvalidOperationException))]
 		public void GetGameNotFound()
 		{
-			PinMameGame game = PinMame.GetGame("unknown");
+			PinMameGame game = _pinMame.GetGame("unknown");
 		}
 
 		[TestMethod]
