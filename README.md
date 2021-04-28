@@ -1,12 +1,14 @@
 # PinMAME for .NET
 
 [![CI status (x64 Linux, macOS and Windows)](https://github.com/VisualPinball/pinmame-dotnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/VisualPinball/pinmame-dotnet/actions) 
-[![NuGet](https://img.shields.io/nuget/v/PinMame.svg)](https://www.nuget.org/packages/PinMame)
+[![NuGet](https://img.shields.io/nuget/vpre/PinMame.svg)](https://www.nuget.org/packages/PinMame)
 
 *Add PinMAME support to any .NET application*
 
 This NuGet package provides a .NET binding for [PinMAME](https://github.com/vpinball/pinmame),
 an emulator for solid state pinball machines. It uses the cross-platform [LibPinMAME](https://github.com/vpinball/pinmame/tree/master/src/libpinmame).
+
+This package is automatically built and published when the main project, PinMAME, is updated.
 
 ## Supported Platforms
 
@@ -25,13 +27,13 @@ The native wrapper is a different package and contains pre-compiled binaries of 
 | **Linux x64**                       | [![PinMame.Native.linux-x64-badge]][PinMame.Native.linux-x64-nuget] |
 | **macOS x64**                       | [![PinMame.Native.osx-x64-badge]][PinMame.Native.osx-x64-nuget]     |
 
-[PinMame.Native.win-x64-badge]: https://img.shields.io/nuget/v/PinMame.Native.win-x64.svg
+[PinMame.Native.win-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.win-x64.svg
 [PinMame.Native.win-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.win-x64
-[PinMame.Native.win-x86-badge]: https://img.shields.io/nuget/v/PinMame.Native.win-x86.svg
+[PinMame.Native.win-x86-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.win-x86.svg
 [PinMame.Native.win-x86-nuget]: https://www.nuget.org/packages/PinMame.Native.win-x86
-[PinMame.Native.linux-x64-badge]: https://img.shields.io/nuget/v/PinMame.Native.linux-x64.svg
+[PinMame.Native.linux-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.linux-x64.svg
 [PinMame.Native.linux-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.linux-x64
-[PinMame.Native.osx-x64-badge]: https://img.shields.io/nuget/v/PinMame.Native.osx-x64.svg
+[PinMame.Native.osx-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.osx-x64.svg
 [PinMame.Native.osx-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.osx-x64
 
 Then just install this package:
@@ -70,7 +72,6 @@ void OnDisplayUpdated(int index, IntPtr framePtr, PinMameDisplayLayout displayLa
 ```
 
 See the [example project](https://github.com/VisualPinball/pinmame-dotnet/blob/master/src/PinMame.Example/Example.cs) for more information.
-
 
 ## License
 
