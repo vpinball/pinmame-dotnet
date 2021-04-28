@@ -2,31 +2,31 @@
 // Copyright (C) 1999-2021 PinMAME development team and contributors
 //
 // Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
+// modification, are permitted provided that the following conditions
 // are met:
 //
-// 1. Redistributions of source code must retain the above copyright 
+// 1. Redistributions of source code must retain the above copyright
 // notice, this list of conditions and the following disclaimer.
 //
 // 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the 
+// notice, this list of conditions and the following disclaimer in the
 // documentation and/or other materials provided with the distribution.
 //
 // 3. Neither the name of the copyright holder nor the names of its
 // contributors may be used to endorse or promote products derived
 // from this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
-// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE 
-// COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
-// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT 
-// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN 
-// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+// FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+// COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+// LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+// ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
 using System;
@@ -47,29 +47,29 @@ namespace PinMame
 			var profilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 			var path = Path.GetFullPath(Path.Combine(profilePath, ".pinmame"));
 
-			_pinMame = PinMame.Instance(48000, path);
+			_pinMame = PinMame.Instance(path, 48000);
 		}
 
 		[TestMethod]
 		public void GetGames()
 		{
-			PinMameGame[] games = _pinMame.GetGames();
+			var games = PinMame.GetGames();
 
-			Assert.IsTrue(games.Length > 650);
+			Assert.IsTrue(games.Count > 650);
 		}
 
 		[TestMethod]
 		public void GetFoundGames()
 		{
-			PinMameGame[] games = _pinMame.GetFoundGames();
+			var games = PinMame.GetFoundGames();
 
-			Assert.IsTrue(games.Length > 0);
+			Assert.IsTrue(games.Count > 0);
 		}
 
 		[TestMethod]
 		public void GetGame()
 		{
-			PinMameGame game = _pinMame.GetGame("tf_180h");
+			PinMameGame game = PinMame.GetGame("tf_180h");
 
 			Assert.IsTrue(game != null);
 		}
@@ -78,7 +78,7 @@ namespace PinMame
 		[ExpectedException(typeof(InvalidOperationException))]
 		public void GetGameNotFound()
 		{
-			PinMameGame game = _pinMame.GetGame("unknown");
+			PinMameGame game = PinMame.GetGame("unknown");
 		}
 
 		[TestMethod]

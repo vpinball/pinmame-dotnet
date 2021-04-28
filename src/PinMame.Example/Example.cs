@@ -50,11 +50,11 @@ namespace PinMame
 		{
 			Logger.Info($"DumpGames");
 
-			foreach (var game in _pinMame.GetGames())
+			foreach (var game in PinMame.GetGames())
 			{
 				Logger.Info($"PARENT: {game}");
 
-				foreach (var clone in game.clones)
+				foreach (var clone in game.Clones)
 				{
 					Logger.Info($"  CLONE: {clone}");
 				}
@@ -65,7 +65,7 @@ namespace PinMame
 		{
 			Logger.Info($"DumpFoundGames");
 
-			foreach (var game in _pinMame.GetFoundGames())
+			foreach (var game in PinMame.GetFoundGames())
 			{
 				Logger.Info($"FOUND: {game}");
 			}
@@ -75,13 +75,13 @@ namespace PinMame
 		{
 			byte* ptr = (byte*)framePtr;
 
-			for (var y = 0; y < displayLayout.height; y++)
+			for (var y = 0; y < displayLayout.Height; y++)
 			{
 				var dmd = "";
 
-				for (var x = 0; x < displayLayout.width; x++)
+				for (var x = 0; x < displayLayout.Width; x++)
 				{
-					dmd += _dmdMap[ptr[y * displayLayout.width + x]];
+					dmd += _dmdMap[ptr[y * displayLayout.Width + x]];
 				}
 
 				Console.SetCursorPosition(0, y);
@@ -93,7 +93,7 @@ namespace PinMame
 		{
 			ushort* ptr = (ushort*)framePtr;
 
-			for (var position = 0; position < displayLayout.length; position++)
+			for (var position = 0; position < displayLayout.Length; position++)
 			{
 				var segments = new string[8] {
 					" AAAAA   " ,
@@ -133,38 +133,38 @@ namespace PinMame
 
 			if (displayLayout.IsDmd)
 			{
-				if (displayLayout.depth == 2)
+				if (displayLayout.Depth == 2)
 				{
 					_dmdMap = new Dictionary<byte, string>() {
-						{ displayLayout.levels[0], "░" },
-						{ displayLayout.levels[1], "▒" },
-						{ displayLayout.levels[2], "▓" },
-						{ displayLayout.levels[3], "▓" }
+						{ displayLayout.Levels[0], "░" },
+						{ displayLayout.Levels[1], "▒" },
+						{ displayLayout.Levels[2], "▓" },
+						{ displayLayout.Levels[3], "▓" }
 					};
 				}
 				else
 				{
 					_dmdMap = new Dictionary<byte, string>()
 					{
-						{ displayLayout.levels[0], "░" },
-						{ displayLayout.levels[1], "░" },
-						{ displayLayout.levels[2], "░" },
-						{ displayLayout.levels[3], "░" },
+						{ displayLayout.Levels[0], "░" },
+						{ displayLayout.Levels[1], "░" },
+						{ displayLayout.Levels[2], "░" },
+						{ displayLayout.Levels[3], "░" },
 
-						{ displayLayout.levels[4], "▒" },
-						{ displayLayout.levels[5], "▒" },
-						{ displayLayout.levels[6], "▒" },
-						{ displayLayout.levels[7], "▒" },
+						{ displayLayout.Levels[4], "▒" },
+						{ displayLayout.Levels[5], "▒" },
+						{ displayLayout.Levels[6], "▒" },
+						{ displayLayout.Levels[7], "▒" },
 
-						{ displayLayout.levels[8], "▓" },
-						{ displayLayout.levels[9], "▓" },
-						{ displayLayout.levels[10], "▓" },
-						{ displayLayout.levels[11], "▓" },
+						{ displayLayout.Levels[8], "▓" },
+						{ displayLayout.Levels[9], "▓" },
+						{ displayLayout.Levels[10], "▓" },
+						{ displayLayout.Levels[11], "▓" },
 
-						{ displayLayout.levels[12], "▓" },
-						{ displayLayout.levels[13], "▓" },
-						{ displayLayout.levels[14], "▓" },
-						{ displayLayout.levels[15], "▓" }
+						{ displayLayout.Levels[12], "▓" },
+						{ displayLayout.Levels[13], "▓" },
+						{ displayLayout.Levels[14], "▓" },
+						{ displayLayout.Levels[15], "▓" }
 					};
 				}
 			}
@@ -209,28 +209,37 @@ namespace PinMame
 
 			_pinMame = PinMame.Instance();
 
-			DumpGames();
-			DumpFoundGames();
-
-			Logger.Info(_pinMame.GetGame("fh_906h"));
-
-			_pinMame.OnGameStarted += OnGameStarted;
-			_pinMame.OnDisplayAvailable += OnDisplayAvailable;
-			_pinMame.OnDisplayUpdated += OnDisplayUpdated;
-			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
-			_pinMame.OnGameEnded += OnGameEnded;
-
-			_pinMame.StartGame("tf_180h");
-			//_pinMame.StartGame("mm_109c");
-			//_pinMame.StartGame("fh_906h");
-			//_pinMame.StartGame("flashgdn");
-
-			_isRunning = true;
-
-			while (_isRunning)
+			var games = PinMame.GetGames();
+			foreach (var game in games)
 			{
-				Thread.Sleep(100);
+				if (game.HasFlag(PinMameGameDriverFlag.GameNotWorking)) {
+					Console.WriteLine($"Game not working: {game}");
+					//Console.WriteLine($"Game not working: {game.Name} - {game.Description} ({game.Manufacturer} {game.Year})");
+				}
 			}
+
+			// DumpGames();
+			// DumpFoundGames();
+			//
+			// Logger.Info(_pinMame.GetGame("fh_906h"));
+			//
+			// _pinMame.OnGameStarted += OnGameStarted;
+			// _pinMame.OnDisplayAvailable += OnDisplayAvailable;
+			// _pinMame.OnDisplayUpdated += OnDisplayUpdated;
+			// _pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
+			// _pinMame.OnGameEnded += OnGameEnded;
+			//
+			// _pinMame.StartGame("tf_180h");
+			// //_pinMame.StartGame("mm_109c");
+			// //_pinMame.StartGame("fh_906h");
+			// //_pinMame.StartGame("flashgdn");
+			//
+			// _isRunning = true;
+			//
+			// while (_isRunning)
+			// {
+			// 	Thread.Sleep(100);
+			// }
 		}
 	}
 }

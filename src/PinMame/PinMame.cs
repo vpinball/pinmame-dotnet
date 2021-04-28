@@ -29,21 +29,17 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
+using NLog;
 
 namespace PinMame
 {
-	using System;
-	using System.IO;
-	using System.Runtime.InteropServices;
-	using Registry = Microsoft.Win32.Registry;
-	using Internal;
-	using System.Collections.Generic;
-	using System.Linq;
-	using NLog;
-	using Logger = NLog.Logger;
-
 	/// <summary>
 	/// PinMAME, a pinball ROM emulator.
 	/// </summary>
@@ -52,23 +48,75 @@ namespace PinMame
 	/// Note this doesn't use Visual PinMAME but is based on a cross-platform
 	/// library.
 	/// </remarks>
-
 	public class PinMame
 	{
-		public static int DisplayAvailableTimeoutMs = 1000;
-		private static Logger Logger = LogManager.GetCurrentClassLogger();
+		#region Delegates Definition
 
-		public delegate void OnDisplayAvailableEventHandler(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout);
-		public delegate void OnDisplayUpdatedEventHandler(object sender, EventArgs e, int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
-		public delegate void OnSolenoidUpdatedEventHandler(object sender, EventArgs e, int solenoid, bool isActive);
+		/// <summary>
+		/// A delegate, called when displays are available.
+		/// </summary>
+		public delegate void OnDisplayAvailableEventHandler(int index, int displayCount, PinMameDisplayLayout displayLayout);
 
+		/// <summary>
+		/// A delegate, called when a display is updated.
+		/// </summary>
+		public delegate void OnDisplayUpdatedEventHandler(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
+
+		/// <summary>
+		/// A delegate, called when a solenoid is updated.
+		/// </summary>
+		public delegate void OnSolenoidUpdatedEventHandler(int solenoid, bool isActive);
+
+		#endregion
+
+		/// <summary>
+		/// Game is started and ready to receive switch changes.
+		/// </summary>
 		public event EventHandler OnGameStarted;
+
+		/// <summary>
+		/// A new display is available. This is called as soon as possible,
+		/// and before <see cref="OnDisplayUpdated"/>.
+		/// </summary>
 		public event OnDisplayAvailableEventHandler OnDisplayAvailable;
+
+		/// <summary>
+		/// A display needs updating due to new content.
+		/// </summary>
 		public event OnDisplayUpdatedEventHandler OnDisplayUpdated;
+
+		/// <summary>
+		/// A coil state has changed.
+		/// </summary>
 		public event OnSolenoidUpdatedEventHandler OnSolenoidUpdated;
+
+		/// <summary>
+		/// The game has ended.
+		/// </summary>
 		public event EventHandler OnGameEnded;
 
-		private PinMameApi.PinmameConfig _config;
+		/// <summary>
+		/// Retrieves rom path which is vpmPath + roms.
+		/// </summary>
+		public string RomPath => _config.vpmPath + "roms";
+
+		/// <summary>
+		/// The currently running game
+		/// </summary>
+		public string RunningGame { get; private set; }
+
+		/// <summary>
+		/// Returns whether a game is currently running.
+		/// </summary>
+		public static bool IsRunning => PinMameApi.PinmameIsRunning() == 1;
+
+		/// <summary>
+		/// Returns the hardware generation
+		/// </summary>
+		/// <returns>Value of the hardware generation</returns>
+		public static PinMameHardwareGen CurrentHardwareGen => (PinMameHardwareGen)PinMameApi.PinmameGetHardwareGen();
+
+		private readonly PinMameApi.PinmameConfig _config;
 		private int[] _changedLamps;
 		private int[] _changedGIs;
 		private readonly Dictionary<int, PinMameDisplayLayout> _availableDisplays = new Dictionary<int, PinMameDisplayLayout>();
@@ -76,27 +124,29 @@ namespace PinMame
 		private static PinMame _instance;
 		private CancellationTokenSource _availableDisplaysToken;
 
+		private const int DisplayAvailableTimeoutMs = 1000;
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
 		/// <summary>
 		/// Creates or retrieves the PinMame instance.
 		/// </summary>
 		/// <param name="sampleRate">Audio sample rate</param>
 		/// <param name="vpmPath">Fallback path for VPM folder, if VPM is not registered</param>
-		/// <exception cref="InvalidOperationException">If VPM cannot be found</exception>
-		public static PinMame Instance(int sampleRate = 48000, string vpmPath = null) =>
-			_instance ?? (_instance = new PinMame(sampleRate, vpmPath));
+		/// <exception cref="ArgumentException">If VPM cannot be found</exception>
+		public static PinMame Instance(string vpmPath = null, int sampleRate = 48000) =>
+			_instance ?? (_instance = new PinMame(vpmPath, sampleRate));
 
-		private PinMame(int sampleRate, string vpmPath)
+		private PinMame(string vpmPath, int sampleRate)
 		{
 			Logger.Info($"PinMame - sampleRate={sampleRate}, vpmPath={vpmPath}");
 
 			var path = vpmPath ?? GetVpmPath();
-			if (path == null)
-			{
-				throw new InvalidOperationException("Could not determine VPM path. Either install VPinMAME or provide it manually.");
+			if (path == null) {
+				throw new ArgumentException("Could not determine VPM path. Either install VPinMAME or provide it manually.", nameof(vpmPath));
 			}
-			if (!Directory.Exists(path))
-			{
-				throw new InvalidOperationException($"Could not find VPM path {path} does not exist.");
+
+			if (!Directory.Exists(path)) {
+				throw new ArgumentException($"Could not find VPM path - {path} does not exist.", nameof(vpmPath));
 			}
 
 			_config = new PinMameApi.PinmameConfig {
@@ -107,164 +157,13 @@ namespace PinMame
 				onDisplayUpdated = OnDisplayUpdatedCallback,
 				onSolenoidUpdated = OnSolenoidUpdatedCallback
 			};
-
 			PinMameApi.PinmameSetConfig(ref _config);
 		}
 
 		/// <summary>
-		/// Retrieves a game by game name.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">If the configuration has not been set or the game name is not found.</exception>
-		public PinMameGame GetGame(string name)
-		{
-			Logger.Info($"GetGame: name={name}");
-
-			PinMameGame game = null;
-
-			PinMameApi.PinmameStatus status = PinMameApi.PinmameGetGame(name, (gamePtr) =>
-			{
-				game = new PinMameGame(gamePtr);
-			});
-
-			if (status != PinMameApi.PinmameStatus.OK)
-			{
-				throw new InvalidOperationException($"Unable to get game, name={name}, status={status}");
-			}
-
-			return game;
-		}
-
-		/// <summary>
-		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception> 
-		public PinMameGame[] GetGames()
-		{
-			Logger.Info("GetGames");
-
-			Dictionary<string, PinMameGame> games = new Dictionary<string, PinMameGame>();
-			List<KeyValuePair<string, PinMameGame>> clones = new List<KeyValuePair<string, PinMameGame>>();
-
-			PinMameApi.PinmameStatus status = PinMameApi.PinmameGetGames((gamePtr) =>
-			{
-				var game = new PinMameGame(gamePtr);
-
-				if (string.IsNullOrEmpty(game.cloneOf))
-				{
-					games.Add(game.name, game);
-				}
-				else
-				{
-					clones.Add(new KeyValuePair<string, PinMameGame>(game.cloneOf, game));
-				}
-			});
-
-			if (status != PinMameApi.PinmameStatus.OK)
-			{
-				throw new InvalidOperationException($"Unable to get games, status={status}");
-			}
-
-			foreach(var clone in clones)
-			{
-				if (games.TryGetValue(clone.Key, out PinMameGame game))
-				{
-					game.addClone(clone.Value);
-				}
-			}
-
-			PinMameGame[] array = games.Values.OrderBy(game => game.description).ToArray();
-
-			Logger.Info($"GetGames - total={array.Length}");
-
-			return array;
-		}
-
-		/// <summary>
-		/// Retrieves all games found in roms folder sorted by description. Clones array will not be populated.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception> 
-		public PinMameGame[] GetFoundGames()
-		{
-			Logger.Info("GetFoundGames");
-
-			var games = new List<PinMameGame>();
-
-			PinMameApi.PinmameStatus status = PinMameApi.PinmameGetGames((gamePtr) =>
-			{
-				var game = new PinMameGame(gamePtr);
-
-				if (game.found)
-				{
-					games.Add(game);
-				}
-			});
-
-			if (status != PinMameApi.PinmameStatus.OK)
-			{
-				throw new InvalidOperationException($"Unable to get games, status={status}");
-			}
-
-			PinMameGame[] array = games.OrderBy(game => game.description).ToArray();
-
-			Logger.Info($"GetFoundGames - total={array.Length}");
-
-			return array;
-		}
-
-		/// <summary>
-		/// Retrieves rom path which is vpmPath + roms.
-		/// </summary>
-		public string GetRomPath()
-		{
-			return _config.vpmPath + "roms";
-		}
-	
-		private void OnStateUpdatedCallback(int state)
-		{
-			Logger.Debug($"OnStateUpdatedCallback - state={state}");
-
-			if (state == 1)
-			{
-				_changedLamps = new int[PinMameApi.PinmameGetMaxLamps() * 2];
-				_changedGIs = new int[PinMameApi.PinmameGetMaxGIs() * 2];
-
-				OnGameStarted?.Invoke(this, EventArgs.Empty);
-			}
-			else
-			{
-				OnGameEnded?.Invoke(this, EventArgs.Empty);
-			}
-		}
-
-		private void OnDisplayAvailableCallback(int index, int displayCount, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
-		{
-			var displayLayout = new PinMameDisplayLayout(displayLayoutRef, PinMameApi.PinmameGetHardwareGen());
-
-			Logger.Trace($"OnDisplayAvailableCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
-
-			OnDisplayAvailable?.Invoke(this, EventArgs.Empty, index, displayCount, displayLayout);
-		}
-
-		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
-		{
-			var displayLayout = new PinMameDisplayLayout(displayLayoutRef);
-
-			Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayLayout={displayLayout}");
-
-			OnDisplayUpdated?.Invoke(this, EventArgs.Empty, index, framePtr, displayLayout);
-		}
-
-		private void OnSolenoidUpdatedCallback(int solenoid, int isActive)
-		{
-			Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
-
-			OnSolenoidUpdated?.Invoke(this, EventArgs.Empty, solenoid, isActive == 1);
-		}
-
-		/// <summary>
-		/// Starts a new game.
+		/// Starts a new game. <p/>
 		///
-		/// When the game has successfully started, the `GameStarted` event is triggered.
+		/// When the game has successfully started, the <see cref="OnGameStarted"/> event is triggered.
 		/// </summary>
 		/// <param name="gameName">Name of the game, e.g. "tz_94h"</param>
 		/// <exception cref="InvalidOperationException">If there is already a game running.</exception>
@@ -272,10 +171,9 @@ namespace PinMame
 		public void StartGame(string gameName)
 		{
 			Logger.Info("StartGame");
-			PinMameApi.PinmameStatus status = PinMameApi.PinmameRun(gameName);
-
-			if (status != PinMameApi.PinmameStatus.OK)
-			{
+			RunningGame = gameName;
+			var status = PinMameApi.PinmameRun(gameName);
+			if (status != PinMameApi.PinmameStatus.OK) {
 				throw new InvalidOperationException($"Unable to start game, status={status}");
 			}
 		}
@@ -292,7 +190,7 @@ namespace PinMame
 		/// <exception cref="InvalidOperationException">Thrown when a game is already running.</exception>
 		public Dictionary<int, PinMameDisplayLayout> GetAvailableDisplays(string romId)
 		{
-			if (IsRunning()) {
+			if (IsRunning) {
 				throw new InvalidOperationException("Cannot retrieve available displays while another game is already running.");
 			}
 
@@ -310,12 +208,85 @@ namespace PinMame
 		}
 
 		/// <summary>
+		/// Retrieves a game by game name.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">If the configuration has not been set or the game name is not found.</exception>
+		public static PinMameGame GetGame(string name)
+		{
+			Logger.Info($"GetGame: name={name}");
+
+			PinMameGame game = null;
+			var status = PinMameApi.PinmameGetGame(name, gamePtr => {
+				game = new PinMameGame(gamePtr);
+			});
+
+			if (status != PinMameApi.PinmameStatus.OK) {
+				throw new InvalidOperationException($"Unable to get game, name={name}, status={status}");
+			}
+
+			return game;
+		}
+
+		/// <summary>
+		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception>
+		public static ICollection<PinMameGame> GetGames()
+		{
+			var games = new Dictionary<string, PinMameGame>();
+			var clones = new List<KeyValuePair<string, PinMameGame>>();
+
+			var status = PinMameApi.PinmameGetGames(gamePtr => {
+				var game = new PinMameGame(gamePtr);
+
+				if (string.IsNullOrEmpty(game.CloneOf)) {
+					games.Add(game.Name, game);
+
+				} else {
+					clones.Add(new KeyValuePair<string, PinMameGame>(game.CloneOf, game));
+				}
+			});
+
+			if (status != PinMameApi.PinmameStatus.OK) {
+				throw new InvalidOperationException($"Unable to get games, status={status}");
+			}
+
+			foreach (var clone in clones) {
+				if (games.TryGetValue(clone.Key, out var game)) {
+					game.AddClone(clone.Value);
+				}
+			}
+
+			return games.Values;
+		}
+
+		/// <summary>
+		/// Retrieves all games found in roms folder sorted by description. Clones array will not be populated.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception>
+		public static ICollection<PinMameGame> GetFoundGames()
+		{
+			var games = new List<PinMameGame>();
+			var status = PinMameApi.PinmameGetGames(gamePtr => {
+				var game = new PinMameGame(gamePtr);
+				if (game.RomFound) {
+					games.Add(game);
+				}
+			});
+
+			if (status != PinMameApi.PinmameStatus.OK) {
+				throw new InvalidOperationException($"Unable to get games, status={status}");
+			}
+
+			return games;
+		}
+
+		/// <summary>
 		/// Resets a game.
 		/// </summary>
 		public void ResetGame()
 		{
 			Logger.Info("ResetGame");
-
 			PinMameApi.PinmameReset();
 		}
 
@@ -325,90 +296,78 @@ namespace PinMame
 		public void StopGame()
 		{
 			Logger.Info("StopGame");
-
 			PinMameApi.PinmameStop();
 		}
 
-		public bool IsRunning() => PinMameApi.PinmameIsRunning() == 1;
-
+		/// <summary>
+		/// Pauses a game.
+		/// </summary>
+		/// <exception cref="InvalidOperationException"></exception>
 		public void Pause()
 		{
 			Logger.Info("Pause");
 
-			PinMameApi.PinmameStatus status = PinMameApi.PinmamePause(1);
-
-			if (status != PinMameApi.PinmameStatus.OK)
-			{
+			var status = PinMameApi.PinmamePause(1);
+			if (status != PinMameApi.PinmameStatus.OK) {
 				throw new InvalidOperationException($"Unable to pause game, status={status}");
 			}
 		}
 
+		/// <summary>
+		/// Continues a paused game.
+		/// </summary>
+		/// <exception cref="InvalidOperationException"></exception>
 		public void Continue()
 		{
 			Logger.Info("Continue");
 
-			PinMameApi.PinmameStatus status = PinMameApi.PinmamePause(0);
-
-			if (status != PinMameApi.PinmameStatus.OK)
-			{
+			var status = PinMameApi.PinmamePause(0);
+			if (status != PinMameApi.PinmameStatus.OK) {
 				throw new InvalidOperationException($"Unable to continue game, status={status}");
 			}
 		}
 
-		/// <summary>
-		/// Returns the hardware generation
-		/// </summary>
-		/// <returns>Value of the hardware generation</returns>
-		public PinMameHardwareGen GetHardwareGen() => (PinMameHardwareGen)PinMameApi.PinmameGetHardwareGen();
-
-		/// <summary>
-		/// Returns the state of a given switch.
-		/// </summary>
-		/// <param name="slot">Slot number of the switch</param>
-		/// <returns>Value of the switch</returns>
-		public bool GetSwitch(int slot) => PinMameApi.PinmameGetSwitch(slot) == 1;
-
-		/// <summary>
-		/// Sets the state of a given switch.
-		/// </summary>
-		/// <param name="slot">Slot number of the switch</param>
-		/// <param name="state">New value of the switch</param>
-		public void SetSwitch(int slot, bool state) => PinMameApi.PinmameSetSwitch(slot, state ? 1 : 0);
-
-		/// <summary>
-		/// Returns the maximal supported number of lamps.
-		/// </summary>
-		/// <returns>Number of lamps</returns>
-		public int GetMaxLamps() => PinMameApi.PinmameGetMaxLamps();
-
-		/// <summary>
-		/// Returns an array of all changed lamps since the last call. <p/>
-		///
-		/// The returned array contains pairs, where the first element is the
-		/// lamp number, and the second element the value.
-		/// </summary>
-		public Span<int> GetChangedLamps()
+		private void OnStateUpdatedCallback(int state)
 		{
-			var num = PinMameApi.PinmameGetChangedLamps(_changedLamps);
-			return _changedLamps.AsSpan().Slice(0, num * 2);
+			Logger.Debug($"OnStateUpdatedCallback - state={state}");
+
+			if (state == 1)
+			{
+				_changedLamps = new int[PinMameApi.PinmameGetMaxLamps() * 2];
+				_changedGIs = new int[PinMameApi.PinmameGetMaxGIs() * 2];
+
+				OnGameStarted?.Invoke(this, EventArgs.Empty);
+			}
+			else
+			{
+				OnGameEnded?.Invoke(this, EventArgs.Empty);
+				RunningGame = null;
+			}
 		}
 
-		/// <summary>
-		/// Returns the maximal supported number of GIs.
-		/// </summary>
-		/// <returns>Number of GIs</returns>
-		public int GetMaxGIs() => PinMameApi.PinmameGetMaxGIs();
-
-		/// <summary>
-		/// Returns an array of all changed GIs since the last call. <p/>
-		///
-		/// The returned array contains pairs, where the first element is the
-		/// GI number, and the second element the value.
-		/// </summary>
-		public Span<int> GetChangedGIs()
+		private void OnDisplayAvailableCallback(int index, int displayCount, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
 		{
-			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
-			return _changedGIs.AsSpan().Slice(0, num * 2);
+			var displayLayout = new PinMameDisplayLayout(displayLayoutRef, PinMameApi.PinmameGetHardwareGen());
+
+			Logger.Trace($"OnDisplayAvailableCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
+
+			OnDisplayAvailable?.Invoke(index, displayCount, displayLayout);
+		}
+
+		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
+		{
+			var displayLayout = new PinMameDisplayLayout(displayLayoutRef);
+
+			Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayLayout={displayLayout}");
+
+			OnDisplayUpdated?.Invoke(index, framePtr, displayLayout);
+		}
+
+		private void OnSolenoidUpdatedCallback(int solenoid, int isActive)
+		{
+			Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
+
+			OnSolenoidUpdated?.Invoke(solenoid, isActive == 1);
 		}
 
 		/// <summary>
@@ -427,7 +386,7 @@ namespace PinMame
 			}
 		}
 
-		private void ProbeOnDisplayAvailable(object sender, EventArgs e, int index, int displayCount, PinMameDisplayLayout displayLayout)
+		private void ProbeOnDisplayAvailable(int index, int displayCount, PinMameDisplayLayout displayLayout)
 		{
 			_availableDisplays[index] = displayLayout;
 			if (displayCount == _availableDisplays.Count) {
@@ -502,5 +461,59 @@ namespace PinMame
 
 			return null;
 		}
+
+		#region Deprecated API?
+
+		/// <summary>
+		/// Returns the state of a given switch.
+		/// </summary>
+		/// <param name="slot">Slot number of the switch</param>
+		/// <returns>Value of the switch</returns>
+		public bool GetSwitch(int slot) => PinMameApi.PinmameGetSwitch(slot) == 1;
+
+		/// <summary>
+		/// Sets the state of a given switch.
+		/// </summary>
+		/// <param name="slot">Slot number of the switch</param>
+		/// <param name="state">New value of the switch</param>
+		public void SetSwitch(int slot, bool state) => PinMameApi.PinmameSetSwitch(slot, state ? 1 : 0);
+
+		/// <summary>
+		/// Returns the maximal supported number of lamps.
+		/// </summary>
+		/// <returns>Number of lamps</returns>
+		public int GetMaxLamps() => PinMameApi.PinmameGetMaxLamps();
+
+		/// <summary>
+		/// Returns an array of all changed lamps since the last call. <p/>
+		///
+		/// The returned array contains pairs, where the first element is the
+		/// lamp number, and the second element the value.
+		/// </summary>
+		public Span<int> GetChangedLamps()
+		{
+			var num = PinMameApi.PinmameGetChangedLamps(_changedLamps);
+			return _changedLamps.AsSpan().Slice(0, num * 2);
+		}
+
+		/// <summary>
+		/// Returns the maximal supported number of GIs.
+		/// </summary>
+		/// <returns>Number of GIs</returns>
+		public int GetMaxGIs() => PinMameApi.PinmameGetMaxGIs();
+
+		/// <summary>
+		/// Returns an array of all changed GIs since the last call. <p/>
+		///
+		/// The returned array contains pairs, where the first element is the
+		/// GI number, and the second element the value.
+		/// </summary>
+		public Span<int> GetChangedGIs()
+		{
+			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
+			return _changedGIs.AsSpan().Slice(0, num * 2);
+		}
+
+		#endregion
 	}
 }
