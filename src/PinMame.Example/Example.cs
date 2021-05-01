@@ -44,7 +44,8 @@ namespace PinMame
 
 		private static PinMame _pinMame;
 		private static Dictionary<byte, string> _dmdMap;
-		static bool _isRunning = false;
+		private static bool _isRunning = false;
+		private static int count = 0;
 
 		static void DumpGames()
 		{
@@ -196,6 +197,11 @@ namespace PinMame
 			_isRunning = false;
 		}
 
+		static int IsKeyPressed(PinMameKeycode keycode)
+		{
+			return (count == 500 && keycode == PinMameKeycode.Escape) ? 1 : 0;
+		}
+
 		static void Main(string[] args)
 		{
 			LogManager.Configuration = new LoggingConfiguration();
@@ -219,6 +225,7 @@ namespace PinMame
 			_pinMame.OnDisplayUpdated += OnDisplayUpdated;
 			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
+			_pinMame.IsKeyPressed += IsKeyPressed;
 
 			_pinMame.StartGame("tf_180h");
 			//_pinMame.StartGame("mm_109c");
@@ -229,6 +236,8 @@ namespace PinMame
 
 			while (_isRunning)
 			{
+				count++;
+
 				Thread.Sleep(100);
 			}
 		}

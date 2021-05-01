@@ -80,6 +80,11 @@ namespace PinMame
 		/// </summary>
 		public delegate void OnGameEndedEventHandler();
 
+		/// <summary>
+		/// A delegate, called when a keycode is requested.
+		/// </summary>
+		public delegate int IsKeyPressedEventHandler(PinMameKeycode keycode);
+
 		#endregion
 
 		/// <summary>
@@ -107,6 +112,11 @@ namespace PinMame
 		/// The game has ended.
 		/// </summary>
 		public event OnGameEndedEventHandler OnGameEnded;
+
+		/// <summary>
+		/// The game has ended.
+		/// </summary>
+		public event IsKeyPressedEventHandler IsKeyPressed;
 
 		/// <summary>
 		/// Retrieves rom path which is vpmPath + roms.
@@ -168,7 +178,8 @@ namespace PinMame
 				onStateUpdated = OnStateUpdatedCallback,
 				onDisplayAvailable = OnDisplayAvailableCallback,
 				onDisplayUpdated = OnDisplayUpdatedCallback,
-				onSolenoidUpdated = OnSolenoidUpdatedCallback
+				onSolenoidUpdated = OnSolenoidUpdatedCallback,
+				isKeyPressed = IsKeyPressedFunction,
 			};
 			PinMameApi.PinmameSetConfig(ref _config);
 		}
@@ -381,6 +392,13 @@ namespace PinMame
 			Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
 
 			OnSolenoidUpdated?.Invoke(solenoid, isActive == 1);
+		}
+
+		private int IsKeyPressedFunction(PinMameApi.PinmameKeycode keycode)
+		{
+			Logger.Trace($"IsKeyPressedFunction - keycode={keycode}");
+
+			return IsKeyPressed?.Invoke((PinMameKeycode)keycode) ?? 1;
 		}
 
 		/// <summary>
