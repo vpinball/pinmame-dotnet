@@ -34,6 +34,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -269,7 +270,7 @@ namespace PinMame
 				}
 			}
 
-			return games.Values;
+			return games.Values.OrderBy(game => game.Description).ToList();
 		}
 
 		/// <summary>
@@ -290,7 +291,7 @@ namespace PinMame
 				throw new InvalidOperationException($"Unable to get games, status={status}");
 			}
 
-			return games;
+			return games.OrderBy(game => game.Description).ToList();
 		}
 
 		/// <summary>
