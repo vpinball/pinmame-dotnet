@@ -70,7 +70,7 @@ namespace PinMame
 		/// <summary>
 		/// Clones are ROMs of the same game but with a different version.
 		/// </summary>
-		public IOrderedEnumerable<PinMameGame> Clones => _clones.OrderBy(cloneGameInfo => cloneGameInfo.Description);
+		public ICollection<PinMameGame> Clones => _clones.OrderBy(cloneGameInfo => cloneGameInfo.Description).ToList();
 
 		internal string CloneOf { get; }
 
