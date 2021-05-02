@@ -31,6 +31,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using NLog;
 using NLog.Config;
@@ -43,15 +44,16 @@ namespace PinMame
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		private static PinMame _pinMame;
-		private static Dictionary<byte, string> _dmdMap;
+		private static string[] _dmdMap;
 		private static bool _isRunning = false;
 		private static int count = 0;
+		private static Dictionary<byte, byte> _dmdLevels;
 
 		static void DumpGames()
 		{
 			Logger.Info($"DumpGames");
 
-			foreach (var game in _pinMame.GetGames())
+			foreach (var game in _pinMame.GetGames().OrderBy(g => g.Description))
 			{
 				Logger.Info($"PARENT: {game}");
 
@@ -80,9 +82,8 @@ namespace PinMame
 			{
 				var dmd = "";
 
-				for (var x = 0; x < displayLayout.Width; x++)
-				{
-					dmd += _dmdMap[ptr[y * displayLayout.Width + x]];
+				for (var x = 0; x < displayLayout.Width; x++) {
+					dmd += _dmdMap[_dmdLevels[ptr[y * displayLayout.Width + x]]];
 				}
 
 				Console.SetCursorPosition(0, y);
@@ -132,43 +133,20 @@ namespace PinMame
 		{
 			Logger.Info($"OnDisplayAvailable: index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
 
-			if (displayLayout.IsDmd)
-			{
-				if (displayLayout.Depth == 2)
-				{
-					_dmdMap = new Dictionary<byte, string>() {
-						{ displayLayout.Levels[0], "░" },
-						{ displayLayout.Levels[1], "▒" },
-						{ displayLayout.Levels[2], "▓" },
-						{ displayLayout.Levels[3], "▓" }
-					};
-				}
-				else
-				{
-					_dmdMap = new Dictionary<byte, string>()
-					{
-						{ displayLayout.Levels[0], "░" },
-						{ displayLayout.Levels[1], "░" },
-						{ displayLayout.Levels[2], "░" },
-						{ displayLayout.Levels[3], "░" },
+			if (displayLayout.IsDmd) {
+				if (displayLayout.Depth == 2) {
+					_dmdMap = new[] {"░", "▒", "▓", "▓"};
 
-						{ displayLayout.Levels[4], "▒" },
-						{ displayLayout.Levels[5], "▒" },
-						{ displayLayout.Levels[6], "▒" },
-						{ displayLayout.Levels[7], "▒" },
-
-						{ displayLayout.Levels[8], "▓" },
-						{ displayLayout.Levels[9], "▓" },
-						{ displayLayout.Levels[10], "▓" },
-						{ displayLayout.Levels[11], "▓" },
-
-						{ displayLayout.Levels[12], "▓" },
-						{ displayLayout.Levels[13], "▓" },
-						{ displayLayout.Levels[14], "▓" },
-						{ displayLayout.Levels[15], "▓" }
+				} else {
+					_dmdMap = new[] {
+						"░","░","░","░",
+						"▒","▒","▒","▒",
+						"▓","▓","▓","▓",
+						"▓","▓","▓","▓",
 					};
 				}
 			}
+			_dmdLevels = displayLayout.Levels;
 		}
 
 		static void OnDisplayUpdated(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout)
@@ -227,8 +205,8 @@ namespace PinMame
 			_pinMame.OnGameEnded += OnGameEnded;
 			_pinMame.IsKeyPressed += IsKeyPressed;
 
-			_pinMame.StartGame("tf_180h");
-			//_pinMame.StartGame("mm_109c");
+			//_pinMame.StartGame("tf_180h");
+			_pinMame.StartGame("mm_109c");
 			//_pinMame.StartGame("fh_906h");
 			//_pinMame.StartGame("flashgdn");
 

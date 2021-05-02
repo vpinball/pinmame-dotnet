@@ -252,22 +252,22 @@ namespace PinMame
 		}
 
 		/// <summary>
-		/// Retrieves all supported games. Sorted by parent description and clone descriptions.
+		/// Retrieves all supported games.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception>
-		public ICollection<PinMameGame> GetGames()
+		public IEnumerable<PinMameGame> GetGames()
 		{
-			var games = new Dictionary<string, PinMameGame>();
-			var clones = new List<KeyValuePair<string, PinMameGame>>();
+			var games = new Dictionary<string, PinMameGame>(); // game name -> game
+			var clones = new List<(string, PinMameGame)>();    // parent game name -> game
 
 			var status = PinMameApi.PinmameGetGames(gamePtr => {
 				var game = new PinMameGame(gamePtr);
 
 				if (string.IsNullOrEmpty(game.CloneOf)) {
-					games.Add(game.Name, game);
+					games[game.Name] = game;
 
 				} else {
-					clones.Add(new KeyValuePair<string, PinMameGame>(game.CloneOf, game));
+					clones.Add((game.CloneOf, game));
 				}
 			});
 
@@ -275,20 +275,23 @@ namespace PinMame
 				throw new InvalidOperationException($"Unable to get games, status={status}");
 			}
 
-			foreach (var clone in clones) {
-				if (games.TryGetValue(clone.Key, out var game)) {
-					game.AddClone(clone.Value);
+			foreach (var (cloneName, clone) in clones) {
+				if (games.ContainsKey(cloneName)) {
+					games[cloneName].AddClone(clone);
+
+				} else {
+					games[cloneName] = clone;
 				}
 			}
 
-			return games.Values.OrderBy(game => game.Description).ToList();
+			return games.Values;
 		}
 
 		/// <summary>
-		/// Retrieves all games found in roms folder sorted by description. Clones array will not be populated.
+		/// Retrieves all games found in roms folder. Clones array will not be populated.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">If the configuration has not been set.</exception>
-		public ICollection<PinMameGame> GetFoundGames()
+		public IEnumerable<PinMameGame> GetFoundGames()
 		{
 			var games = new List<PinMameGame>();
 			var status = PinMameApi.PinmameGetGames(gamePtr => {
@@ -302,7 +305,7 @@ namespace PinMame
 				throw new InvalidOperationException($"Unable to get games, status={status}");
 			}
 
-			return games.OrderBy(game => game.Description).ToList();
+			return games;
 		}
 
 		/// <summary>
