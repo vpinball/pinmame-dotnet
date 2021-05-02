@@ -398,7 +398,7 @@ namespace PinMame
 		{
 			Logger.Trace($"IsKeyPressedFunction - keycode={keycode}");
 
-			return IsKeyPressed?.Invoke((PinMameKeycode)keycode) ?? 1;
+			return IsKeyPressed?.Invoke((PinMameKeycode)keycode) ?? 0;
 		}
 
 		/// <summary>
