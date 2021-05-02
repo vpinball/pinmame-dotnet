@@ -74,6 +74,8 @@ namespace PinMame
 
 		internal string CloneOf { get; }
 
+		public bool HasNoFlag => _flags == 0;
+
 		private readonly uint _flags;
 		private readonly List<PinMameGame> _clones;
 

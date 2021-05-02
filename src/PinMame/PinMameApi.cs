@@ -33,6 +33,8 @@
 // ReSharper disable IdentifierTypo
 // ReSharper disable CommentTypo
 
+using System.Collections.Generic;
+
 namespace PinMame
 {
 	using System;
@@ -273,18 +275,26 @@ namespace PinMame
 
 		internal struct PinmameDmdLevels
 		{
-			internal static readonly byte[] Wpc = {
-				20, 33, 67, 100
+			internal static readonly Dictionary<byte, byte> Wpc = new Dictionary<byte, byte> {
+				{ 0x00, 0 },
+				{ 0x14, 0 },
+				{ 0x21, 1 },
+				{ 0x43, 2 },
+				{ 0x64, 3 },
 			};
 
-			internal static readonly byte[] Sam =
-			{
-				0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 100
+			internal static readonly Dictionary<byte, byte> Sam = new Dictionary<byte, byte> {
+				{ 0x00, 0 }, { 0x14, 1 }, { 0x19, 2 }, { 0x1E, 3 },
+				{ 0x23, 4 }, { 0x28, 5 }, { 0x2D, 6 }, { 0x32, 7 },
+				{ 0x37, 8 }, { 0x3C, 9 }, { 0x41, 10 }, { 0x46, 11 },
+				{ 0x4B, 12 }, { 0x50, 13 }, { 0x5A, 14 }, { 0x64, 15 }
 			};
 
-			internal static readonly byte[] Gts3 =
-			{
-				0, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100
+			internal static readonly Dictionary<byte, byte> Gts3 = new Dictionary<byte, byte> {
+				{ 0x00, 0 }, { 0x1E, 1 }, { 0x23, 2 }, { 0x28, 3 },
+				{ 0x2D, 4 }, { 0x32, 5 }, { 0x37, 6 }, { 0x3C, 7 },
+				{ 0x41, 8 }, { 0x46, 9 }, { 0x4B, 10 }, { 0x50, 11 },
+				{ 0x55, 12 }, { 0x5A, 13 }, { 0x5F, 14 }, { 0x64, 15 }
 			};
 		}
 

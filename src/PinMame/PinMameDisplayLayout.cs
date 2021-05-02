@@ -29,6 +29,8 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+using System.Collections.Generic;
+
 namespace PinMame
 {
 	public struct PinMameDisplayLayout
@@ -40,7 +42,7 @@ namespace PinMame
 		public readonly int Width;
 		public readonly int Height;
 		public readonly int Depth;
-		public readonly byte[] Levels;
+		public readonly Dictionary<byte, byte> Levels;
 
 		internal PinMameDisplayLayout(PinMameApi.PinmameDisplayLayout displayLayout)
 		{
