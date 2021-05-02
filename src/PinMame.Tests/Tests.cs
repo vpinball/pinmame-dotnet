@@ -31,6 +31,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -55,7 +56,7 @@ namespace PinMame
 		{
 			var games = _pinMame.GetGames();
 
-			Assert.IsTrue(games.Count > 650);
+			Assert.IsTrue(games.Count() > 650);
 		}
 
 		[TestMethod]
@@ -63,7 +64,7 @@ namespace PinMame
 		{
 			var games = _pinMame.GetFoundGames();
 
-			Assert.IsTrue(games.Count > 0);
+			Assert.IsTrue(games.Count() > 0);
 		}
 
 		[TestMethod]
