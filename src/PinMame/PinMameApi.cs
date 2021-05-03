@@ -398,5 +398,13 @@ namespace PinMame
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int PinmameGetChangedGIs(int[] changedStates);
 		#endregion
+
+		#region Audio related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int PinmameGetPendingAudioSamples(float[] buffer, int channels, int samples);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int PinmameGetPendingAudioSamples16bit(short[] buffer, int channels, int samples);
+		#endregion
 	}
 }

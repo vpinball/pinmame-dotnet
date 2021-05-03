@@ -496,8 +496,6 @@ namespace PinMame
 			return null;
 		}
 
-		#region Deprecated API?
-
 		/// <summary>
 		/// Returns the state of a given switch.
 		/// </summary>
@@ -537,7 +535,7 @@ namespace PinMame
 		public int GetMaxGIs() => PinMameApi.PinmameGetMaxGIs();
 
 		/// <summary>
-		/// Returns an array of all changed GIs since the last call. <p/>
+		/// Returns an array of all changed GIs since the last call.
 		///
 		/// The returned array contains pairs, where the first element is the
 		/// GI number, and the second element the value.
@@ -548,6 +546,28 @@ namespace PinMame
 			return _changedGIs.AsSpan().Slice(0, num * 2);
 		}
 
-		#endregion
+		/// <summary>
+		/// Populate an audio buffer.
+		/// </summary>
+		/// <param name="audioBuffer">Float (32 bit) array to store audio data in</param>
+		/// <param name="channels">Number of channels for audio data</param>
+		/// <param name="samples">Number of samples to fetch</param>
+		/// <returns>Number of samples fetched</returns>
+		public int GetPendingAudioSamples(float[] audioBuffer, int channels, int samples)
+		{
+			return PinMameApi.PinmameGetPendingAudioSamples(audioBuffer, channels, samples);
+		}
+
+		/// <summary>
+		/// Populate an audio buffer.
+		/// </summary>
+		/// <param name="audioBuffer">Short (signed 16 bit) array to store audio data in</param>
+		/// <param name="channels">Number of channels for audio data</param>
+		/// <param name="samples">Number of samples to fetch</param>
+		/// <returns>Number of samples fetched</returns>
+		public int GetPendingAudioSamples(short[] audioBuffer, int channels, int samples)
+		{
+			return PinMameApi.PinmameGetPendingAudioSamples16bit(audioBuffer, channels, samples); 
+		}
 	}
 }
