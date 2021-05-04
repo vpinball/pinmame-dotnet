@@ -23,7 +23,7 @@
   </ItemGroup>
     
   <ItemGroup>
-    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.212" />
+    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.216" />
   </ItemGroup>
     
 </Project>
