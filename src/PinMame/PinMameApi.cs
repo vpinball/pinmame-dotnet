@@ -300,6 +300,8 @@ namespace PinMame
 		internal delegate void PinmameOnStateUpdatedCallback(int change);
 		internal delegate void PinmameOnDisplayAvailableCallback(int index, int displayCount, ref PinmameDisplayLayout displayLayout);
 		internal delegate void PinmameOnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinmameDisplayLayout displayLayout);
+		internal delegate int PinmameOnAudioAvailableCallback(ref PinmameAudioInfo audioInfo);
+		internal delegate int PinmameOnAudioUpdatedCallback(IntPtr bufferPtr, int samples);
 		internal delegate void PinmameOnSolenoidUpdatedCallback(int solenoid, int isActive);
 		internal delegate int PinmameIsKeyPressedFunction(PinmameKeycode keycode);
 
@@ -318,12 +320,13 @@ namespace PinMame
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		internal struct PinmameConfig
 		{
-			internal int sampleRate;
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
 			internal string vpmPath;
 			internal PinmameOnStateUpdatedCallback onStateUpdated;
 			internal PinmameOnDisplayAvailableCallback onDisplayAvailable;
 			internal PinmameOnDisplayUpdatedCallback onDisplayUpdated;
+			internal PinmameOnAudioAvailableCallback onAudioAvailable;
+			internal PinmameOnAudioUpdatedCallback onAudioUpdated;
 			internal PinmameOnSolenoidUpdatedCallback onSolenoidUpdated;
 			internal PinmameIsKeyPressedFunction isKeyPressed;
 		};
@@ -338,6 +341,16 @@ namespace PinMame
 			internal readonly int width;
 			internal readonly int height;
 			internal readonly int depth;
+		};
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct PinmameAudioInfo
+		{
+			internal readonly int channels;
+			internal readonly double sampleRate;
+			internal readonly double framesPerSecond;
+			internal readonly int samplesPerFrame;
+			internal readonly int bufferSize;
 		};
 
 		#region Setup functions
@@ -397,14 +410,6 @@ namespace PinMame
 
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int PinmameGetChangedGIs(int[] changedStates);
-		#endregion
-
-		#region Audio related functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetPendingAudioSamples(float[] buffer, int channels, int samples);
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetPendingAudioSamples16bit(short[] buffer, int channels, int samples);
 		#endregion
 	}
 }

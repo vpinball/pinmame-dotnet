@@ -29,70 +29,26 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace PinMame
 {
-	[TestClass]
-	public class Tests
+	public struct PinMameAudioInfo
 	{
-		PinMame _pinMame;
+		public readonly int Channels;
+		public readonly double SampleRate;
+		public readonly double FramesPerSecond;
+		public readonly int SamplesPerFrame;
+		public readonly int BufferSize;
 
-		[TestInitialize()]
-		public void Initialize()
+		internal PinMameAudioInfo(PinMameApi.PinmameAudioInfo audioInfo)
 		{
-			var profilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-			var path = Path.GetFullPath(Path.Combine(profilePath, ".pinmame"));
-
-			_pinMame = PinMame.Instance(path);
+			Channels = audioInfo.channels;
+			SampleRate = audioInfo.sampleRate;
+			FramesPerSecond = audioInfo.framesPerSecond;
+			SamplesPerFrame = audioInfo.samplesPerFrame;
+			BufferSize = audioInfo.bufferSize;
 		}
 
-		[TestMethod]
-		public void GetGames()
-		{
-			var games = _pinMame.GetGames();
-
-			Assert.IsTrue(games.Count() > 650);
-		}
-
-		[TestMethod]
-		public void GetFoundGames()
-		{
-			var games = _pinMame.GetFoundGames();
-
-			Assert.IsTrue(games.Count() > 0);
-		}
-
-		[TestMethod]
-		public void GetGame()
-		{
-			PinMameGame game = _pinMame.GetGame("tf_180h");
-
-			Assert.IsTrue(game != null);
-		}
-
-		[TestMethod]
-		[ExpectedException(typeof(InvalidOperationException))]
-		public void GetGameNotFound()
-		{
-			PinMameGame game = _pinMame.GetGame("unknown");
-		}
-
-		[TestMethod]
-		public void Start()
-		{
-			_pinMame.StartGame("mm_109c");
-
-			var i = 0;
-
-			while (i++ < 10)
-			{
-				Thread.Sleep(1000);
-			}
-		}
+		public override string ToString() =>
+			$"channels={Channels}, sampleRate={SampleRate}, framesPerSecond={FramesPerSecond}, samplesPerFrame={SamplesPerFrame}, bufferSize={BufferSize}";
 	}
 }

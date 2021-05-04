@@ -163,6 +163,20 @@ namespace PinMame
 			}
 		}
 
+		private static int OnAudioAvailable(PinMameAudioInfo audioInfo)
+		{
+			Logger.Info($"OnAudioAvailable: audioInfo={audioInfo}");
+
+			return audioInfo.SamplesPerFrame;
+		}
+
+		private static int OnAudioUpdated(IntPtr bufferPtr, int samples)
+		{
+			Logger.Info($"OnAudioUpdated: samples={samples}");
+
+			return samples;
+		}
+
 		static void OnSolenoidUpdated(int solenoid, bool isActive)
 		{
 			Logger.Info($"OnSolenoidUpdated: solenoid={solenoid}, isActive={isActive}");
@@ -201,6 +215,8 @@ namespace PinMame
 			_pinMame.OnGameStarted += OnGameStarted;
 			_pinMame.OnDisplayAvailable += OnDisplayAvailable;
 			_pinMame.OnDisplayUpdated += OnDisplayUpdated;
+			_pinMame.OnAudioAvailable += OnAudioAvailable;
+			_pinMame.OnAudioUpdated += OnAudioUpdated;
 			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
 			_pinMame.IsKeyPressed += IsKeyPressed;

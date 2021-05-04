@@ -34,7 +34,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,6 +70,16 @@ namespace PinMame
 		public delegate void OnDisplayUpdatedEventHandler(int index, IntPtr framePtr, PinMameDisplayLayout displayLayout);
 
 		/// <summary>
+		/// A delegate, called when the audio stream is available.
+		/// </summary>
+		public delegate int OnAudioAvailableEventHandler(PinMameAudioInfo audioInfo);
+
+		/// <summary>
+		/// A delegate, called when the audio stream is updated.
+		/// </summary>
+		public delegate int OnAudioUpdatedEventHandler(IntPtr bufferPtr, int samples);
+
+		/// <summary>
 		/// A delegate, called when a solenoid is updated.
 		/// </summary>
 		public delegate void OnSolenoidUpdatedEventHandler(int solenoid, bool isActive);
@@ -102,6 +111,17 @@ namespace PinMame
 		/// A display needs updating due to new content.
 		/// </summary>
 		public event OnDisplayUpdatedEventHandler OnDisplayUpdated;
+
+		/// <summary>
+		/// The audio stream is available. This is called as soon as possible,
+		/// and before <see cref="OnAudioUpdated"/>.
+		/// </summary>
+		public event OnAudioAvailableEventHandler OnAudioAvailable;
+
+		/// <summary>
+		/// The audio stream needs updating due to new content.
+		/// </summary>
+		public event OnAudioUpdatedEventHandler OnAudioUpdated;
 
 		/// <summary>
 		/// A coil state has changed.
@@ -153,15 +173,14 @@ namespace PinMame
 		/// <summary>
 		/// Creates or retrieves the PinMame instance.
 		/// </summary>
-		/// <param name="sampleRate">Audio sample rate</param>
 		/// <param name="vpmPath">Fallback path for VPM folder, if VPM is not registered</param>
 		/// <exception cref="ArgumentException">If VPM cannot be found</exception>
-		public static PinMame Instance(string vpmPath = null, int sampleRate = 48000) =>
-			_instance ?? (_instance = new PinMame(vpmPath, sampleRate));
+		public static PinMame Instance(string vpmPath = null) =>
+			_instance ?? (_instance = new PinMame(vpmPath));
 
-		private PinMame(string vpmPath, int sampleRate)
+		private PinMame(string vpmPath)
 		{
-			Logger.Info($"PinMame - sampleRate={sampleRate}, vpmPath={vpmPath}");
+			Logger.Info($"PinMame - vpmPath={vpmPath}");
 
 			var path = vpmPath ?? GetVpmPath();
 			if (path == null) {
@@ -173,11 +192,12 @@ namespace PinMame
 			}
 
 			_config = new PinMameApi.PinmameConfig {
-				sampleRate = 48000,
 				vpmPath = path + Path.DirectorySeparatorChar,
 				onStateUpdated = OnStateUpdatedCallback,
 				onDisplayAvailable = OnDisplayAvailableCallback,
 				onDisplayUpdated = OnDisplayUpdatedCallback,
+				onAudioAvailable = OnAudioAvailableCallback,
+				onAudioUpdated = OnAudioUpdatedCallback,
 				onSolenoidUpdated = OnSolenoidUpdatedCallback,
 				isKeyPressed = IsKeyPressedFunction,
 			};
@@ -390,6 +410,22 @@ namespace PinMame
 			OnDisplayUpdated?.Invoke(index, framePtr, displayLayout);
 		}
 
+		private int OnAudioAvailableCallback(ref PinMameApi.PinmameAudioInfo audioInfoRef)
+		{
+			var audioInfo = new PinMameAudioInfo(audioInfoRef);
+
+			Logger.Trace($"OnAudioAvailableCallback - audioInfo={audioInfo}");
+
+			return OnAudioAvailable?.Invoke(audioInfo) ?? 0;
+		}
+
+		private int OnAudioUpdatedCallback(IntPtr bufferPtr, int samples)
+		{
+			Logger.Trace($"OnAudioUpdatedCallback - samples={samples}");
+
+			return OnAudioUpdated?.Invoke(bufferPtr, samples) ?? 0;
+		}
+
 		private void OnSolenoidUpdatedCallback(int solenoid, int isActive)
 		{
 			Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
@@ -544,30 +580,6 @@ namespace PinMame
 		{
 			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
 			return _changedGIs.AsSpan().Slice(0, num * 2);
-		}
-
-		/// <summary>
-		/// Populate an audio buffer.
-		/// </summary>
-		/// <param name="audioBuffer">Float (32 bit) array to store audio data in</param>
-		/// <param name="channels">Number of channels for audio data</param>
-		/// <param name="samples">Number of samples to fetch</param>
-		/// <returns>Number of samples fetched</returns>
-		public int GetPendingAudioSamples(float[] audioBuffer, int channels, int samples)
-		{
-			return PinMameApi.PinmameGetPendingAudioSamples(audioBuffer, channels, samples);
-		}
-
-		/// <summary>
-		/// Populate an audio buffer.
-		/// </summary>
-		/// <param name="audioBuffer">Short (signed 16 bit) array to store audio data in</param>
-		/// <param name="channels">Number of channels for audio data</param>
-		/// <param name="samples">Number of samples to fetch</param>
-		/// <returns>Number of samples fetched</returns>
-		public int GetPendingAudioSamples(short[] audioBuffer, int channels, int samples)
-		{
-			return PinMameApi.PinmameGetPendingAudioSamples16bit(audioBuffer, channels, samples); 
 		}
 	}
 }
