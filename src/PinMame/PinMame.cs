@@ -173,14 +173,15 @@ namespace PinMame
 		/// <summary>
 		/// Creates or retrieves the PinMame instance.
 		/// </summary>
+		/// <param name="sampleRate">Audio sample rate</param>
 		/// <param name="vpmPath">Fallback path for VPM folder, if VPM is not registered</param>
 		/// <exception cref="ArgumentException">If VPM cannot be found</exception>
-		public static PinMame Instance(string vpmPath = null) =>
-			_instance ?? (_instance = new PinMame(vpmPath));
+		public static PinMame Instance(int sampleRate = 48000, string vpmPath = null) =>
+			_instance ?? (_instance = new PinMame(sampleRate, vpmPath));
 
-		private PinMame(string vpmPath)
+		private PinMame(int sampleRate, string vpmPath)
 		{
-			Logger.Info($"PinMame - vpmPath={vpmPath}");
+			Logger.Info($"PinMame - sampleRate={sampleRate}, vpmPath={vpmPath}");
 
 			var path = vpmPath ?? GetVpmPath();
 			if (path == null) {
@@ -192,6 +193,7 @@ namespace PinMame
 			}
 
 			_config = new PinMameApi.PinmameConfig {
+				sampleRate = sampleRate,
 				vpmPath = path + Path.DirectorySeparatorChar,
 				onStateUpdated = OnStateUpdatedCallback,
 				onDisplayAvailable = OnDisplayAvailableCallback,
