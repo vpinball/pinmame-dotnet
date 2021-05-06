@@ -320,6 +320,7 @@ namespace PinMame
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		internal struct PinmameConfig
 		{
+			internal int sampleRate;
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
 			internal string vpmPath;
 			internal PinmameOnStateUpdatedCallback onStateUpdated;
