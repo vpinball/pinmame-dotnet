@@ -41,7 +41,8 @@ namespace PinMame
 	public enum PinMameDisplayType
 	{
 		/// <summary>
-		/// 16 segments
+		/// 14 segments with period and comma, where both period and
+		/// comma are always toggeled at the same time.
 		/// </summary>
 		Seg16 = PinMameApi.PinmameDisplayType.SEG16,
 

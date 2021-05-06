@@ -124,6 +124,41 @@ namespace PinMame
 			}
 		}
 
+		static void DumpDisplays()
+		{
+			var games = _pinMame.GetGames()
+				.Where(g => g.HasNoFlag);
+
+			var displayMap = new Dictionary<PinMameDisplayType, Dictionary<PinMameGame, int>>();
+
+			foreach (var game in games) {
+				try {
+					Console.WriteLine($"Retrieving displays for {game}...");
+					var displays = _pinMame.GetAvailableDisplays(game.Name);
+					foreach (var displayLayout in displays.Values) {
+						if (!displayMap.ContainsKey(displayLayout.Type)) {
+							displayMap.Add(displayLayout.Type, new Dictionary<PinMameGame, int>());
+						}
+
+						if (!displayMap[displayLayout.Type].ContainsKey(game)) {
+							displayMap[displayLayout.Type].Add(game, 0);
+						}
+						displayMap[displayLayout.Type][game]++;
+					}
+
+				} catch (Exception e) {
+					Logger.Error(e, $"Error retrieving displays from {game}.");
+				}
+			}
+
+			foreach (var displayType in displayMap.Keys)
+			{
+				var gameNames = displayMap[displayType]
+					.Select(c => $"     {c.Key.Name}({c.Value}) - {c.Key.Description} ({c.Key.Manufacturer} {c.Key.Year})").ToArray();
+				Console.WriteLine($"{displayType}: \n{string.Join("\n", gameNames)}\n");
+			}
+		}
+
 		static void OnGameStarted()
 		{
 			Logger.Info($"OnGameStarted");
