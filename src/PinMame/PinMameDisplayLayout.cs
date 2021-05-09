@@ -81,9 +81,7 @@ namespace PinMame
 			}
 		}
 
-		public bool IsDmd => Type == PinMameDisplayType.Dmd
-		                  || Type == (PinMameDisplayType.Dmd | PinMameDisplayType.DmdNoAA)
-		                  || Type == (PinMameDisplayType.Dmd | PinMameDisplayType.DmdNoAA | PinMameDisplayType.NoDisp);
+		public bool IsDmd => (Type & PinMameDisplayType.Dmd) == PinMameDisplayType.Dmd;
 
 		public override string ToString() =>
 			$"type={Type}, top={Top}, left={Left}, length={Length}, width={Width}, height={Height}, depth={Depth}";
