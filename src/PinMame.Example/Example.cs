@@ -217,6 +217,11 @@ namespace PinMame
 			Logger.Info($"OnSolenoidUpdated: solenoid={solenoid}, isActive={isActive}");
 		}
 
+		static void OnConsoleDataUpdated(IntPtr dataPtr, int size)
+		{
+			Logger.Info($"OnConsoleDataUpdated: size={size}");
+		}
+
 		static void OnGameEnded()
 		{
 			Logger.Info("OnGameEnded");
@@ -253,13 +258,16 @@ namespace PinMame
 			_pinMame.OnAudioAvailable += OnAudioAvailable;
 			_pinMame.OnAudioUpdated += OnAudioUpdated;
 			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
+			_pinMame.OnConsoleDataUpdated += OnConsoleDataUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
 			_pinMame.IsKeyPressed += IsKeyPressed;
 
 			//_pinMame.StartGame("tf_180h");
-			_pinMame.StartGame("mm_109c");
 			//_pinMame.StartGame("fh_906h");
+			//_pinMame.StartGame("mm_109c");
 			//_pinMame.StartGame("flashgdn");
+
+			_pinMame.StartGame("acd_168hc");
 
 			_isRunning = true;
 

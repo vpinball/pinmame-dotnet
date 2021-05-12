@@ -54,7 +54,7 @@ var _pinMame = PinMame.PinMame.Instance();
 _pinMame.StartGame("mm_109c");
 ```
 
-You can add event handlers for `OnGameStarted`, `OnDisplayAvailable`, `OnDisplayUpdated`, `OnAudioAvailable`, `OnAudioUpdated`, `OnSolenoidUpdated`, `OnGameEnded`, and `IsKeyPressed`.
+You can add event handlers for `OnGameStarted`, `OnDisplayAvailable`, `OnDisplayUpdated`, `OnAudioAvailable`, `OnAudioUpdated`, `OnSolenoidUpdated`, `OnConsoleDataUpdated`, `OnGameEnded`, and `IsKeyPressed`.
 
 To process display data, in your `OnDisplayUpdated` callback:
 
