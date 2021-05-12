@@ -85,6 +85,11 @@ namespace PinMame
 		public delegate void OnSolenoidUpdatedEventHandler(int solenoid, bool isActive);
 
 		/// <summary>
+		/// A delegate, called when console data is updated.
+		/// </summary>
+		public delegate void OnConsoleDataUpdatedEventHandler(IntPtr dataPtr, int size);
+
+		/// <summary>
 		/// A delegate, called when a game ends.
 		/// </summary>
 		public delegate void OnGameEndedEventHandler();
@@ -127,6 +132,11 @@ namespace PinMame
 		/// A coil state has changed.
 		/// </summary>
 		public event OnSolenoidUpdatedEventHandler OnSolenoidUpdated;
+
+		/// <summary>
+		/// Console data has changed.
+		/// </summary>
+		public event OnConsoleDataUpdatedEventHandler OnConsoleDataUpdated;
 
 		/// <summary>
 		/// The game has ended.
@@ -201,6 +211,7 @@ namespace PinMame
 				onAudioAvailable = OnAudioAvailableCallback,
 				onAudioUpdated = OnAudioUpdatedCallback,
 				onSolenoidUpdated = OnSolenoidUpdatedCallback,
+				onConsoleDataUpdated = OnConsoleDataUpdatedCallback,
 				isKeyPressed = IsKeyPressedFunction,
 			};
 			PinMameApi.PinmameSetConfig(ref _config);
@@ -433,6 +444,13 @@ namespace PinMame
 			Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
 
 			OnSolenoidUpdated?.Invoke(solenoid, isActive == 1);
+		}
+
+		private void OnConsoleDataUpdatedCallback(IntPtr dataPtr, int size)
+		{
+			Logger.Debug($"OnConsoleDataUpdatedCallback - size={size}");
+
+			OnConsoleDataUpdated?.Invoke(dataPtr, size);
 		}
 
 		private int IsKeyPressedFunction(PinMameApi.PinmameKeycode keycode)

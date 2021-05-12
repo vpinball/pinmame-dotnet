@@ -303,6 +303,7 @@ namespace PinMame
 		internal delegate int PinmameOnAudioAvailableCallback(ref PinmameAudioInfo audioInfo);
 		internal delegate int PinmameOnAudioUpdatedCallback(IntPtr bufferPtr, int samples);
 		internal delegate void PinmameOnSolenoidUpdatedCallback(int solenoid, int isActive);
+		internal delegate void PinmameOnConsoleDataUpdatedCallback(IntPtr dataPtr, int size);
 		internal delegate int PinmameIsKeyPressedFunction(PinmameKeycode keycode);
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -329,6 +330,7 @@ namespace PinMame
 			internal PinmameOnAudioAvailableCallback onAudioAvailable;
 			internal PinmameOnAudioUpdatedCallback onAudioUpdated;
 			internal PinmameOnSolenoidUpdatedCallback onSolenoidUpdated;
+			internal PinmameOnConsoleDataUpdatedCallback onConsoleDataUpdated;
 			internal PinmameIsKeyPressedFunction isKeyPressed;
 		};
 
