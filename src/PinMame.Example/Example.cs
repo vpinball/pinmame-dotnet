@@ -247,6 +247,8 @@ namespace PinMame
 
 			_pinMame = PinMame.Instance(44100);
 
+			_pinMame.SetHandleKeyboard(true);
+
 			DumpGames();
 			DumpFoundGames();
 

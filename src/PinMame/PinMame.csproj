@@ -26,9 +26,9 @@
     <TargetOS Condition="$([MSBuild]::IsOSPlatform('Windows'))">Windows</TargetOS>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0"/>
-    <PackageReference Include="System.Memory" Version="4.5.4"/>
-    <PackageReference Include="NLog" Version="4.7.9"/>
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="NLog" Version="4.7.10" />
   </ItemGroup>
   <!-- Append target operating system to output path -->
   <PropertyGroup>
@@ -42,10 +42,10 @@
   </ItemGroup>
   <!-- Include .NET Standard packages on Linux and macOS -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.0"/>
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\OSX\PinMame.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.0"/>
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.0" />
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\OSX\PinMame.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.0" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
   </ItemGroup>
 </Project>

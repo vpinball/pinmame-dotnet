@@ -369,6 +369,20 @@ namespace PinMame
 		internal static extern PinmameStatus PinmameGetGames(PinmameGameCallback callback);
 		#endregion
 
+		#region Options related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int PinmameGetHandleKeyboard();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void PinmameSetHandleKeyboard(int handleKeyboard);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int PinmameGetHandleMechanics();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void PinmameSetHandleMechanics(int handleMechanics);
+		#endregion
+
 		#region Game functions
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern PinmameStatus PinmameRun(string name);
@@ -413,6 +427,14 @@ namespace PinMame
 
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int PinmameGetChangedGIs(int[] changedStates);
+		#endregion
+
+		#region Mech related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int PinmameGetMech(int mechNo);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void PinmameSetMech(int mechNo, int value);
 		#endregion
 	}
 }
