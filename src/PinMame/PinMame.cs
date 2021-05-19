@@ -218,6 +218,28 @@ namespace PinMame
 		}
 
 		/// <summary>
+		/// Returns if the HandleKeyboard option is enabled or disabled.
+		/// </summary>
+		public bool GetHandleKeyboard() => PinMameApi.PinmameGetHandleKeyboard() == 1;
+
+		/// <summary>
+		/// Enables or disables the HandleKeyboard option.
+		/// </summary>
+		/// <param name="handleKeyboard">New value of the HandleKeyboard flag.</param>
+		public void SetHandleKeyboard(bool handleKeyboard) => PinMameApi.PinmameSetHandleKeyboard(handleKeyboard ? 1 : 0);
+
+		/// <summary>
+		/// Returns if the HandleMechanics option is enabled or disabled.
+		/// </summary>
+		public bool GetHandleMechanics() => PinMameApi.PinmameGetHandleMechanics() == 1;
+
+		/// <summary>
+		/// Enables or disables the HandleMechanics option.
+		/// </summary>
+		/// <param name="handleMechanics">New value of the HandleMechanics option.</param>
+		public void SetHandleMechanics(bool handleMechanics) => PinMameApi.PinmameSetHandleMechanics(handleMechanics ? 1 : 0);
+
+		/// <summary>
 		/// Starts a new game. <p/>
 		///
 		/// When the game has successfully started, the <see cref="OnGameStarted"/> event is triggered.
@@ -601,5 +623,19 @@ namespace PinMame
 			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
 			return _changedGIs.AsSpan().Slice(0, num * 2);
 		}
+
+		/// <summary>
+		/// Returns the value of a given mech.
+		/// </summary>
+		/// <param name="mechNo">Mech number</param>
+		/// <returns>Value of the mech</returns>
+		public int GetMech(int mechNo) => PinMameApi.PinmameGetMech(mechNo);
+
+		/// <summary>
+		/// Sets the value of a given mech.
+		/// </summary>
+		/// <param name="mechNo">Mech number</param>
+		/// <param name="value">New value of the mech</param>
+		public void SetMech(int mechNo, int value) => PinMameApi.PinmameSetMech(mechNo, value);
 	}
 }
