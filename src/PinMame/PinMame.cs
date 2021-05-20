@@ -579,7 +579,7 @@ namespace PinMame
 		/// </summary>
 		/// <param name="slot">Slot number of the switch</param>
 		/// <returns>Value of the switch</returns>
-		public bool GetSwitch(int slot) => PinMameApi.PinmameGetSwitch(slot) == 1;
+		public bool GetSwitch(int slot) => PinMameApi.PinmameGetSwitch(slot) != 0;
 
 		/// <summary>
 		/// Sets the state of a given switch.
