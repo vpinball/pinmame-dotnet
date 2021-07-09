@@ -413,15 +413,13 @@ namespace PinMame
 		{
 			Logger.Debug($"OnStateUpdatedCallback - state={state}");
 
-			if (state == 1)
-			{
+			if (state == 1) {
 				_changedLamps = new int[PinMameApi.PinmameGetMaxLamps() * 2];
 				_changedGIs = new int[PinMameApi.PinmameGetMaxGIs() * 2];
 
 				OnGameStarted?.Invoke();
 			}
-			else
-			{
+			else {
 				OnGameEnded?.Invoke();
 				RunningGame = null;
 			}
@@ -510,57 +508,45 @@ namespace PinMame
 		{
 			try
 			{
-				if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-				{
+				if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 					var reg = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Classes\VPinMAME.Controller\CLSID");
-					if (reg != null)
-					{
+					if (reg != null) {
 						var clsId = reg.GetValue(null).ToString();
 						var x64Suffix = Environment.Is64BitOperatingSystem ? @"WOW6432Node\" : "";
 						reg = Registry.ClassesRoot.OpenSubKey(x64Suffix + @"CLSID\" + clsId + @"\InprocServer32");
-						if (reg != null)
-						{
+						if (reg != null) {
 							reg = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Freeware\Visual PinMame\globals");
 
-							if (reg != null)
-							{
+							if (reg != null) {
 								var path = reg.GetValue("rompath").ToString();
 
-								if (path.EndsWith(@"\roms"))
-								{
+								if (path.EndsWith(@"\roms")) {
 									return path.Substring(0, path.Length - 5);
 								}
-								else
-								{
+								else {
 									Logger.Warn($"Rom Path {path} last folder is not 'roms'");
 								}
 							}
-							else
-							{
+							else {
 								Logger.Warn($"Could not Rom Path in registry.");
 							}
 						}
-						else
-						{
+						else {
 							Logger.Warn($"Could not find CLSID {clsId} of VPinMAME.dll.");
 						}
 					}
-					else
-					{
+					else {
 						Logger.Warn("Looks like VPinMAME.Controller is not registered on the system!");
 					}
 				}
-				else
-				{
+				else {
 					var profilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 					var path = Path.GetFullPath(Path.Combine(profilePath, ".pinmame"));
 
-					if (Directory.Exists(path))
-					{
+					if (Directory.Exists(path)) {
 						return path;
 					}
-					else
-					{
+					else {
 						Logger.Warn($"Could not find .pinmame folder in {profilePath}");
 					}
 				}
@@ -600,10 +586,17 @@ namespace PinMame
 		/// The returned array contains pairs, where the first element is the
 		/// lamp number, and the second element the value.
 		/// </summary>
-		public Span<int> GetChangedLamps()
+		public PinMameLampInfo[] GetChangedLamps()
 		{
 			var num = PinMameApi.PinmameGetChangedLamps(_changedLamps);
-			return _changedLamps.AsSpan().Slice(0, num * 2);
+
+			PinMameLampInfo[] array = new PinMameLampInfo[num];
+
+			for (int index = 0; index < num; index++) {
+				array[index] = new PinMameLampInfo(_changedLamps[index * 2], _changedLamps[(index * 2) + 1]);
+			}
+
+			return array;
 		}
 
 		/// <summary>
@@ -618,10 +611,17 @@ namespace PinMame
 		/// The returned array contains pairs, where the first element is the
 		/// GI number, and the second element the value.
 		/// </summary>
-		public Span<int> GetChangedGIs()
+		public PinMameLampInfo[] GetChangedGIs()
 		{
 			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
-			return _changedGIs.AsSpan().Slice(0, num * 2);
+
+			PinMameLampInfo[] array = new PinMameLampInfo[num];
+
+			for (int index = 0; index < num; index++) {
+				array[index] = new PinMameLampInfo(_changedGIs[index * 2], _changedGIs[(index * 2) + 1]);
+			}
+		
+			return array;
 		}
 
 		/// <summary>
