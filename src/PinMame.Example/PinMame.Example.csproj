@@ -17,7 +17,7 @@
   </ItemGroup>
     
   <ItemGroup>
-    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.236" />
+    <PackageReference Include="PinMame.Native" Version="3.4.0-preview.276" />
     <PackageReference Include="NLog" Version="4.7.10" />
   </ItemGroup>
 
