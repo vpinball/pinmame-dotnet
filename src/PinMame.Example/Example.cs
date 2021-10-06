@@ -290,7 +290,7 @@ namespace PinMame
 
 					foreach (var lampInfo in _pinMame.GetChangedGIs())
 					{
-						Logger.Info($"main: Changed Lamp: {lampInfo}");
+						Logger.Info($"main: Changed GI: {lampInfo}");
 					}
 				}
 
