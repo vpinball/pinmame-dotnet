@@ -14,7 +14,7 @@
     <AssemblyName>PinMame</AssemblyName>
     <AssemblyVersion>0.1.0</AssemblyVersion>
     <PackageId>PinMame</PackageId>
-    <PackageVersion>0.1.0-preview.41</PackageVersion>
+    <PackageVersion>0.1.0-preview.42</PackageVersion>
     <PackageProjectUrl>https://github.com/VisualPinball/pinmame-dotnet</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <InformationalVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</InformationalVersion>
@@ -26,8 +26,8 @@
     <TargetOS Condition="$([MSBuild]::IsOSPlatform('Windows'))">Windows</TargetOS>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
-    <PackageReference Include="NLog" Version="4.7.11" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0"/>
+    <PackageReference Include="NLog" Version="4.7.11"/>
   </ItemGroup>
   <!-- Append target operating system to output path -->
   <PropertyGroup>
@@ -41,10 +41,10 @@
   </ItemGroup>
   <!-- Include .NET Standard packages on Linux and macOS -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.0" />
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\OSX\PinMame.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.0" />
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.0"/>
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.0\OSX\PinMame.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.0"/>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
   </ItemGroup>
 </Project>
