@@ -46,6 +46,7 @@ namespace PinMame
 		private static PinMame _pinMame;
 		private static string[] _dmdMap;
 		private static bool _isRunning = false;
+		private static bool _started = false;
 		private static int count = 0;
 		private static Dictionary<byte, byte> _dmdLevels;
 
@@ -162,6 +163,8 @@ namespace PinMame
 		static void OnGameStarted()
 		{
 			Logger.Info($"OnGameStarted");
+
+			_started = true;
 		}
 
 		static void OnDisplayAvailable(int index, int displayCount, PinMameDisplayLayout displayLayout)
@@ -268,14 +271,28 @@ namespace PinMame
 			//_pinMame.StartGame("fh_906h");
 			//_pinMame.StartGame("mm_109c");
 			//_pinMame.StartGame("flashgdn");
+			//_pinMame.StartGame("acd_168hc");
 
-			_pinMame.StartGame("acd_168hc");
+			_pinMame.StartGame("t2_l8");
 
 			_isRunning = true;
 
 			while (_isRunning)
 			{
 				count++;
+
+				if (_started)
+				{
+					foreach(var lampInfo in _pinMame.GetChangedLamps())
+					{
+						Logger.Info($"main: Changed Lamp: {lampInfo}");
+					}
+
+					foreach (var lampInfo in _pinMame.GetChangedGIs())
+					{
+						Logger.Info($"main: Changed Lamp: {lampInfo}");
+					}
+				}
 
 				Thread.Sleep(100);
 			}
