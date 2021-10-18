@@ -466,6 +466,22 @@ namespace PinMame
 		NotADriver = PinMameApi.PinmameGameDriverFlag.NOT_A_DRIVER,
 	}
 
+	public enum PinMameMechFlag : uint
+	{
+		LINEAR = PinMameApi.PinmameMechFlag.LINEAR,
+		NONLINEAR = PinMameApi.PinmameMechFlag.NONLINEAR,
+		CIRCLE = PinMameApi.PinmameMechFlag.CIRCLE,
+		STOPEND = PinMameApi.PinmameMechFlag.STOPEND,
+		REVERSE = PinMameApi.PinmameMechFlag.REVERSE,
+		ONESOL = PinMameApi.PinmameMechFlag.ONESOL,
+		ONEDIRSOL = PinMameApi.PinmameMechFlag.ONEDIRSOL,
+		TWODIRSOL = PinMameApi.PinmameMechFlag.TWODIRSOL,
+		TWOSTEPSOL = PinMameApi.PinmameMechFlag.TWOSTEPSOL,
+		FOURSTEPSOL = PinMameApi.PinmameMechFlag.FOURSTEPSOL,
+		SLOW = PinMameApi.PinmameMechFlag.SLOW,
+		FAST = PinMameApi.PinmameMechFlag.FAST
+	}
+
 	public enum PinMameKeycode
 	{
 		A = PinMameApi.PinmameKeycode.A,

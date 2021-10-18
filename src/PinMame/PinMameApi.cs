@@ -43,12 +43,16 @@ namespace PinMame
 
 	internal static class PinMameApi
 	{
+		internal const int MaxMechSwitches = 20;
+
 		internal enum PinmameStatus
 		{
 			OK = 0,
-			GAME_NOT_FOUND = 1,
-			GAME_ALREADY_RUNNING = 2,
-			EMULATOR_NOT_RUNNING = 3
+			CONFIG_NOT_SET = 1,
+			GAME_NOT_FOUND = 2,
+			GAME_ALREADY_RUNNING = 3,
+			EMULATOR_NOT_RUNNING = 4,
+			INVALID_MECH_NO = 5
 		}
 
 		internal enum PinmameDisplayType : int
@@ -162,6 +166,22 @@ namespace PinMame
 			GAME_NO_SOUND = 0x0200,               // sound is missing
 			GAME_IMPERFECT_SOUND = 0x0400,        // sound is known to be wrong
 			NOT_A_DRIVER = 0x4000,                // set by the fake "root" driver_0 and by "containers"
+		}
+
+		internal enum PinmameMechFlag : uint
+		{
+			LINEAR = 0x00,
+			NONLINEAR = 0x01,
+			CIRCLE = 0x00,
+			STOPEND = 0x02,
+			REVERSE = 0x04,
+			ONESOL = 0x00,
+			ONEDIRSOL = 0x10,
+			TWODIRSOL = 0x20,
+			TWOSTEPSOL = 0x40,
+			FOURSTEPSOL = (TWODIRSOL | TWOSTEPSOL),
+			SLOW = 0x00,
+			FAST = 0x80
 		}
 
 		internal enum PinmameKeycode
@@ -302,6 +322,8 @@ namespace PinMame
 		internal delegate void PinmameOnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinmameDisplayLayout displayLayout);
 		internal delegate int PinmameOnAudioAvailableCallback(ref PinmameAudioInfo audioInfo);
 		internal delegate int PinmameOnAudioUpdatedCallback(IntPtr bufferPtr, int samples);
+		internal delegate void PinmameOnMechAvailableCallback(int mechNo, ref PinmameMechInfo mechInfo);
+		internal delegate void PinmameOnMechUpdatedCallback(int mechNo, ref PinmameMechInfo mechInfo);
 		internal delegate void PinmameOnSolenoidUpdatedCallback(int solenoid, int isActive);
 		internal delegate void PinmameOnConsoleDataUpdatedCallback(IntPtr dataPtr, int size);
 		internal delegate int PinmameIsKeyPressedFunction(PinmameKeycode keycode);
@@ -329,10 +351,35 @@ namespace PinMame
 			internal PinmameOnDisplayUpdatedCallback onDisplayUpdated;
 			internal PinmameOnAudioAvailableCallback onAudioAvailable;
 			internal PinmameOnAudioUpdatedCallback onAudioUpdated;
+			internal PinmameOnMechAvailableCallback onMechAvailable;
+			internal PinmameOnMechUpdatedCallback onMechUpdated;
 			internal PinmameOnSolenoidUpdatedCallback onSolenoidUpdated;
 			internal PinmameOnConsoleDataUpdatedCallback onConsoleDataUpdated;
 			internal PinmameIsKeyPressedFunction isKeyPressed;
 		};
+
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal struct PinmameMechSwitchConfig
+		{
+			internal int swNo;
+			internal int startPos;
+			internal int endPos;
+			internal int pulse;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal struct PinmameMechConfig
+		{
+			internal int sol1;
+			internal int sol2;
+			internal int type;
+			internal int length;
+			internal int steps;
+			internal int initialPos;
+			[MarshalAs(UnmanagedType.ByValArray, SizeConst = MaxMechSwitches)]
+			internal PinmameMechSwitchConfig[] sw;
+		}
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		internal readonly struct PinmameDisplayLayout
@@ -354,6 +401,16 @@ namespace PinMame
 			internal readonly double framesPerSecond;
 			internal readonly int samplesPerFrame;
 			internal readonly int bufferSize;
+		};
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct PinmameMechInfo
+		{
+			internal readonly int type;
+			internal readonly int length;
+			internal readonly int steps;
+			internal readonly int pos;
+			internal readonly int speed;
 		};
 
 		#region Setup functions
@@ -431,10 +488,10 @@ namespace PinMame
 
 		#region Mech related functions
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetMech(int mechNo);
+		internal static extern PinmameStatus PinmameSetMech(int mechNo, ref PinmameMechConfig mechConfig);
 
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void PinmameSetMech(int mechNo, int value);
+		internal static extern PinmameStatus PinmameSetMech(int mechNo, IntPtr mechConfig);
 		#endregion
 	}
 }

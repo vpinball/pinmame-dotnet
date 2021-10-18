@@ -51,10 +51,22 @@ Create a `PinMame` instance, and then start a game.
 using PinMame;
 var _pinMame = PinMame.PinMame.Instance();
 
-_pinMame.StartGame("mm_109c");
+_pinMame.StartGame("t2_l8");
 ```
 
-You can add event handlers for `OnGameStarted`, `OnDisplayAvailable`, `OnDisplayUpdated`, `OnAudioAvailable`, `OnAudioUpdated`, `OnSolenoidUpdated`, `OnConsoleDataUpdated`, `OnGameEnded`, and `IsKeyPressed`.
+You can add event handlers for:
+
+- `OnGameStarted`
+- `OnDisplayAvailable`
+- `OnDisplayUpdated`
+- `OnAudioAvailable`
+- `OnAudioUpdated`
+- `OnMechAvailable`
+- `OnMechUpdated`
+- `OnSolenoidUpdated`
+- `OnConsoleDataUpdated`
+- `OnGameEnded`
+- `IsKeyPressed`
 
 To process display data, in your `OnDisplayUpdated` callback:
 
@@ -70,6 +82,29 @@ void OnDisplayUpdated(int index, IntPtr framePtr, PinMameDisplayLayout displayLa
         // Handle Alphanumeric displays (framePtr is ushort*)
     }
 };
+```
+
+Some games add mechs regardless of the `g_fHandleMechanics` flag. 
+
+To add or update a mech:
+
+```cs
+PinMameMechConfig mechConfig = new PinMameMechConfig(
+   (uint)(PinMameMechFlag.NONLINEAR | PinMameMechFlag.REVERSE | PinMameMechFlag.ONESOL),
+   11,
+   240,
+   240,
+   0);
+mechConfig.AddSwitch(new PinMameMechSwitchConfig(33, 0, 5));
+mechConfig.AddSwitch(new PinMameMechSwitchConfig(32, 98, 105));
+
+_pinMame.SetMech(0, mechConfig);
+```
+
+To remove a mech: 
+
+```cs
+_pinMame.SetMech(0, null);
 ```
 
 See the [example project](https://github.com/VisualPinball/pinmame-dotnet/blob/master/src/PinMame.Example/Example.cs) for more information.
