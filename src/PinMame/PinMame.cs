@@ -52,6 +52,7 @@ namespace PinMame
 	/// </remarks>
 	public class PinMame
 	{
+
 		#region Delegates Definition
 
 		/// <summary>
@@ -78,6 +79,16 @@ namespace PinMame
 		/// A delegate, called when the audio stream is updated.
 		/// </summary>
 		public delegate int OnAudioUpdatedEventHandler(IntPtr bufferPtr, int samples);
+
+		/// <summary>
+		/// A delegate, called when a mech is available.
+		/// </summary>
+		public delegate void OnMechAvailableEventHandler(int mechNo, PinMameMechInfo mechInfo);
+
+		/// <summary>
+		/// A delegate, called when a mech is updated.
+		/// </summary>
+		public delegate void OnMechUpdatedEventHandler(int mechNo, PinMameMechInfo mechInfo);
 
 		/// <summary>
 		/// A delegate, called when a solenoid is updated.
@@ -129,6 +140,16 @@ namespace PinMame
 		public event OnAudioUpdatedEventHandler OnAudioUpdated;
 
 		/// <summary>
+		/// A new mech is available.
+		/// </summary>
+		public event OnMechAvailableEventHandler OnMechAvailable;
+
+		/// <summary>
+		/// A mech speed or position has changed.
+		/// </summary>
+		public event OnMechUpdatedEventHandler OnMechUpdated;
+
+		/// <summary>
 		/// A coil state has changed.
 		/// </summary>
 		public event OnSolenoidUpdatedEventHandler OnSolenoidUpdated;
@@ -178,6 +199,8 @@ namespace PinMame
 		private CancellationTokenSource _availableDisplaysToken;
 
 		private const int DisplayAvailableTimeoutMs = 1000;
+		public const int MaxMechSwitches = 20;
+
 		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		/// <summary>
@@ -210,6 +233,8 @@ namespace PinMame
 				onDisplayUpdated = OnDisplayUpdatedCallback,
 				onAudioAvailable = OnAudioAvailableCallback,
 				onAudioUpdated = OnAudioUpdatedCallback,
+				onMechAvailable = OnMechAvailableCallback,
+				onMechUpdated = OnMechUpdatedCallback,
 				onSolenoidUpdated = OnSolenoidUpdatedCallback,
 				onConsoleDataUpdated = OnConsoleDataUpdatedCallback,
 				isKeyPressed = IsKeyPressedFunction,
@@ -459,6 +484,24 @@ namespace PinMame
 			return OnAudioUpdated?.Invoke(bufferPtr, samples) ?? 0;
 		}
 
+		private void OnMechAvailableCallback(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
+		{
+			var mechInfo = new PinMameMechInfo(mechInfoRef);
+
+			Logger.Trace($"OnMechAvailableCallback - mechNo={mechNo}, mechInfo={mechInfo}");
+
+			OnMechAvailable?.Invoke(mechNo, mechInfo);
+		}
+
+		private void OnMechUpdatedCallback(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
+		{
+			var mechInfo = new PinMameMechInfo(mechInfoRef);
+
+			Logger.Trace($"OnMechUpdatedCallback - mechNo={mechNo}, mechInfo={mechInfo}");
+
+			OnMechUpdated?.Invoke(mechNo, mechInfo);
+		}
+
 		private void OnSolenoidUpdatedCallback(int solenoid, int isActive)
 		{
 			Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
@@ -625,17 +668,51 @@ namespace PinMame
 		}
 
 		/// <summary>
-		/// Returns the value of a given mech.
+		/// Sets the configuration of a given mech.
 		/// </summary>
 		/// <param name="mechNo">Mech number</param>
-		/// <returns>Value of the mech</returns>
-		public int GetMech(int mechNo) => PinMameApi.PinmameGetMech(mechNo);
+		/// <param name="config">Mech configuration. A null value will remove the mech.</param>
+		public void SetMech(int mechNo, PinMameMechConfig? config = null)
+		{
+			PinMameApi.PinmameStatus status;
 
-		/// <summary>
-		/// Sets the value of a given mech.
-		/// </summary>
-		/// <param name="mechNo">Mech number</param>
-		/// <param name="value">New value of the mech</param>
-		public void SetMech(int mechNo, int value) => PinMameApi.PinmameSetMech(mechNo, value);
+			if (config.HasValue)
+			{
+				var tmpConfig = (PinMameMechConfig)config;
+
+				var mechConfig = new PinMameApi.PinmameMechConfig();
+				mechConfig.sol1 = tmpConfig.Sol1;
+				mechConfig.sol2 = tmpConfig.Sol2;
+				mechConfig.type = (int)tmpConfig.Type;
+				mechConfig.length = tmpConfig.Length;
+				mechConfig.steps = tmpConfig.Steps;
+				mechConfig.initialPos = tmpConfig.InitialPos;
+
+				mechConfig.sw = new PinMameApi.PinmameMechSwitchConfig[PinMameApi.MaxMechSwitches];
+
+				var index = 0;
+
+				foreach(var switchConfig in tmpConfig.SwitchList)
+				{
+					mechConfig.sw[index].swNo = switchConfig.SwNo;
+					mechConfig.sw[index].startPos = switchConfig.StartPos;
+					mechConfig.sw[index].endPos = switchConfig.EndPos;
+					mechConfig.sw[index].pulse = switchConfig.Pulse ? 1 : 0;
+
+					index++;
+				}
+
+				status = PinMameApi.PinmameSetMech(mechNo, ref mechConfig);
+			}
+			else
+			{
+				status = PinMameApi.PinmameSetMech(mechNo, IntPtr.Zero);
+			}
+
+			if (status != PinMameApi.PinmameStatus.OK)
+			{
+				throw new InvalidOperationException($"Unable to set mech, status={status}");
+			}
+		}
 	}
 }

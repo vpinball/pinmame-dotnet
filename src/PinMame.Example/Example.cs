@@ -164,6 +164,17 @@ namespace PinMame
 		{
 			Logger.Info($"OnGameStarted");
 
+			PinMameMechConfig mechConfig = new PinMameMechConfig(
+				(uint)(PinMameMechFlag.NONLINEAR | PinMameMechFlag.REVERSE | PinMameMechFlag.ONESOL),
+				11,
+				240,
+				240,
+				0);
+			mechConfig.AddSwitch(new PinMameMechSwitchConfig(33, 0, 5));
+			mechConfig.AddSwitch(new PinMameMechSwitchConfig(32, 98, 105));
+
+			_pinMame.SetMech(0, mechConfig);
+
 			_started = true;
 		}
 
@@ -173,14 +184,16 @@ namespace PinMame
 
 			if (displayLayout.IsDmd) {
 				if (displayLayout.Depth == 2) {
-					_dmdMap = new[] {"░", "▒", "▓", "▓"};
+					_dmdMap = new[] {
+						"░", "▒", "▓", "▓"
+					};
 
 				} else {
 					_dmdMap = new[] {
-						"░","░","░","░",
-						"▒","▒","▒","▒",
-						"▓","▓","▓","▓",
-						"▓","▓","▓","▓",
+						"░", "░", "░", "░",
+						"▒", "▒", "▒", "▒",
+						"▓", "▓", "▓", "▓",
+						"▓", "▓", "▓", "▓",
 					};
 				}
 			}
@@ -201,18 +214,28 @@ namespace PinMame
 			}
 		}
 
-		private static int OnAudioAvailable(PinMameAudioInfo audioInfo)
+		static int OnAudioAvailable(PinMameAudioInfo audioInfo)
 		{
 			Logger.Info($"OnAudioAvailable: audioInfo={audioInfo}");
 
 			return audioInfo.SamplesPerFrame;
 		}
 
-		private static int OnAudioUpdated(IntPtr bufferPtr, int samples)
+		static int OnAudioUpdated(IntPtr bufferPtr, int samples)
 		{
 			Logger.Info($"OnAudioUpdated: samples={samples}");
 
 			return samples;
+		}
+
+		static void OnMechAvailable(int mechNo, PinMameMechInfo mechInfo)
+		{
+			Logger.Info($"OnMechAvailable: mechNo={mechNo}, mechInfo={mechInfo}, sw33={_pinMame.GetSwitch(33)}, sw32={_pinMame.GetSwitch(32)}");
+		}
+
+		static void OnMechUpdated(int mechNo, PinMameMechInfo mechInfo)
+		{
+			Logger.Info($"OnMechUpdated: mechNo={mechNo}, mechInfo={mechInfo}, sw33={_pinMame.GetSwitch(33)}, sw32={_pinMame.GetSwitch(32)}");
 		}
 
 		static void OnSolenoidUpdated(int solenoid, bool isActive)
@@ -251,6 +274,7 @@ namespace PinMame
 			_pinMame = PinMame.Instance(44100);
 
 			_pinMame.SetHandleKeyboard(true);
+			_pinMame.SetHandleMechanics(false);
 
 			DumpGames();
 			DumpFoundGames();
@@ -262,6 +286,8 @@ namespace PinMame
 			_pinMame.OnDisplayUpdated += OnDisplayUpdated;
 			_pinMame.OnAudioAvailable += OnAudioAvailable;
 			_pinMame.OnAudioUpdated += OnAudioUpdated;
+			_pinMame.OnMechAvailable += OnMechAvailable;
+			_pinMame.OnMechUpdated += OnMechUpdated;
 			_pinMame.OnSolenoidUpdated += OnSolenoidUpdated;
 			_pinMame.OnConsoleDataUpdated += OnConsoleDataUpdated;
 			_pinMame.OnGameEnded += OnGameEnded;
