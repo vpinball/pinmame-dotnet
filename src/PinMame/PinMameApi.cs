@@ -52,7 +52,8 @@ namespace PinMame
 			GAME_NOT_FOUND = 2,
 			GAME_ALREADY_RUNNING = 3,
 			EMULATOR_NOT_RUNNING = 4,
-			INVALID_MECH_NO = 5
+			MECH_HANDLE_MECHANICS = 5,
+			MECH_NO_INVALID = 6
 		}
 
 		internal enum PinmameDisplayType : int
@@ -487,6 +488,9 @@ namespace PinMame
 		#endregion
 
 		#region Mech related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int PinmameGetMaxMechs();
+
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern PinmameStatus PinmameSetMech(int mechNo, ref PinmameMechConfig mechConfig);
 
