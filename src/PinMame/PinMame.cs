@@ -254,15 +254,15 @@ namespace PinMame
 		public void SetHandleKeyboard(bool handleKeyboard) => PinMameApi.PinmameSetHandleKeyboard(handleKeyboard ? 1 : 0);
 
 		/// <summary>
-		/// Returns if the HandleMechanics option is enabled or disabled.
+		/// Returns the HandleMechanics value.
 		/// </summary>
-		public bool GetHandleMechanics() => PinMameApi.PinmameGetHandleMechanics() == 1;
+		public int GetHandleMechanics() => PinMameApi.PinmameGetHandleMechanics();
 
 		/// <summary>
-		/// Enables or disables the HandleMechanics option.
+		/// Sets the HandleMechanics option.
 		/// </summary>
 		/// <param name="handleMechanics">New value of the HandleMechanics option.</param>
-		public void SetHandleMechanics(bool handleMechanics) => PinMameApi.PinmameSetHandleMechanics(handleMechanics ? 1 : 0);
+		public void SetHandleMechanics(int handleMechanics) => PinMameApi.PinmameSetHandleMechanics(handleMechanics);
 
 		/// <summary>
 		/// Starts a new game. <p/>
@@ -666,6 +666,12 @@ namespace PinMame
 		
 			return array;
 		}
+
+		/// <summary>
+		/// Returns the maximal supported number of Mechs.
+		/// </summary>
+		/// <returns>Number of Mechs</returns>
+		public int GetMaxMechs() => PinMameApi.PinmameGetMaxMechs();
 
 		/// <summary>
 		/// Sets the configuration of a given mech.

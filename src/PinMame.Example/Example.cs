@@ -274,7 +274,11 @@ namespace PinMame
 			_pinMame = PinMame.Instance(44100);
 
 			_pinMame.SetHandleKeyboard(true);
-			_pinMame.SetHandleMechanics(false);
+			_pinMame.SetHandleMechanics(0);
+
+			Logger.Info($"maxLamps={_pinMame.GetMaxLamps()}");
+			Logger.Info($"maxGIs={_pinMame.GetMaxGIs()}");
+			Logger.Info($"maxMechs={_pinMame.GetMaxMechs()}");
 
 			DumpGames();
 			DumpFoundGames();
