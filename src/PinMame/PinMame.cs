@@ -206,15 +206,16 @@ namespace PinMame
 		/// <summary>
 		/// Creates or retrieves the PinMame instance.
 		/// </summary>
+		/// <param name="audioFormat">Audio format (Int16 / Float)</param>
 		/// <param name="sampleRate">Audio sample rate</param>
 		/// <param name="vpmPath">Fallback path for VPM folder, if VPM is not registered</param>
 		/// <exception cref="ArgumentException">If VPM cannot be found</exception>
-		public static PinMame Instance(int sampleRate = 48000, string vpmPath = null) =>
-			_instance ?? (_instance = new PinMame(sampleRate, vpmPath));
+		public static PinMame Instance(PinMameAudioFormat audioFormat = PinMameAudioFormat.AudioFormatInt16, int sampleRate = 48000, string vpmPath = null) =>
+			_instance ?? (_instance = new PinMame(audioFormat, sampleRate, vpmPath));
 
-		private PinMame(int sampleRate, string vpmPath)
+		private PinMame(PinMameAudioFormat audioFormat, int sampleRate, string vpmPath)
 		{
-			Logger.Info($"PinMame - sampleRate={sampleRate}, vpmPath={vpmPath}");
+			Logger.Info($"PinMame - audioFormat={audioFormat}, sampleRate={sampleRate}, vpmPath={vpmPath}");
 
 			var path = vpmPath ?? GetVpmPath();
 			if (path == null) {
@@ -226,6 +227,7 @@ namespace PinMame
 			}
 
 			_config = new PinMameApi.PinmameConfig {
+				audioFormat = (PinMameApi.PinmameAudioFormat)audioFormat,
 				sampleRate = sampleRate,
 				vpmPath = path + Path.DirectorySeparatorChar,
 				onStateUpdated = OnStateUpdatedCallback,
@@ -703,7 +705,7 @@ namespace PinMame
 					mechConfig.sw[index].swNo = switchConfig.SwNo;
 					mechConfig.sw[index].startPos = switchConfig.StartPos;
 					mechConfig.sw[index].endPos = switchConfig.EndPos;
-					mechConfig.sw[index].pulse = switchConfig.Pulse ? 1 : 0;
+					mechConfig.sw[index].pulse = switchConfig.Pulse;
 
 					index++;
 				}

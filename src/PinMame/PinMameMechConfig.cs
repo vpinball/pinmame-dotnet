@@ -39,9 +39,9 @@ namespace PinMame
 		public readonly int SwNo;
 		public readonly int StartPos;
 		public readonly int EndPos;
-		public readonly bool Pulse;
+		public readonly int Pulse;
 
-		public PinMameMechSwitchConfig(int swNo, int startPos, int endPos, bool pulse = false)
+		public PinMameMechSwitchConfig(int swNo, int startPos, int endPos, int pulse = 0)
 		{
 			SwNo = swNo;
 			StartPos = startPos;
@@ -58,9 +58,11 @@ namespace PinMame
 		public readonly int Length;
 		public readonly int Steps;
 		public readonly int InitialPos;
+		public readonly int Acc;
+		public readonly int Ret;
 		public readonly List<PinMameMechSwitchConfig> SwitchList;
 
-		public PinMameMechConfig(uint type, int sol1, int sol2, int length, int steps, int initialPos)
+		public PinMameMechConfig(uint type, int sol1, int sol2, int length, int steps, int initialPos, int acc, int ret)
 		{
 			Type = type;
 			Sol1 = sol1;
@@ -68,16 +70,20 @@ namespace PinMame
 			Length = length;
 			Steps = steps;
 			InitialPos = initialPos;
+			Acc = acc;
+			Ret = ret;
 			SwitchList = new List<PinMameMechSwitchConfig>();
 		}
 
-		public PinMameMechConfig(uint type, int sol1, int length, int steps, int initialPos)
+		public PinMameMechConfig(uint type, int sol1, int length, int steps, int initialPos, int acc, int ret)
 		{
 			Type = type;
 			Sol1 = sol1;
 			Length = length;
 			Steps = steps;
 			InitialPos = initialPos;
+			Acc = acc;
+			Ret = ret;
 			SwitchList = new List<PinMameMechSwitchConfig>();
 
 			Sol2 = 0;

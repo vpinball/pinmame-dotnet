@@ -48,7 +48,7 @@ namespace PinMame
 			var profilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 			var path = Path.GetFullPath(Path.Combine(profilePath, ".pinmame"));
 
-			_pinMame = PinMame.Instance(44100, path);
+			_pinMame = PinMame.Instance(PinMameAudioFormat.AudioFormatInt16, 44100, path);
 		}
 
 		[TestMethod]
