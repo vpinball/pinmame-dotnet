@@ -56,6 +56,12 @@ namespace PinMame
 			MECH_NO_INVALID = 6
 		}
 
+		internal enum PinmameAudioFormat : int
+		{
+			AUDIO_FORMAT_INT16 = 0,
+			AUDIO_FORMAT_FLOAT = 1
+		}
+
 		internal enum PinmameDisplayType : int
 		{
 			SEG16 = 0,                  // 16 segments
@@ -182,7 +188,9 @@ namespace PinMame
 			TWOSTEPSOL = 0x40,
 			FOURSTEPSOL = (TWODIRSOL | TWOSTEPSOL),
 			SLOW = 0x00,
-			FAST = 0x80
+			FAST = 0x80,
+			STEPSW = 0x00,
+			LENGTHSW = 0x100
 		}
 
 		internal enum PinmameKeycode
@@ -344,6 +352,7 @@ namespace PinMame
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		internal struct PinmameConfig
 		{
+			internal PinmameAudioFormat audioFormat;
 			internal int sampleRate;
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
 			internal string vpmPath;
@@ -372,12 +381,14 @@ namespace PinMame
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		internal struct PinmameMechConfig
 		{
+			internal int type;
 			internal int sol1;
 			internal int sol2;
-			internal int type;
 			internal int length;
 			internal int steps;
 			internal int initialPos;
+			internal int acc;
+			internal int ret;
 			[MarshalAs(UnmanagedType.ByValArray, SizeConst = MaxMechSwitches)]
 			internal PinmameMechSwitchConfig[] sw;
 		}
@@ -397,6 +408,7 @@ namespace PinMame
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		internal readonly struct PinmameAudioInfo
 		{
+			internal readonly PinmameAudioFormat format;
 			internal readonly int channels;
 			internal readonly double sampleRate;
 			internal readonly double framesPerSecond;

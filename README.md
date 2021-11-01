@@ -84,16 +84,18 @@ void OnDisplayUpdated(int index, IntPtr framePtr, PinMameDisplayLayout displayLa
 };
 ```
 
-Some games add mechs regardless of the `g_fHandleMechanics` flag. 
-
 To add or update a mech:
 
 ```cs
+_pinMame.SetHandleMechanics(0);
+
 PinMameMechConfig mechConfig = new PinMameMechConfig(
-   (uint)(PinMameMechFlag.NONLINEAR | PinMameMechFlag.REVERSE | PinMameMechFlag.ONESOL),
+   (uint)(PinMameMechFlag.NonLinear | PinMameMechFlag.Reverse | PinMameMechFlag.OneSol),
    11,
    240,
    240,
+   0,
+   0,
    0);
 mechConfig.AddSwitch(new PinMameMechSwitchConfig(33, 0, 5));
 mechConfig.AddSwitch(new PinMameMechSwitchConfig(32, 98, 105));

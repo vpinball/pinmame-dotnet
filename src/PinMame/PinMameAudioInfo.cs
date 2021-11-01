@@ -33,6 +33,7 @@ namespace PinMame
 {
 	public struct PinMameAudioInfo
 	{
+		public readonly PinMameAudioFormat Format;
 		public readonly int Channels;
 		public readonly double SampleRate;
 		public readonly double FramesPerSecond;
@@ -41,6 +42,7 @@ namespace PinMame
 
 		internal PinMameAudioInfo(PinMameApi.PinmameAudioInfo audioInfo)
 		{
+			Format = (PinMameAudioFormat)audioInfo.format;
 			Channels = audioInfo.channels;
 			SampleRate = audioInfo.sampleRate;
 			FramesPerSecond = audioInfo.framesPerSecond;
@@ -49,6 +51,6 @@ namespace PinMame
 		}
 
 		public override string ToString() =>
-			$"channels={Channels}, sampleRate={SampleRate}, framesPerSecond={FramesPerSecond}, samplesPerFrame={SamplesPerFrame}, bufferSize={BufferSize}";
+			$"format={Format}, channels={Channels}, sampleRate={SampleRate}, framesPerSecond={FramesPerSecond}, samplesPerFrame={SamplesPerFrame}, bufferSize={BufferSize}";
 	}
 }

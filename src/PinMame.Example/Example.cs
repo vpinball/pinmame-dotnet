@@ -165,10 +165,12 @@ namespace PinMame
 			Logger.Info($"OnGameStarted");
 
 			PinMameMechConfig mechConfig = new PinMameMechConfig(
-				(uint)(PinMameMechFlag.NONLINEAR | PinMameMechFlag.REVERSE | PinMameMechFlag.ONESOL),
+				(uint)(PinMameMechFlag.NonLinear | PinMameMechFlag.Reverse | PinMameMechFlag.OneSol),
 				11,
 				240,
 				240,
+				0,
+				0,
 				0);
 			mechConfig.AddSwitch(new PinMameMechSwitchConfig(33, 0, 5));
 			mechConfig.AddSwitch(new PinMameMechSwitchConfig(32, 98, 105));
@@ -271,7 +273,7 @@ namespace PinMame
 
 			LogManager.ReconfigExistingLoggers();
 
-			_pinMame = PinMame.Instance(44100);
+			_pinMame = PinMame.Instance(PinMameAudioFormat.AudioFormatInt16, 44100);
 
 			_pinMame.SetHandleKeyboard(true);
 			_pinMame.SetHandleMechanics(0);

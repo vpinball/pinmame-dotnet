@@ -38,6 +38,13 @@ using System;
 namespace PinMame
 {
 	[Flags]
+	public enum PinMameAudioFormat
+	{
+		AudioFormatInt16 = PinMameApi.PinmameAudioFormat.AUDIO_FORMAT_INT16,
+		AudioFormatFloat = PinMameApi.PinmameAudioFormat.AUDIO_FORMAT_FLOAT
+	}
+
+	[Flags]
 	public enum PinMameDisplayType
 	{
 		/// <summary>
@@ -468,18 +475,20 @@ namespace PinMame
 
 	public enum PinMameMechFlag : uint
 	{
-		LINEAR = PinMameApi.PinmameMechFlag.LINEAR,
-		NONLINEAR = PinMameApi.PinmameMechFlag.NONLINEAR,
-		CIRCLE = PinMameApi.PinmameMechFlag.CIRCLE,
-		STOPEND = PinMameApi.PinmameMechFlag.STOPEND,
-		REVERSE = PinMameApi.PinmameMechFlag.REVERSE,
-		ONESOL = PinMameApi.PinmameMechFlag.ONESOL,
-		ONEDIRSOL = PinMameApi.PinmameMechFlag.ONEDIRSOL,
-		TWODIRSOL = PinMameApi.PinmameMechFlag.TWODIRSOL,
-		TWOSTEPSOL = PinMameApi.PinmameMechFlag.TWOSTEPSOL,
-		FOURSTEPSOL = PinMameApi.PinmameMechFlag.FOURSTEPSOL,
-		SLOW = PinMameApi.PinmameMechFlag.SLOW,
-		FAST = PinMameApi.PinmameMechFlag.FAST
+		Linear = PinMameApi.PinmameMechFlag.LINEAR,
+		NonLinear = PinMameApi.PinmameMechFlag.NONLINEAR,
+		Circle = PinMameApi.PinmameMechFlag.CIRCLE,
+		StopEnd = PinMameApi.PinmameMechFlag.STOPEND,
+		Reverse = PinMameApi.PinmameMechFlag.REVERSE,
+		OneSol = PinMameApi.PinmameMechFlag.ONESOL,
+		OneDirSol = PinMameApi.PinmameMechFlag.ONEDIRSOL,
+		TwoDirSol = PinMameApi.PinmameMechFlag.TWODIRSOL,
+		TwoStepSol = PinMameApi.PinmameMechFlag.TWOSTEPSOL,
+		FourStepSol = PinMameApi.PinmameMechFlag.FOURSTEPSOL,
+		Slow = PinMameApi.PinmameMechFlag.SLOW,
+		Fast = PinMameApi.PinmameMechFlag.FAST,
+		StepSw = PinMameApi.PinmameMechFlag.STEPSW,
+		LengthSw = PinMameApi.PinmameMechFlag.LENGTHSW
 	}
 
 	public enum PinMameKeycode
