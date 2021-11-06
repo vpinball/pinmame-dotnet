@@ -24,17 +24,20 @@ The native wrapper is a different package and contains pre-compiled binaries of 
 |-----------------------|:-------------------------------------------------------------------:|
 | **Windows 64-bit**    | [![PinMame.Native.win-x64-badge]][PinMame.Native.win-x64-nuget]     |
 | **Windows 32-bit**    | [![PinMame.Native.win-x86-badge]][PinMame.Native.win-x86-nuget]     |
-| **Linux x64**         | [![PinMame.Native.linux-x64-badge]][PinMame.Native.linux-x64-nuget] |
 | **macOS x64**         | [![PinMame.Native.osx-x64-badge]][PinMame.Native.osx-x64-nuget]     |
+| **macOS arm64**       | [![PinMame.Native.osx-arm64-badge]][PinMame.Native.osx-arm64-nuget] |
+| **Linux x64**         | [![PinMame.Native.linux-x64-badge]][PinMame.Native.linux-x64-nuget] |
 
 [PinMame.Native.win-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.win-x64.svg
 [PinMame.Native.win-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.win-x64
 [PinMame.Native.win-x86-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.win-x86.svg
 [PinMame.Native.win-x86-nuget]: https://www.nuget.org/packages/PinMame.Native.win-x86
-[PinMame.Native.linux-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.linux-x64.svg
-[PinMame.Native.linux-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.linux-x64
 [PinMame.Native.osx-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.osx-x64.svg
 [PinMame.Native.osx-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.osx-x64
+[PinMame.Native.osx-arm64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.osx-arm64.svg
+[PinMame.Native.osx-arm64-nuget]: https://www.nuget.org/packages/PinMame.Native.osx-arm64
+[PinMame.Native.linux-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.linux-x64.svg
+[PinMame.Native.linux-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.linux-x64
 
 To install this package with the native dependency of your current platform, run:
 
