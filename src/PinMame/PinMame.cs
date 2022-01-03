@@ -1,5 +1,5 @@
 ﻿// pinmame-dotnet
-// Copyright (C) 1999-2021 PinMAME development team and contributors
+// Copyright (C) 1999-2022 PinMAME development team and contributors
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions

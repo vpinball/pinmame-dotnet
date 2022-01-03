@@ -13,7 +13,7 @@ This package is automatically built and published when the main project, PinMAME
 ## Supported Platforms
 
 - .NET Framework (4.5 and higher)
-- .NET Core (.NETStandard 2.0 and higher on Windows, Linux and macOS)
+- .NET Core (.NETStandard 2.1 and higher on Windows, Linux and macOS)
 - Mono
 
 ## Setup
