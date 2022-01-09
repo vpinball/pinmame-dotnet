@@ -26,8 +26,8 @@
     <TargetOS Condition="$([MSBuild]::IsOSPlatform('Windows'))">Windows</TargetOS>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0"/>
-    <PackageReference Include="NLog" Version="4.7.13"/>
+    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
+    <PackageReference Include="NLog" Version="4.7.13" />
   </ItemGroup>
   <!-- Append target operating system to output path -->
   <PropertyGroup>
@@ -39,12 +39,16 @@
       <Link>Interop\Libraries.cs</Link>
     </Compile>
   </ItemGroup>
-  <!-- Include .NET Standard packages on Linux and macOS -->
+  <!-- Include .NET Standard packages on macOS, iOS, and Linux -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.1"/>
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\OSX\PinMame.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.1"/>
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\OSX\PinMame.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.1" />
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\iOS\PinMame.dll" Pack="true" PackagePath="runtimes\ios\lib\netstandard2.1" />
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.1" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
+    <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Mono\" />
   </ItemGroup>
 </Project>

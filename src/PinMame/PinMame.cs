@@ -230,16 +230,16 @@ namespace PinMame
 				audioFormat = (PinMameApi.PinmameAudioFormat)audioFormat,
 				sampleRate = sampleRate,
 				vpmPath = path + Path.DirectorySeparatorChar,
-				onStateUpdated = OnStateUpdatedCallback,
-				onDisplayAvailable = OnDisplayAvailableCallback,
-				onDisplayUpdated = OnDisplayUpdatedCallback,
-				onAudioAvailable = OnAudioAvailableCallback,
-				onAudioUpdated = OnAudioUpdatedCallback,
-				onMechAvailable = OnMechAvailableCallback,
-				onMechUpdated = OnMechUpdatedCallback,
-				onSolenoidUpdated = OnSolenoidUpdatedCallback,
-				onConsoleDataUpdated = OnConsoleDataUpdatedCallback,
-				isKeyPressed = IsKeyPressedFunction,
+				onStateUpdated = OnStateUpdatedCallbackPInvoke,
+				onDisplayAvailable = OnDisplayAvailableCallbackPInvoke,
+				onDisplayUpdated = OnDisplayUpdatedCallbackPInvoke,
+				onAudioAvailable = OnAudioAvailableCallbackPInvoke,
+				onAudioUpdated = OnAudioUpdatedCallbackPInvoke,
+				onMechAvailable = OnMechAvailableCallbackPInvoke,
+				onMechUpdated = OnMechUpdatedCallbackPInvoke,
+				onSolenoidUpdated = OnSolenoidUpdatedCallbackPInvoke,
+				onConsoleDataUpdated = OnConsoleDataUpdatedCallbackPInvoke,
+				isKeyPressed = IsKeyPressedFunctionPInvoke,
 			};
 			PinMameApi.PinmameSetConfig(ref _config);
 		}
@@ -436,6 +436,12 @@ namespace PinMame
 			}
 		}
 
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnStateUpdatedCallback))]
+		private static void OnStateUpdatedCallbackPInvoke(int state)
+		{
+			_instance.OnStateUpdatedCallback(state);
+		}
+
 		private void OnStateUpdatedCallback(int state)
 		{
 			Logger.Debug($"OnStateUpdatedCallback - state={state}");
@@ -452,6 +458,12 @@ namespace PinMame
 			}
 		}
 
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnDisplayAvailableCallback))]
+		private static void OnDisplayAvailableCallbackPInvoke(int index, int displayCount, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
+		{
+			_instance.OnDisplayAvailableCallback(index, displayCount, ref displayLayoutRef);
+		}
+
 		private void OnDisplayAvailableCallback(int index, int displayCount, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
 		{
 			var displayLayout = new PinMameDisplayLayout(displayLayoutRef, PinMameApi.PinmameGetHardwareGen());
@@ -459,6 +471,12 @@ namespace PinMame
 			Logger.Trace($"OnDisplayAvailableCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
 
 			OnDisplayAvailable?.Invoke(index, displayCount, displayLayout);
+		}
+
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnDisplayUpdatedCallback))]
+		private static void OnDisplayUpdatedCallbackPInvoke(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
+		{
+			_instance.OnDisplayUpdatedCallback(index, framePtr, ref displayLayoutRef);
 		}
 
 		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
@@ -470,8 +488,14 @@ namespace PinMame
 			OnDisplayUpdated?.Invoke(index, framePtr, displayLayout);
 		}
 
-		private int OnAudioAvailableCallback(ref PinMameApi.PinmameAudioInfo audioInfoRef)
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnAudioAvailableCallback))]
+		private static int OnAudioAvailableCallbackPInvoke(ref PinMameApi.PinmameAudioInfo audioInfoRef)
 		{
+			return _instance.OnAudioAvailableCallback(ref audioInfoRef);
+		}
+
+		private int OnAudioAvailableCallback(ref PinMameApi.PinmameAudioInfo audioInfoRef)
+		{ 
 			var audioInfo = new PinMameAudioInfo(audioInfoRef);
 
 			Logger.Trace($"OnAudioAvailableCallback - audioInfo={audioInfo}");
@@ -479,11 +503,23 @@ namespace PinMame
 			return OnAudioAvailable?.Invoke(audioInfo) ?? 0;
 		}
 
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnAudioUpdatedCallback))]
+		private static int OnAudioUpdatedCallbackPInvoke(IntPtr bufferPtr, int samples)
+		{
+			return _instance.OnAudioUpdatedCallback(bufferPtr, samples);
+		}
+
 		private int OnAudioUpdatedCallback(IntPtr bufferPtr, int samples)
 		{
 			Logger.Trace($"OnAudioUpdatedCallback - samples={samples}");
 
 			return OnAudioUpdated?.Invoke(bufferPtr, samples) ?? 0;
+		}
+
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnMechAvailableCallback))]
+		private static void OnMechAvailableCallbackPInvoke(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
+		{
+			_instance.OnMechAvailableCallback(mechNo, ref mechInfoRef);
 		}
 
 		private void OnMechAvailableCallback(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
@@ -495,20 +531,38 @@ namespace PinMame
 			OnMechAvailable?.Invoke(mechNo, mechInfo);
 		}
 
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnMechUpdatedCallback))]
+		private static void OnMechUpdatedCallbackPInvoke(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
+		{
+			_instance.OnMechUpdatedCallback(mechNo, ref mechInfoRef);
+		}
+
 		private void OnMechUpdatedCallback(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
 		{
 			var mechInfo = new PinMameMechInfo(mechInfoRef);
 
 			Logger.Trace($"OnMechUpdatedCallback - mechNo={mechNo}, mechInfo={mechInfo}");
 
-			OnMechUpdated?.Invoke(mechNo, mechInfo);
+			_instance.OnMechUpdated?.Invoke(mechNo, mechInfo);
+		}
+
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnSolenoidUpdatedCallback))]
+		private static void OnSolenoidUpdatedCallbackPInvoke(int solenoid, int isActive)
+		{
+			_instance.OnSolenoidUpdatedCallback(solenoid, isActive);
 		}
 
 		private void OnSolenoidUpdatedCallback(int solenoid, int isActive)
-		{
+		{ 
 			Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
 
 			OnSolenoidUpdated?.Invoke(solenoid, isActive == 1);
+		}
+
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnConsoleDataUpdatedCallback))]
+		private static void OnConsoleDataUpdatedCallbackPInvoke(IntPtr dataPtr, int size)
+		{
+			_instance.OnConsoleDataUpdatedCallback(dataPtr, size);
 		}
 
 		private void OnConsoleDataUpdatedCallback(IntPtr dataPtr, int size)
@@ -516,6 +570,12 @@ namespace PinMame
 			Logger.Debug($"OnConsoleDataUpdatedCallback - size={size}");
 
 			OnConsoleDataUpdated?.Invoke(dataPtr, size);
+		}
+
+		[MonoPInvokeCallback(typeof(PinMameApi.PinmameIsKeyPressedFunction))]
+		private static int IsKeyPressedFunctionPInvoke(PinMameApi.PinmameKeycode keycode)
+		{
+			return _instance.IsKeyPressedFunction(keycode);
 		}
 
 		private int IsKeyPressedFunction(PinMameApi.PinmameKeycode keycode)

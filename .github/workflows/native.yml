@@ -40,12 +40,14 @@ jobs:
           mv libpinmame-*-win-x86 libpinmame-win-x86
           mv libpinmame-*-osx-x64 libpinmame-osx-x64
           mv libpinmame-*-osx-arm64 libpinmame-osx-arm64
+          mv libpinmame-*-ios-arm64 libpinmame-ios-arm64
           mv libpinmame-*-linux-x64 libpinmame-linux-x64
           sed -i 's/__VERSION__/${{ needs.version.outputs.semver }}/g' *.nuspec
           nuget pack PinMame.Native.win-x64.nuspec -OutputDirectory nupkg
           nuget pack PinMame.Native.win-x86.nuspec -OutputDirectory nupkg
           nuget pack PinMame.Native.osx-x64.nuspec -OutputDirectory nupkg
           nuget pack PinMame.Native.osx-arm64.nuspec -OutputDirectory nupkg
+          nuget pack PinMame.Native.ios-arm64.nuspec -OutputDirectory nupkg
           nuget pack PinMame.Native.linux-x64.nuspec -OutputDirectory nupkg
           nuget pack PinMame.Native.nuspec -OutputDirectory nupkg
       - uses: actions/upload-artifact@v2
@@ -68,4 +70,5 @@ jobs:
           nuget push PinMame.Native.win-x86.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
           nuget push PinMame.Native.osx-x64.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
           nuget push PinMame.Native.osx-arm64.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
+          nuget push PinMame.Native.ios-arm64.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
           nuget push PinMame.Native.linux-x64.${{ needs.version.outputs.semver }}.nupkg -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json

@@ -17,17 +17,18 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <copyright>PinMAME development team and contributors</copyright>
     <dependencies>
-      <group targetFramework="netstandard2.0">
+      <group targetFramework="netstandard2.1">
         <dependency id="PinMame.Native.win-x64" version="__VERSION__" include="native" />
         <dependency id="PinMame.Native.win-x86" version="__VERSION__" include="native" />
         <dependency id="PinMame.Native.osx-x64" version="__VERSION__" include="native" />
         <dependency id="PinMame.Native.osx-arm64" version="__VERSION__" include="native" />
+        <dependency id="PinMame.Native.ios-arm64" version="__VERSION__" include="native" />
         <dependency id="PinMame.Native.linux-x64" version="__VERSION__" include="native" />
       </group>
     </dependencies>
   </metadata>
   <files>
     <!-- A dummy reference which prevents NuGet from adding any compilation references when this package is imported -->
-    <file src="_._" target="lib\netstandard2.0" />
+    <file src="_._" target="lib\netstandard2.1" />
   </files>
 </package>

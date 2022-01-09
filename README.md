@@ -1,6 +1,6 @@
 # PinMAME for .NET
 
-[![CI status (x64 Linux, macOS and Windows)](https://github.com/VisualPinball/pinmame-dotnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/VisualPinball/pinmame-dotnet/actions) 
+[![CI status (x64 Linux, iOS, macOS and Windows)](https://github.com/VisualPinball/pinmame-dotnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/VisualPinball/pinmame-dotnet/actions) 
 [![NuGet](https://img.shields.io/nuget/vpre/PinMame.svg)](https://www.nuget.org/packages/PinMame)
 
 *Add PinMAME support to any .NET application*
@@ -12,7 +12,6 @@ This package is automatically built and published when the main project, PinMAME
 
 ## Supported Platforms
 
-- .NET Framework (4.5 and higher)
 - .NET Core (.NETStandard 2.1 and higher on Windows, Linux and macOS)
 - Mono
 
@@ -26,6 +25,7 @@ The native wrapper is a different package and contains pre-compiled binaries of 
 | **Windows 32-bit**    | [![PinMame.Native.win-x86-badge]][PinMame.Native.win-x86-nuget]     |
 | **macOS x64**         | [![PinMame.Native.osx-x64-badge]][PinMame.Native.osx-x64-nuget]     |
 | **macOS arm64**       | [![PinMame.Native.osx-arm64-badge]][PinMame.Native.osx-arm64-nuget] |
+| **iOS arm64**         | [![PinMame.Native.ios-arm64-badge]][PinMame.Native.ios-arm64-nuget] |
 | **Linux x64**         | [![PinMame.Native.linux-x64-badge]][PinMame.Native.linux-x64-nuget] |
 
 [PinMame.Native.win-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.win-x64.svg
@@ -36,6 +36,8 @@ The native wrapper is a different package and contains pre-compiled binaries of 
 [PinMame.Native.osx-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.osx-x64
 [PinMame.Native.osx-arm64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.osx-arm64.svg
 [PinMame.Native.osx-arm64-nuget]: https://www.nuget.org/packages/PinMame.Native.osx-arm64
+[PinMame.Native.ios-arm64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.ios-arm64.svg
+[PinMame.Native.ios-arm64-nuget]: https://www.nuget.org/packages/PinMame.Native.ios-arm64
 [PinMame.Native.linux-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.linux-x64.svg
 [PinMame.Native.linux-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.linux-x64
 

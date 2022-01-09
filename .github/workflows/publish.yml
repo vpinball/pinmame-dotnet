@@ -12,6 +12,7 @@ jobs:
           ref: ${{ github.event.client_payload.commitish }}
       - run: |
           cd src/PinMame
+          dotnet build -c Release /p:TargetOS=iOS
           dotnet build -c Release /p:TargetOS=OSX
           dotnet build -c Release /p:TargetOS=Linux
           dotnet pack -c Release /p:TargetOS=Windows -o nupkg

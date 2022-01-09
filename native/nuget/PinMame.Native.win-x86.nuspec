@@ -17,17 +17,17 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <copyright>PinMAME development team and contributors</copyright>
     <dependencies>
-      <group targetFramework=".NETStandard2.0" />
+      <group targetFramework="netstandard2.1" />
     </dependencies>
   </metadata>
   <files>
     <!-- The build bits -->
-    <file src="targets\PinMame.Native.win-x86.targets" target="build\netstandard2.0" />
+    <file src="targets\PinMame.Native.win-x86.targets" target="build\netstandard2.1" />
     <!-- Include libpinmame win-x86 binaries -->
     <file src="libpinmame-win-x86\libpinmame-*.dll" target="runtimes\win-x86\native" />
     <!-- Include the license -->
     <file src="..\..\LICENSE.txt" />
     <!-- A dummy reference which prevents NuGet from adding any compilation references when this package is imported -->
-    <file src="_._" target="lib\netstandard2.0" />
+    <file src="_._" target="lib\netstandard2.1" />
   </files>
 </package>
