@@ -29,6 +29,8 @@ jobs:
             rid: osx-x64
           - os: macos-latest
             rid: osx-arm64
+          - os: macos-latest
+            rid: ios-arm64
           - os: ubuntu-latest
             rid: linux-x64
     steps:
@@ -39,9 +41,13 @@ jobs:
       - name: Build
         run: |
           cd src/PinMame.Tests
-          dotnet build -c Release -r ${{ matrix.rid }}
+          if [[ "${{ matrix.rid }}" == "ios-arm64" ]]; then
+            dotnet build -c Release -r ${{ matrix.rid }} /p:TargetOS=iOS
+          else
+            dotnet build -c Release -r ${{ matrix.rid }}
+          fi
       - name: Test
-        if: matrix.rid != 'osx-arm64'
+        if: matrix.rid != 'osx-arm64' && matrix.rid != 'ios-arm64'
         run: |
           mkdir -p ~/.pinmame/roms
           curl -sl https://www.ipdb.org/files/4032/mm_109c.zip -o ~/.pinmame/roms/mm_109c.zip
