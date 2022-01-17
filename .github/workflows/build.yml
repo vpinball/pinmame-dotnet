@@ -29,10 +29,17 @@ jobs:
             rid: osx-x64
           - os: macos-latest
             rid: osx-arm64
+            skipTest: true
           - os: macos-latest
             rid: ios-arm64
+            targetOS: iOS
+            skipTest: true
           - os: ubuntu-latest
             rid: linux-x64
+          - os: ubuntu-latest
+            rid: android-arm64-v8a
+            targetOS: Android
+            skipTest: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-dotnet@v1
@@ -41,13 +48,13 @@ jobs:
       - name: Build
         run: |
           cd src/PinMame.Tests
-          if [[ "${{ matrix.rid }}" == "ios-arm64" ]]; then
-            dotnet build -c Release -r ${{ matrix.rid }} /p:TargetOS=iOS
+          if [[ "${{ matrix.targetOS }}" ]]; then
+            dotnet build -c Release -r ${{ matrix.rid }} /p:TargetOS=${{ matrix.targetOS }}
           else
             dotnet build -c Release -r ${{ matrix.rid }}
           fi
       - name: Test
-        if: matrix.rid != 'osx-arm64' && matrix.rid != 'ios-arm64'
+        if: matrix.skipTest != true
         run: |
           mkdir -p ~/.pinmame/roms
           curl -sl https://www.ipdb.org/files/4032/mm_109c.zip -o ~/.pinmame/roms/mm_109c.zip
