@@ -24,6 +24,7 @@
         <dependency id="PinMame.Native.osx-arm64" version="__VERSION__" include="native" />
         <dependency id="PinMame.Native.ios-arm64" version="__VERSION__" include="native" />
         <dependency id="PinMame.Native.linux-x64" version="__VERSION__" include="native" />
+        <dependency id="PinMame.Native.android-arm64-v8a" version="__VERSION__" include="native" />
       </group>
     </dependencies>
   </metadata>
