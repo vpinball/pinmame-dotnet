@@ -24,7 +24,8 @@
     <!-- The build bits -->
     <file src="targets\PinMame.Native.ios-arm64.targets" target="build\netstandard2.1" />
     <!-- Include libpinmame ios-arm64 binaries -->
-    <file src="libpinmame-ios-arm64\libpinmame.*.dylib" target="runtimes\ios-arm64\native" />
+    <file src="libpinmame-ios-arm64\libpinmame.*.a" target="runtimes\ios-arm64\native" />
+    <file src="libpinmame-ios-arm64\libz.a" target="runtimes\ios-arm64\native" />
     <!-- Include the license -->
     <file src="..\..\LICENSE.txt" />
     <!-- A dummy reference which prevents NuGet from adding any compilation references when this package is imported -->
