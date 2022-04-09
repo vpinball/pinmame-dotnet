@@ -25,6 +25,7 @@ The native wrapper is a different package and contains pre-compiled binaries of 
 | **Windows 32-bit**    | [![PinMame.Native.win-x86-badge]][PinMame.Native.win-x86-nuget]                     |
 | **macOS x64**         | [![PinMame.Native.osx-x64-badge]][PinMame.Native.osx-x64-nuget]                     |
 | **macOS arm64**       | [![PinMame.Native.osx-arm64-badge]][PinMame.Native.osx-arm64-nuget]                 |
+| **macOS x64/arm64**   | [![PinMame.Native.osx-badge]][PinMame.Native.osx-nuget]                             |
 | **iOS arm64**         | [![PinMame.Native.ios-arm64-badge]][PinMame.Native.ios-arm64-nuget]                 |
 | **Linux x64**         | [![PinMame.Native.linux-x64-badge]][PinMame.Native.linux-x64-nuget]                 |
 | **Android arm64-v8a** | [![PinMame.Native.android-arm64-v8a-badge]][PinMame.Native.android-arm64-v8a-nuget] |
@@ -37,6 +38,8 @@ The native wrapper is a different package and contains pre-compiled binaries of 
 [PinMame.Native.osx-x64-nuget]: https://www.nuget.org/packages/PinMame.Native.osx-x64
 [PinMame.Native.osx-arm64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.osx-arm64.svg
 [PinMame.Native.osx-arm64-nuget]: https://www.nuget.org/packages/PinMame.Native.osx-arm64
+[PinMame.Native.osx-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.osx.svg
+[PinMame.Native.osx-nuget]: https://www.nuget.org/packages/PinMame.Native.osx
 [PinMame.Native.ios-arm64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.ios-arm64.svg
 [PinMame.Native.ios-arm64-nuget]: https://www.nuget.org/packages/PinMame.Native.ios-arm64
 [PinMame.Native.linux-x64-badge]: https://img.shields.io/nuget/vpre/PinMame.Native.linux-x64.svg
