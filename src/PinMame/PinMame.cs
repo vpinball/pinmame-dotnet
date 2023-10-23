@@ -686,11 +686,28 @@ namespace PinMame
 		public int GetMaxLamps() => PinMameApi.PinmameGetMaxLamps();
 
 		/// <summary>
-		/// Returns an array of all changed lamps since the last call. <p/>
-		///
-		/// The returned array contains pairs, where the first element is the
-		/// lamp number, and the second element the value.
+		/// Clears and updates a list with all changed lamps since the last call. <p/>
 		/// </summary>
+		/// <remarks>
+		/// This API allows to perform a GC-free operation. See also <see cref="GetChangedLamps()"/>.
+		/// </remarks>
+		public void GetChangedLamps(List<PinMameLampInfo> list)
+		{
+			list.Clear();
+			var num = PinMameApi.PinmameGetChangedLamps(_changedLamps);
+
+			for (var index = 0; index < num; index++) {
+				list.Add(new PinMameLampInfo(_changedLamps[index * 2], _changedLamps[(index * 2) + 1]));
+			}
+		}
+
+		/// <summary>
+		/// Returns an array of all changed lamps since the last call.
+		/// </summary>
+		/// <remarks>
+		/// This call produces a little bit of garbage, since the result array is created on each call.
+		/// </remarks>
+		/// <returns>Array of Id/Value pairs.</returns>
 		public PinMameLampInfo[] GetChangedLamps()
 		{
 			var num = PinMameApi.PinmameGetChangedLamps(_changedLamps);
@@ -711,11 +728,27 @@ namespace PinMame
 		public int GetMaxGIs() => PinMameApi.PinmameGetMaxGIs();
 
 		/// <summary>
-		/// Returns an array of all changed GIs since the last call.
-		///
-		/// The returned array contains pairs, where the first element is the
-		/// GI number, and the second element the value.
+		/// Clears and updates a list with all changed GIs since the last call.
 		/// </summary>
+		/// <remarks>
+		/// This API allows to perform a GC-free operation. See also <see cref="GetChangedGIs()"/>.
+		/// </remarks>
+		/// <param name="list">List to write the result to.</param>
+		public void GetChangedGIs(List<PinMameLampInfo> list)
+		{
+			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
+			for (var index = 0; index < num; index++) {
+				list.Add(new PinMameLampInfo(_changedGIs[index * 2], _changedGIs[(index * 2) + 1]));
+			}
+		}
+
+		/// <summary>
+		/// Returns an array of all changed GIs since the last call.
+		/// </summary>
+		/// <remarks>
+		/// This call produces a little bit of garbage, since the result array is created on each call.
+		/// </remarks>
+		/// <returns>Array of Id/Value pairs.</returns>
 		public PinMameLampInfo[] GetChangedGIs()
 		{
 			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
@@ -725,7 +758,7 @@ namespace PinMame
 			for (int index = 0; index < num; index++) {
 				array[index] = new PinMameLampInfo(_changedGIs[index * 2], _changedGIs[(index * 2) + 1]);
 			}
-		
+
 			return array;
 		}
 

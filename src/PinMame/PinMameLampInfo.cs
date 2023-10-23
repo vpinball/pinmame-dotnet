@@ -31,7 +31,7 @@
 
 namespace PinMame
 {
-	public struct PinMameLampInfo
+	public readonly struct PinMameLampInfo
 	{
 		public readonly int Id;
 		public readonly int Value;
