@@ -64,7 +64,7 @@ jobs:
     needs: [ version, build-nuget ]
     steps:
       - uses: nuget/setup-nuget@v1
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: nupkg
       - name: Publish
