@@ -26,8 +26,8 @@ jobs:
     needs: [ version ]
     steps:
       - uses: nuget/setup-nuget@v1
-      - uses: actions/checkout@v2
-      - uses: dawidd6/action-download-artifact@v2
+      - uses: actions/checkout@v4
+      - uses: dawidd6/action-download-artifact@v6
         with:
           workflow: libpinmame
           run_id: ${{ github.event.client_payload.run_id }}
@@ -54,7 +54,7 @@ jobs:
           nuget pack PinMame.Native.linux-x64.nuspec -OutputDirectory nupkg
           nuget pack PinMame.Native.android-arm64-v8a.nuspec -OutputDirectory nupkg
           nuget pack PinMame.Native.nuspec -OutputDirectory nupkg
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: nupkg
           path: native/nuget/nupkg

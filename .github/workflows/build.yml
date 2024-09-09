@@ -41,7 +41,7 @@ jobs:
             targetOS: Android
             skipTest: true
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '3.1.x'

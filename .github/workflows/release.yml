@@ -11,7 +11,7 @@ jobs:
       nextTag: ${{ steps.nextVersion.outputs.nextTag }}
       commitish: ${{ steps.commit.outputs.commitish }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - id: nextVersion
