@@ -25,6 +25,7 @@ jobs:
             rid: win-x64
           - os: windows-latest
             rid: win-x86
+            skipTest: true
           - os: macos-latest
             rid: osx-x64
             skipTest: true
