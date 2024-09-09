@@ -42,7 +42,7 @@ jobs:
             skipTest: true
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '3.1.x'
       - name: Build
@@ -66,7 +66,7 @@ jobs:
     needs: [ build ]
     if: github.repository == 'vpinball/pinmame-dotnet' && github.ref == 'refs/heads/master' && github.event_name == 'push'
     steps:
-      - uses: peter-evans/repository-dispatch@v1
+      - uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.GH_PAT }}
           event-type: build-complete
