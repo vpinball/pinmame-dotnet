@@ -40,7 +40,7 @@ namespace PinMame
 		public readonly int SamplesPerFrame;
 		public readonly int BufferSize;
 
-		internal PinMameAudioInfo(PinMameApi.PinmameAudioInfo audioInfo)
+		internal PinMameAudioInfo(PinMameApi.AudioInfo audioInfo)
 		{
 			Format = (PinMameAudioFormat)audioInfo.format;
 			Channels = audioInfo.channels;

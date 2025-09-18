@@ -182,15 +182,15 @@ namespace PinMame
 		/// <summary>
 		/// Returns whether a game is currently running.
 		/// </summary>
-		public static bool IsRunning => PinMameApi.PinmameIsRunning() == 1;
+		public static bool IsRunning => PinMameApi.IsRunning() == 1;
 
 		/// <summary>
 		/// Returns the hardware generation
 		/// </summary>
 		/// <returns>Value of the hardware generation</returns>
-		public static PinMameHardwareGen CurrentHardwareGen => (PinMameHardwareGen)PinMameApi.PinmameGetHardwareGen();
+		public static PinMameHardwareGen CurrentHardwareGen => (PinMameHardwareGen)PinMameApi.GetHardwareGen();
 
-		private readonly PinMameApi.PinmameConfig _config;
+		private readonly PinMameApi.Config _config;
 		private int[] _changedLamps;
 		private int[] _changedGIs;
 		private readonly Dictionary<int, PinMameDisplayLayout> _availableDisplays = new Dictionary<int, PinMameDisplayLayout>();
@@ -226,8 +226,8 @@ namespace PinMame
 				throw new ArgumentException($"Could not find VPM path - {path} does not exist.", nameof(vpmPath));
 			}
 
-			_config = new PinMameApi.PinmameConfig {
-				audioFormat = (PinMameApi.PinmameAudioFormat)audioFormat,
+			_config = new PinMameApi.Config {
+				audioFormat = (PinMameApi.AudioFormat)audioFormat,
 				sampleRate = sampleRate,
 				vpmPath = path + Path.DirectorySeparatorChar,
 				onStateUpdated = OnStateUpdatedCallbackPInvoke,
@@ -241,30 +241,30 @@ namespace PinMame
 				onConsoleDataUpdated = OnConsoleDataUpdatedCallbackPInvoke,
 				isKeyPressed = IsKeyPressedFunctionPInvoke,
 			};
-			PinMameApi.PinmameSetConfig(ref _config);
+			PinMameApi.SetConfig(ref _config);
 		}
 
 		/// <summary>
 		/// Returns if the HandleKeyboard option is enabled or disabled.
 		/// </summary>
-		public bool GetHandleKeyboard() => PinMameApi.PinmameGetHandleKeyboard() == 1;
+		public bool GetHandleKeyboard() => PinMameApi.GetHandleKeyboard() == 1;
 
 		/// <summary>
 		/// Enables or disables the HandleKeyboard option.
 		/// </summary>
 		/// <param name="handleKeyboard">New value of the HandleKeyboard flag.</param>
-		public void SetHandleKeyboard(bool handleKeyboard) => PinMameApi.PinmameSetHandleKeyboard(handleKeyboard ? 1 : 0);
+		public void SetHandleKeyboard(bool handleKeyboard) => PinMameApi.SetHandleKeyboard(handleKeyboard ? 1 : 0);
 
 		/// <summary>
 		/// Returns the HandleMechanics value.
 		/// </summary>
-		public int GetHandleMechanics() => PinMameApi.PinmameGetHandleMechanics();
+		public int GetHandleMechanics() => PinMameApi.GetHandleMechanics();
 
 		/// <summary>
 		/// Sets the HandleMechanics option.
 		/// </summary>
 		/// <param name="handleMechanics">New value of the HandleMechanics option.</param>
-		public void SetHandleMechanics(int handleMechanics) => PinMameApi.PinmameSetHandleMechanics(handleMechanics);
+		public void SetHandleMechanics(int handleMechanics) => PinMameApi.SetHandleMechanics(handleMechanics);
 
 		/// <summary>
 		/// Starts a new game. <p/>
@@ -278,8 +278,8 @@ namespace PinMame
 		{
 			Logger.Info("StartGame");
 			RunningGame = gameName;
-			var status = PinMameApi.PinmameRun(gameName);
-			if (status != PinMameApi.PinmameStatus.OK) {
+			var status = PinMameApi.Run(gameName);
+			if (status != PinMameApi.Status.OK) {
 				throw new InvalidOperationException($"Unable to start game, status={status}");
 			}
 		}
@@ -322,11 +322,11 @@ namespace PinMame
 			Logger.Info($"GetGame: name={name}");
 
 			PinMameGame game = null;
-			var status = PinMameApi.PinmameGetGame(name, gamePtr => {
+			var status = PinMameApi.GetGame(name, gamePtr => {
 				game = new PinMameGame(gamePtr);
 			});
 
-			if (status != PinMameApi.PinmameStatus.OK) {
+			if (status != PinMameApi.Status.OK) {
 				throw new InvalidOperationException($"Unable to get game, name={name}, status={status}");
 			}
 
@@ -342,7 +342,7 @@ namespace PinMame
 			var games = new Dictionary<string, PinMameGame>(); // game name -> game
 			var clones = new List<(string, PinMameGame)>();    // parent game name -> game
 
-			var status = PinMameApi.PinmameGetGames(gamePtr => {
+			var status = PinMameApi.GetGames(gamePtr => {
 				var game = new PinMameGame(gamePtr);
 
 				if (string.IsNullOrEmpty(game.CloneOf)) {
@@ -353,7 +353,7 @@ namespace PinMame
 				}
 			});
 
-			if (status != PinMameApi.PinmameStatus.OK) {
+			if (status != PinMameApi.Status.OK) {
 				throw new InvalidOperationException($"Unable to get games, status={status}");
 			}
 
@@ -376,14 +376,14 @@ namespace PinMame
 		public IEnumerable<PinMameGame> GetFoundGames()
 		{
 			var games = new List<PinMameGame>();
-			var status = PinMameApi.PinmameGetGames(gamePtr => {
+			var status = PinMameApi.GetGames(gamePtr => {
 				var game = new PinMameGame(gamePtr);
 				if (game.RomFound) {
 					games.Add(game);
 				}
 			});
 
-			if (status != PinMameApi.PinmameStatus.OK) {
+			if (status != PinMameApi.Status.OK) {
 				throw new InvalidOperationException($"Unable to get games, status={status}");
 			}
 
@@ -396,7 +396,7 @@ namespace PinMame
 		public void ResetGame()
 		{
 			Logger.Info("ResetGame");
-			PinMameApi.PinmameReset();
+			PinMameApi.Reset();
 		}
 
 		/// <summary>
@@ -405,7 +405,7 @@ namespace PinMame
 		public void StopGame()
 		{
 			Logger.Info("StopGame");
-			PinMameApi.PinmameStop();
+			PinMameApi.Stop();
 		}
 
 		/// <summary>
@@ -416,8 +416,8 @@ namespace PinMame
 		{
 			Logger.Info("Pause");
 
-			var status = PinMameApi.PinmamePause(1);
-			if (status != PinMameApi.PinmameStatus.OK) {
+			var status = PinMameApi.Pause(1);
+			if (status != PinMameApi.Status.OK) {
 				throw new InvalidOperationException($"Unable to pause game, status={status}");
 			}
 		}
@@ -430,13 +430,13 @@ namespace PinMame
 		{
 			Logger.Info("Continue");
 
-			var status = PinMameApi.PinmamePause(0);
-			if (status != PinMameApi.PinmameStatus.OK) {
+			var status = PinMameApi.Pause(0);
+			if (status != PinMameApi.Status.OK) {
 				throw new InvalidOperationException($"Unable to continue game, status={status}");
 			}
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnStateUpdatedCallback))]
+		[MonoPInvokeCallback(typeof(PinMameApi.OnStateUpdatedCallback))]
 		private static void OnStateUpdatedCallbackPInvoke(int state)
 		{
 			_instance.OnStateUpdatedCallback(state);
@@ -447,8 +447,8 @@ namespace PinMame
 			Logger.Debug($"OnStateUpdatedCallback - state={state}");
 
 			if (state == 1) {
-				_changedLamps = new int[PinMameApi.PinmameGetMaxLamps() * 2];
-				_changedGIs = new int[PinMameApi.PinmameGetMaxGIs() * 2];
+				_changedLamps = new int[PinMameApi.GetMaxLamps() * 2];
+				_changedGIs = new int[PinMameApi.GetMaxGIs() * 2];
 
 				OnGameStarted?.Invoke();
 			}
@@ -458,28 +458,28 @@ namespace PinMame
 			}
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnDisplayAvailableCallback))]
-		private static void OnDisplayAvailableCallbackPInvoke(int index, int displayCount, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
+		[MonoPInvokeCallback(typeof(PinMameApi.OnDisplayAvailableCallback))]
+		private static void OnDisplayAvailableCallbackPInvoke(int index, int displayCount, ref PinMameApi.DisplayLayout displayLayoutRef)
 		{
 			_instance.OnDisplayAvailableCallback(index, displayCount, ref displayLayoutRef);
 		}
 
-		private void OnDisplayAvailableCallback(int index, int displayCount, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
+		private void OnDisplayAvailableCallback(int index, int displayCount, ref PinMameApi.DisplayLayout displayLayoutRef)
 		{
-			var displayLayout = new PinMameDisplayLayout(displayLayoutRef, PinMameApi.PinmameGetHardwareGen());
+			var displayLayout = new PinMameDisplayLayout(displayLayoutRef, PinMameApi.GetHardwareGen());
 
 			Logger.Trace($"OnDisplayAvailableCallback - index={index}, displayCount={displayCount}, displayLayout={displayLayout}");
 
 			OnDisplayAvailable?.Invoke(index, displayCount, displayLayout);
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnDisplayUpdatedCallback))]
-		private static void OnDisplayUpdatedCallbackPInvoke(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
+		[MonoPInvokeCallback(typeof(PinMameApi.OnDisplayUpdatedCallback))]
+		private static void OnDisplayUpdatedCallbackPInvoke(int index, IntPtr framePtr, ref PinMameApi.DisplayLayout displayLayoutRef)
 		{
 			_instance.OnDisplayUpdatedCallback(index, framePtr, ref displayLayoutRef);
 		}
 
-		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.PinmameDisplayLayout displayLayoutRef)
+		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.DisplayLayout displayLayoutRef)
 		{
 			var displayLayout = new PinMameDisplayLayout(displayLayoutRef);
 
@@ -488,13 +488,13 @@ namespace PinMame
 			OnDisplayUpdated?.Invoke(index, framePtr, displayLayout);
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnAudioAvailableCallback))]
-		private static int OnAudioAvailableCallbackPInvoke(ref PinMameApi.PinmameAudioInfo audioInfoRef)
+		[MonoPInvokeCallback(typeof(PinMameApi.OnAudioAvailableCallback))]
+		private static int OnAudioAvailableCallbackPInvoke(ref PinMameApi.AudioInfo audioInfoRef)
 		{
 			return _instance.OnAudioAvailableCallback(ref audioInfoRef);
 		}
 
-		private int OnAudioAvailableCallback(ref PinMameApi.PinmameAudioInfo audioInfoRef)
+		private int OnAudioAvailableCallback(ref PinMameApi.AudioInfo audioInfoRef)
 		{ 
 			var audioInfo = new PinMameAudioInfo(audioInfoRef);
 
@@ -503,7 +503,7 @@ namespace PinMame
 			return OnAudioAvailable?.Invoke(audioInfo) ?? 0;
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnAudioUpdatedCallback))]
+		[MonoPInvokeCallback(typeof(PinMameApi.OnAudioUpdatedCallback))]
 		private static int OnAudioUpdatedCallbackPInvoke(IntPtr bufferPtr, int samples)
 		{
 			return _instance.OnAudioUpdatedCallback(bufferPtr, samples);
@@ -516,13 +516,13 @@ namespace PinMame
 			return OnAudioUpdated?.Invoke(bufferPtr, samples) ?? 0;
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnMechAvailableCallback))]
-		private static void OnMechAvailableCallbackPInvoke(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
+		[MonoPInvokeCallback(typeof(PinMameApi.OnMechAvailableCallback))]
+		private static void OnMechAvailableCallbackPInvoke(int mechNo, ref PinMameApi.MechInfo mechInfoRef)
 		{
 			_instance.OnMechAvailableCallback(mechNo, ref mechInfoRef);
 		}
 
-		private void OnMechAvailableCallback(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
+		private void OnMechAvailableCallback(int mechNo, ref PinMameApi.MechInfo mechInfoRef)
 		{
 			var mechInfo = new PinMameMechInfo(mechInfoRef);
 
@@ -531,13 +531,13 @@ namespace PinMame
 			OnMechAvailable?.Invoke(mechNo, mechInfo);
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnMechUpdatedCallback))]
-		private static void OnMechUpdatedCallbackPInvoke(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
+		[MonoPInvokeCallback(typeof(PinMameApi.OnMechUpdatedCallback))]
+		private static void OnMechUpdatedCallbackPInvoke(int mechNo, ref PinMameApi.MechInfo mechInfoRef)
 		{
 			_instance.OnMechUpdatedCallback(mechNo, ref mechInfoRef);
 		}
 
-		private void OnMechUpdatedCallback(int mechNo, ref PinMameApi.PinmameMechInfo mechInfoRef)
+		private void OnMechUpdatedCallback(int mechNo, ref PinMameApi.MechInfo mechInfoRef)
 		{
 			var mechInfo = new PinMameMechInfo(mechInfoRef);
 
@@ -546,7 +546,7 @@ namespace PinMame
 			_instance.OnMechUpdated?.Invoke(mechNo, mechInfo);
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnSolenoidUpdatedCallback))]
+		[MonoPInvokeCallback(typeof(PinMameApi.OnSolenoidUpdatedCallback))]
 		private static void OnSolenoidUpdatedCallbackPInvoke(int solenoid, int isActive)
 		{
 			_instance.OnSolenoidUpdatedCallback(solenoid, isActive);
@@ -559,7 +559,7 @@ namespace PinMame
 			OnSolenoidUpdated?.Invoke(solenoid, isActive == 1);
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameOnConsoleDataUpdatedCallback))]
+		[MonoPInvokeCallback(typeof(PinMameApi.OnConsoleDataUpdatedCallback))]
 		private static void OnConsoleDataUpdatedCallbackPInvoke(IntPtr dataPtr, int size)
 		{
 			_instance.OnConsoleDataUpdatedCallback(dataPtr, size);
@@ -572,13 +572,13 @@ namespace PinMame
 			OnConsoleDataUpdated?.Invoke(dataPtr, size);
 		}
 
-		[MonoPInvokeCallback(typeof(PinMameApi.PinmameIsKeyPressedFunction))]
-		private static int IsKeyPressedFunctionPInvoke(PinMameApi.PinmameKeycode keycode)
+		[MonoPInvokeCallback(typeof(PinMameApi.IsKeyPressedFunction))]
+		private static int IsKeyPressedFunctionPInvoke(PinMameApi.Keycode keycode)
 		{
 			return _instance.IsKeyPressedFunction(keycode);
 		}
 
-		private int IsKeyPressedFunction(PinMameApi.PinmameKeycode keycode)
+		private int IsKeyPressedFunction(PinMameApi.Keycode keycode)
 		{
 			Logger.Trace($"IsKeyPressedFunction - keycode={keycode}");
 
@@ -670,20 +670,20 @@ namespace PinMame
 		/// </summary>
 		/// <param name="slot">Slot number of the switch</param>
 		/// <returns>Value of the switch</returns>
-		public bool GetSwitch(int slot) => PinMameApi.PinmameGetSwitch(slot) != 0;
+		public bool GetSwitch(int slot) => PinMameApi.GetSwitch(slot) != 0;
 
 		/// <summary>
 		/// Sets the state of a given switch.
 		/// </summary>
 		/// <param name="slot">Slot number of the switch</param>
 		/// <param name="state">New value of the switch</param>
-		public void SetSwitch(int slot, bool state) => PinMameApi.PinmameSetSwitch(slot, state ? 1 : 0);
+		public void SetSwitch(int slot, bool state) => PinMameApi.SetSwitch(slot, state ? 1 : 0);
 
 		/// <summary>
 		/// Returns the maximal supported number of lamps.
 		/// </summary>
 		/// <returns>Number of lamps</returns>
-		public int GetMaxLamps() => PinMameApi.PinmameGetMaxLamps();
+		public int GetMaxLamps() => PinMameApi.GetMaxLamps();
 
 		/// <summary>
 		/// Clears and updates a list with all changed lamps since the last call. <p/>
@@ -694,7 +694,7 @@ namespace PinMame
 		public void GetChangedLamps(List<PinMameLampInfo> list)
 		{
 			list.Clear();
-			var num = PinMameApi.PinmameGetChangedLamps(_changedLamps);
+			var num = PinMameApi.GetChangedLamps(_changedLamps);
 
 			for (var index = 0; index < num; index++) {
 				list.Add(new PinMameLampInfo(_changedLamps[index * 2], _changedLamps[(index * 2) + 1]));
@@ -710,7 +710,7 @@ namespace PinMame
 		/// <returns>Array of Id/Value pairs.</returns>
 		public PinMameLampInfo[] GetChangedLamps()
 		{
-			var num = PinMameApi.PinmameGetChangedLamps(_changedLamps);
+			var num = PinMameApi.GetChangedLamps(_changedLamps);
 
 			PinMameLampInfo[] array = new PinMameLampInfo[num];
 
@@ -725,7 +725,7 @@ namespace PinMame
 		/// Returns the maximal supported number of GIs.
 		/// </summary>
 		/// <returns>Number of GIs</returns>
-		public int GetMaxGIs() => PinMameApi.PinmameGetMaxGIs();
+		public int GetMaxGIs() => PinMameApi.GetMaxGIs();
 
 		/// <summary>
 		/// Clears and updates a list with all changed GIs since the last call.
@@ -736,7 +736,7 @@ namespace PinMame
 		/// <param name="list">List to write the result to.</param>
 		public void GetChangedGIs(List<PinMameLampInfo> list)
 		{
-			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
+			var num = PinMameApi.GetChangedGIs(_changedGIs);
 			for (var index = 0; index < num; index++) {
 				list.Add(new PinMameLampInfo(_changedGIs[index * 2], _changedGIs[(index * 2) + 1]));
 			}
@@ -751,7 +751,7 @@ namespace PinMame
 		/// <returns>Array of Id/Value pairs.</returns>
 		public PinMameLampInfo[] GetChangedGIs()
 		{
-			var num = PinMameApi.PinmameGetChangedGIs(_changedGIs);
+			var num = PinMameApi.GetChangedGIs(_changedGIs);
 
 			PinMameLampInfo[] array = new PinMameLampInfo[num];
 
@@ -766,7 +766,7 @@ namespace PinMame
 		/// Returns the maximal supported number of Mechs.
 		/// </summary>
 		/// <returns>Number of Mechs</returns>
-		public int GetMaxMechs() => PinMameApi.PinmameGetMaxMechs();
+		public int GetMaxMechs() => PinMameApi.GetMaxMechs();
 
 		/// <summary>
 		/// Sets the configuration of a given mech.
@@ -775,13 +775,13 @@ namespace PinMame
 		/// <param name="config">Mech configuration. A null value will remove the mech.</param>
 		public void SetMech(int mechNo, PinMameMechConfig? config = null)
 		{
-			PinMameApi.PinmameStatus status;
+			PinMameApi.Status status;
 
 			if (config.HasValue)
 			{
 				var tmpConfig = (PinMameMechConfig)config;
 
-				var mechConfig = new PinMameApi.PinmameMechConfig();
+				var mechConfig = new PinMameApi.MechConfig();
 				mechConfig.sol1 = tmpConfig.Sol1;
 				mechConfig.sol2 = tmpConfig.Sol2;
 				mechConfig.type = (int)tmpConfig.Type;
@@ -789,7 +789,7 @@ namespace PinMame
 				mechConfig.steps = tmpConfig.Steps;
 				mechConfig.initialPos = tmpConfig.InitialPos;
 
-				mechConfig.sw = new PinMameApi.PinmameMechSwitchConfig[PinMameApi.MaxMechSwitches];
+				mechConfig.sw = new PinMameApi.MechSwitchConfig[PinMameApi.MaxMechSwitches];
 
 				var index = 0;
 
@@ -803,14 +803,14 @@ namespace PinMame
 					index++;
 				}
 
-				status = PinMameApi.PinmameSetMech(mechNo, ref mechConfig);
+				status = PinMameApi.SetMech(mechNo, ref mechConfig);
 			}
 			else
 			{
-				status = PinMameApi.PinmameSetMech(mechNo, IntPtr.Zero);
+				status = PinMameApi.SetMech(mechNo, IntPtr.Zero);
 			}
 
-			if (status != PinMameApi.PinmameStatus.OK)
+			if (status != PinMameApi.Status.OK)
 			{
 				throw new InvalidOperationException($"Unable to set mech, status={status}");
 			}

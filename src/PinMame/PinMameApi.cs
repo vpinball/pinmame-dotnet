@@ -45,7 +45,16 @@ namespace PinMame
 	{
 		internal const int MaxMechSwitches = 20;
 
-		internal enum PinmameStatus
+		#region Enums
+
+		internal enum LogLevel
+		{
+			DEBUG = 0,
+			INFO = 1,
+			ERROR = 2
+		}
+
+		internal enum Status
 		{
 			OK = 0,
 			CONFIG_NOT_SET = 1,
@@ -56,35 +65,119 @@ namespace PinMame
 			MECH_NO_INVALID = 6
 		}
 
-		internal enum PinmameAudioFormat : int
+		internal enum FileType
 		{
-			AUDIO_FORMAT_INT16 = 0,
-			AUDIO_FORMAT_FLOAT = 1
+			ROMS = 0,
+			NVRAM = 1,
+			SAMPLES = 2,
+			CONFIG = 3,
+			HIGHSCORE = 4
 		}
 
-		internal enum PinmameDisplayType : int
+		internal enum DmdMode
 		{
-			SEG16 = 0,                  // 16 segments
-			SEG16R = 1,                 // 16 segments with comma and period reversed
-			SEG10 = 2,                  // 9 segments and comma
-			SEG9 = 3,                   // 9 segments
-			SEG8 = 4,                   // 7 segments and comma
-			SEG8D = 5,                  // 7 segments and period
-			SEG7 = 6,                   // 7 segments
-			SEG87 = 7,                  // 7 segments, comma every three
-			SEG87F = 8,                 // 7 segments, forced comma every three
-			SEG98 = 9,                  // 9 segments, comma every three
-			SEG98F = 10,                // 9 segments, forced comma every three
-			SEG7S = 11,                 // 7 segments, small
-			SEG7SC = 12,                // 7 segments, small, with comma
-			SEG16S = 13,                // 16 segments with split top and bottom line
-			DMD = 14,                   // DMD Display
-			VIDEO = 15,                 // VIDEO Display
-			SEG16N = 16,                // 16 segments without commas
-			SEG16D = 17,                // 16 segments with periods only
-			SEGALL = 0x1f,              // maximum segment definition number
-			IMPORT = 0x20,              // Link to another display layout
-			SEGMASK = 0x3f,             // Note that CORE_IMPORT must be part of the segmask as well!
+			BRIGHTNESS = 0,
+			RAW = 1
+		}
+
+		internal enum SoundMode
+		{
+			DEFAULT = 0,
+			ALTSOUND = 1
+		}
+
+		internal enum AudioFormat : int
+		{
+			INT16 = 0,
+			FLOAT = 1
+		}
+
+		internal enum DisplayType : int
+		{
+			/// <summary>
+			/// 16 segments
+			/// </summary>
+			SEG16 = 0,
+			/// <summary>
+			/// 16 segments with comma and period reversed
+			/// </summary>
+			SEG16R = 1,
+			/// <summary>
+			/// 9 segments and comma
+			/// </summary>
+			SEG10 = 2,
+			/// <summary>
+			/// 9 segments
+			/// </summary>
+			SEG9 = 3,
+			/// <summary>
+			/// 7 segments and comma
+			/// </summary>
+			SEG8 = 4,
+			/// <summary>
+			/// 7 segments and period
+			/// </summary>
+			SEG8D = 5,
+			/// <summary>
+			/// 7 segments
+			/// </summary>
+			SEG7 = 6,
+			/// <summary>
+			/// 7 segments, comma every three
+			/// </summary>
+			SEG87 = 7,
+			/// <summary>
+			/// 7 segments, forced comma every three
+			/// </summary>
+			SEG87F = 8,
+			/// <summary>
+			/// 9 segments, comma every three
+			/// </summary>
+			SEG98 = 9,
+			/// <summary>
+			/// 9 segments, forced comma every three
+			/// </summary>
+			SEG98F = 10,
+			/// <summary>
+			/// 7 segments, small
+			/// </summary>
+			SEG7S = 11,
+			/// <summary>
+			/// 7 segments, small, with comma
+			/// </summary>
+			SEG7SC = 12,
+			/// <summary>
+			/// 16 segments with split top and bottom line
+			/// </summary>
+			SEG16S = 13,
+			/// <summary>
+			/// DMD Display
+			/// </summary>
+			DMD = 14,
+			/// <summary>
+			/// VIDEO Display
+			/// </summary>
+			VIDEO = 15,
+			/// <summary>
+			/// 16 segments without commas
+			/// </summary>
+			SEG16N = 16,
+			/// <summary>
+			/// 16 segments with periods only
+			/// </summary>
+			SEG16D = 17,
+			/// <summary>
+			/// maximum segment definition number
+			/// </summary>
+			SEGALL = 0x1f,
+			/// <summary>
+			/// Link to another display layout
+			/// </summary>
+			IMPORT = 0x20,
+			/// <summary>
+			/// Note that CORE_IMPORT must be part of the segmask as well!
+			/// </summary>
+			SEGMASK = 0x3f,             
 			SEGHIBIT = 0x40,
 			SEGREV = 0x80,
 			DMDNOAA = 0x100,
@@ -97,85 +190,276 @@ namespace PinMame
 			SEG7SCH = SEG7SC| SEGHIBIT
 		}
 
-		[Flags]
-		internal enum PinmameHardwareGen : ulong
+		internal enum ModOutputType
 		{
-			WPCALPHA_1 = 0x0000000000001,  // Alpha-numeric display S11 sound, Dr Dude 10/90
-			WPCALPHA_2 = 0x0000000000002,  // Alpha-numeric display,  - The Machine BOP 4/91
-			WPCDMD = 0x0000000000004,      // Dot Matrix Display, Terminator 2 7/91 - Party Zone 10/91
-			WPCFLIPTRON = 0x0000000000008, // Fliptronic flippers, Addams Family 2/92 - Twilight Zone 5/93
-			WPCDCS = 0x0000000000010,      // DCS Sound system, Indiana Jones 10/93 - Popeye 3/94
-			WPCSECURITY = 0x0000000000020, // Security chip, World Cup Soccer 3/94 - Jackbot 10/95
-			WPC95DCS = 0x0000000000040,    // Hybrid WPC95 driver + DCS sound, Who Dunnit
-			WPC95 = 0x0000000000080,       // Integrated boards, Congo 3/96 - Cactus Canyon 2/99
-			S11 = 0x0000080000000,         // No external sound board
-			S11X = 0x0000000000100,        // S11C sound board
+			/// <summary>
+			/// Solenoid output type
+			/// </summary>
+			SOLENOID = 0,
+			/// <summary>
+			/// Lamp output type
+			/// </summary>
+			LAMP = 1,
+			/// <summary>
+			/// Global Illumination output type
+			/// </summary>
+			GI = 2,
+			/// <summary>
+			/// Alpha Numeric segment output type
+			/// </summary>
+			ALPHASEG = 3,  
+		}
+
+		[Flags]
+		internal enum HardwareGen : ulong
+		{
+			/// <summary>
+			/// Alpha-numeric display S11 sound, Dr Dude 10/90
+			/// </summary>
+			WPCALPHA_1 = 0x0000000000001,
+			/// <summary>
+			/// Alpha-numeric display,  - The Machine BOP 4/91
+			/// </summary>
+			WPCALPHA_2 = 0x0000000000002,
+			/// <summary>
+			/// Dot Matrix Display, Terminator 2 7/91 - Party Zone 10/91
+			/// </summary>
+			WPCDMD = 0x0000000000004,
+			/// <summary>
+			/// Fliptronic flippers, Addams Family 2/92 - Twilight Zone 5/93
+			/// </summary>
+			WPCFLIPTRON = 0x0000000000008,
+			/// <summary>
+			/// DCS Sound system, Indiana Jones 10/93 - Popeye 3/94
+			/// </summary>
+			WPCDCS = 0x0000000000010,
+			/// <summary>
+			/// Security chip, World Cup Soccer 3/94 - Jackbot 10/95
+			/// </summary>
+			WPCSECURITY = 0x0000000000020,
+			/// <summary>
+			/// Hybrid WPC95 driver + DCS sound, Who Dunnit
+			/// </summary>
+			WPC95DCS = 0x0000000000040,
+			/// <summary>
+			/// Integrated boards, Congo 3/96 - Cactus Canyon 2/99
+			/// </summary>
+			WPC95 = 0x0000000000080,
+			/// <summary>
+			/// No external sound board
+			/// </summary>
+			S11 = 0x0000080000000,
+			/// <summary>
+			/// S11C sound board
+			/// </summary>
+			S11X = 0x0000000000100,        
 			S11A = S11X,
 			S11B = S11X,
-			S11B2 = 0x0000000000200,       // Jokerz! sound board
-			S11C = 0x0000000000400,        // No CPU board sound
-			S9 = 0x0000000000800,          // S9 CPU, 4x7+1x4
-			DE = 0x0000000001000,          // DE AlphaSeg
-			DEDMD16 = 0x0000000002000,     // DE 128x16
-			DEDMD32 = 0x0000000004000,     // DE 128x32
-			DEDMD64 = 0x0000000008000,     // DE 192x64
-			S7 = 0x0000000010000,          // S7 CPU
-			S6 = 0x0000000020000,          // S6 CPU
-			S4 = 0x0000000040000,          // S4 CPU
-			S3C = 0x0000000080000,         // S3 CPU No Chimes
+			/// <summary>
+			/// Jokerz! sound board
+			/// </summary>
+			S11B2 = 0x0000000000200,
+			/// <summary>
+			/// No CPU board sound
+			/// </summary>
+			S11C = 0x0000000000400,
+			/// <summary>
+			/// S9 CPU, 4x7+1x4
+			/// </summary>
+			S9 = 0x0000000000800,
+			/// <summary>
+			/// DE AlphaSeg
+			/// </summary>
+			DE = 0x0000000001000,
+			/// <summary>
+			/// DE 128x16
+			/// </summary>
+			DEDMD16 = 0x0000000002000,
+			/// <summary>
+			/// DE 128x32
+			/// </summary>
+			DEDMD32 = 0x0000000004000,
+			/// <summary>
+			/// DE 192x64
+			/// </summary>
+			DEDMD64 = 0x0000000008000,
+			/// <summary>
+			/// S7 CPU
+			/// </summary>
+			S7 = 0x0000000010000,
+			/// <summary>
+			/// S6 CPU
+			/// </summary>
+			S6 = 0x0000000020000,
+			/// <summary>
+			/// S4 CPU
+			/// </summary>
+			S4 = 0x0000000040000,
+			/// <summary>
+			/// S3 CPU No Chimes
+			/// </summary>
+			S3C = 0x0000000080000,         
 			S3 = 0x0000000100000,
 			BY17 = 0x0000000200000,
 			BY35 = 0x0000000400000,
-			STMPU100 = 0x0000000800000,    // Stern MPU - 100
-			STMPU200 = 0x0000001000000,    // Stern MPU - 200
-			ASTRO = 0x0000002000000,       // Unknown Astro game, Stern hardware
-			HNK = 0x0000004000000,         // Hankin
-			BYPROTO = 0x0000008000000,     // Bally Bow & Arrow prototype
+			/// <summary>
+			/// Stern MPU - 100
+			/// </summary>
+			STMPU100 = 0x0000000800000,
+			/// <summary>
+			/// Stern MPU - 200
+			/// </summary>
+			STMPU200 = 0x0000001000000,
+			/// <summary>
+			/// Unknown Astro game, Stern hardware
+			/// </summary>
+			ASTRO = 0x0000002000000,
+			/// <summary>
+			/// Hankin
+			/// </summary>
+			HNK = 0x0000004000000,
+			/// <summary>
+			/// Bally Bow & Arrow prototype
+			/// </summary>
+			BYPROTO = 0x0000008000000,     
 			BY6803 = 0x0000010000000,
 			BY6803A = 0x0000020000000,
-			BOWLING = 0x0000040000000,     // Big Ball Bowling, Stern hardware
-			GTS1 = 0x0000100000000,        // GTS1
-			GTS80 = 0x0000200000000,       // GTS80
+			/// <summary>
+			/// Big Ball Bowling, Stern hardware
+			/// </summary>
+			BOWLING = 0x0000040000000,
+			/// <summary>
+			/// GTS1
+			/// </summary>
+			GTS1 = 0x0000100000000,
+			/// <summary>
+			/// GTS80
+			/// </summary>
+			GTS80 = 0x0000200000000,       
 			GTS80A = GTS80,
-			GTS80B = 0x0000400000000,      // GTS80B
-			WS = 0x0004000000000,          // Whitestar
-			WS_1 = 0x0008000000000,        // Whitestar with extra RAM
-			WS_2 = 0x0010000000000,        // Whitestar with extra DMD
-			GTS3 = 0x0020000000000,        // GTS3
+			/// <summary>
+			/// GTS80B
+			/// </summary>
+			GTS80B = 0x0000400000000,
+			/// <summary>
+			/// Whitestar
+			/// </summary>
+			WS = 0x0004000000000,
+			/// <summary>
+			/// Whitestar with extra RAM
+			/// </summary>
+			WS_1 = 0x0008000000000,
+			/// <summary>
+			/// Whitestar with extra DMD
+			/// </summary>
+			WS_2 = 0x0010000000000,
+			/// <summary>
+			/// GTS3
+			/// </summary>
+			GTS3 = 0x0020000000000,        
 			ZAC1 = 0x0040000000000,
 			ZAC2 = 0x0080000000000,
-			SAM = 0x0100000000000,         // Stern SAM
-			ALVG = 0x0200000000000,        // Alvin G Hardware
-			ALVG_DMD2 = 0x0400000000000,   // Alvin G Hardware, with more shades
-			MRGAME = 0x0800000000000,      // Mr.Game Hardware
-			SLEIC = 0x1000000000000,       // Sleic Hardware
-			WICO = 0x2000000000000,        // Wico Hardware
-			SPA = 0x4000000000000,         // Stern PA
-			ALLWPC = 0x00000000000ff,      // All WPC
-			ALLS11 = 0x000008000ff00,      // All Sys11
-			ALLBY35 = 0x0000047e00000,     // All Bally35 and derivatives
-			ALLS80 = 0x0000600000000,      // All GTS80
-			ALLWS = 0x001c000000000        // All Whitestar
+			/// <summary>
+			/// Stern SAM
+			/// </summary>
+			SAM = 0x0100000000000,
+			/// <summary>
+			/// Alvin G Hardware
+			/// </summary>
+			ALVG = 0x0200000000000,
+			/// <summary>
+			/// Alvin G Hardware, with more shades
+			/// </summary>
+			ALVG_DMD2 = 0x0400000000000,
+			/// <summary>
+			/// Mr.Game Hardware
+			/// </summary>
+			MRGAME = 0x0800000000000,
+			/// <summary>
+			/// Sleic Hardware
+			/// </summary>
+			SLEIC = 0x1000000000000,
+			/// <summary>
+			/// Wico Hardware
+			/// </summary>
+			WICO = 0x2000000000000,
+			/// <summary>
+			/// Stern PA
+			/// </summary>
+			SPA = 0x4000000000000,
+			/// <summary>
+			/// All WPC
+			/// </summary>
+			ALLWPC = 0x00000000000ff,
+			/// <summary>
+			/// All Sys11
+			/// </summary>
+			ALLS11 = 0x000008000ff00,
+			/// <summary>
+			/// All Bally35 and derivatives
+			/// </summary>
+			ALLBY35 = 0x0000047e00000,
+			/// <summary>
+			/// All GTS80
+			/// </summary>
+			ALLS80 = 0x0000600000000,
+			/// <summary>
+			/// All Whitestar
+			/// </summary>
+			ALLWS = 0x001c000000000        
 		}
 
-		internal enum PinmameGameDriverFlag : uint
+		internal enum GameDriverFlag : uint
 		{
 			ORIENTATION_MASK = 0x0007,
-			ORIENTATION_FLIP_X = 0x0001,          // mirror everything in the X direction
-			ORIENTATION_FLIP_Y = 0x0002,          // mirror everything in the Y direction
-			ORIENTATION_SWAP_XY = 0x0004,         // mirror along the top-left/bottom-right diagonal
+			/// <summary>
+			/// mirror everything in the X direction
+			/// </summary>
+			ORIENTATION_FLIP_X = 0x0001,
+			/// <summary>
+			/// mirror everything in the Y direction
+			/// </summary>
+			ORIENTATION_FLIP_Y = 0x0002,
+			/// <summary>
+			/// mirror along the top-left/bottom-right diagonal
+			/// </summary>
+			ORIENTATION_SWAP_XY = 0x0004,         
 			GAME_NOT_WORKING = 0x0008,
-			GAME_UNEMULATED_PROTECTION = 0x0010,  // game's protection not fully emulated
-			GAME_WRONG_COLORS = 0x0020,           // colors are totally wrong
-			GAME_IMPERFECT_COLORS = 0x0040,       // colors are not 100% accurate, but close
-			GAME_IMPERFECT_GRAPHICS = 0x0080,     // graphics are wrong/incomplete
-			GAME_NO_COCKTAIL = 0x0100,            // screen flip support is missing
-			GAME_NO_SOUND = 0x0200,               // sound is missing
-			GAME_IMPERFECT_SOUND = 0x0400,        // sound is known to be wrong
-			NOT_A_DRIVER = 0x4000,                // set by the fake "root" driver_0 and by "containers"
+			/// <summary>
+			/// game's protection not fully emulated
+			/// </summary>
+			GAME_UNEMULATED_PROTECTION = 0x0010,
+			/// <summary>
+			/// colors are totally wrong
+			/// </summary>
+			GAME_WRONG_COLORS = 0x0020,
+			/// <summary>
+			/// colors are not 100% accurate, but close
+			/// </summary>
+			GAME_IMPERFECT_COLORS = 0x0040,
+			/// <summary>
+			/// graphics are wrong/incomplete
+			/// </summary>
+			GAME_IMPERFECT_GRAPHICS = 0x0080,
+			/// <summary>
+			/// screen flip support is missing
+			/// </summary>
+			GAME_NO_COCKTAIL = 0x0100,
+			/// <summary>
+			/// sound is missing
+			/// </summary>
+			GAME_NO_SOUND = 0x0200,
+			/// <summary>
+			/// sound is known to be wrong
+			/// </summary>
+			GAME_IMPERFECT_SOUND = 0x0400,
+			/// <summary>
+			/// set by the fake "root" driver_0 and by "containers"
+			/// </summary>
+			NOT_A_DRIVER = 0x4000,                
 		}
 
-		internal enum PinmameMechFlag : uint
+		internal enum MechFlag : uint
 		{
 			LINEAR = 0x00,
 			NONLINEAR = 0x01,
@@ -193,7 +477,7 @@ namespace PinMame
 			LENGTHSW = 0x100
 		}
 
-		internal enum PinmameKeycode
+		internal enum Keycode
 		{
 			A = 0,
 			B = 1,
@@ -300,6 +584,360 @@ namespace PinMame
 			MENU = 104,
 		}
 
+		#endregion
+
+		#region Structs
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct Game
+		{
+			internal readonly string name;
+			internal readonly string cloneOf;
+			internal readonly string description;
+			internal readonly string year;
+			internal readonly string manufacturer;
+			internal readonly uint flags;
+			internal readonly int found;
+		};
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct DisplayLayout
+		{
+			internal readonly DisplayType type;
+			internal readonly int top;
+			internal readonly int left;
+			internal readonly int length;
+			internal readonly int width;
+			internal readonly int height;
+			internal readonly int depth;
+		};
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct AudioInfo
+		{
+			internal readonly AudioFormat format;
+			internal readonly int channels;
+			internal readonly double sampleRate;
+			internal readonly double framesPerSecond;
+			internal readonly int samplesPerFrame;
+			internal readonly int bufferSize;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct SwitchState
+		{
+			internal readonly int swNo;
+			internal readonly int state;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct SolenoidState
+		{
+			internal readonly int solNo;
+			internal readonly int state;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct LampState
+		{
+			internal readonly int lampNo;
+			internal readonly int state;
+		}
+		
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct GIState
+		{
+			internal readonly int giNo;
+			internal readonly int state;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct LEDState
+		{
+			internal readonly int swNo;
+			internal readonly int startPos;
+			internal readonly int endPos;
+			internal readonly int pulse;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal struct MechSwitchConfig
+		{
+			internal int swNo;
+			internal int startPos;
+			internal int endPos;
+			internal int pulse;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal struct MechConfig
+		{
+			internal int type;
+			internal int sol1;
+			internal int sol2;
+			internal int length;
+			internal int steps;
+			internal int initialPos;
+			internal int acc;
+			internal int ret;
+			[MarshalAs(UnmanagedType.ByValArray, SizeConst = MaxMechSwitches)]
+			internal MechSwitchConfig[] sw;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct MechInfo
+		{
+			internal readonly int type;
+			internal readonly int length;
+			internal readonly int steps;
+			internal readonly int pos;
+			internal readonly int speed;
+		};
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct SoundCommand
+		{
+			internal readonly int sndNo;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct NVRAMState
+		{
+			internal readonly int nvramNo;
+			internal readonly byte oldStat;
+			internal readonly byte currStat;
+		}
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal readonly struct KeyboardInfo
+		{
+			internal readonly string name;
+			internal readonly Keycode code;
+			internal readonly uint standardcode;
+		}
+
+		#endregion
+
+		#region Delegates
+
+		internal delegate void GameCallback(IntPtr gamePtr);
+		internal delegate void OnStateUpdatedCallback(int change);
+		internal delegate void OnDisplayAvailableCallback(int index, int displayCount, ref DisplayLayout displayLayout);
+		internal delegate void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref DisplayLayout displayLayout);
+		internal delegate int OnAudioAvailableCallback(ref AudioInfo audioInfo);
+		internal delegate int OnAudioUpdatedCallback(IntPtr bufferPtr, int samples);
+		internal delegate void OnMechAvailableCallback(int mechNo, ref MechInfo mechInfo);
+		internal delegate void OnMechUpdatedCallback(int mechNo, ref MechInfo mechInfo);
+		internal delegate void OnSolenoidUpdatedCallback(int solenoid, int isActive);
+		internal delegate void OnConsoleDataUpdatedCallback(IntPtr dataPtr, int size);
+		internal delegate int IsKeyPressedFunction(Keycode keycode);
+		internal delegate void OnLogMessageCallback(LogLevel logLevel, string format, string args);
+		internal delegate void OnSoundCommandCallback(int boardNo, int cmd);
+
+		#endregion
+
+		#region Config Struct
+
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+		internal struct Config
+		{
+			internal AudioFormat audioFormat;
+			internal int sampleRate;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
+			internal string vpmPath;
+			internal OnStateUpdatedCallback onStateUpdated;
+			internal OnDisplayAvailableCallback onDisplayAvailable;
+			internal OnDisplayUpdatedCallback onDisplayUpdated;
+			internal OnAudioAvailableCallback onAudioAvailable;
+			internal OnAudioUpdatedCallback onAudioUpdated;
+			internal OnMechAvailableCallback onMechAvailable;
+			internal OnMechUpdatedCallback onMechUpdated;
+			internal OnSolenoidUpdatedCallback onSolenoidUpdated;
+			internal OnConsoleDataUpdatedCallback onConsoleDataUpdated;
+			internal IsKeyPressedFunction isKeyPressed;
+			internal OnLogMessageCallback onLogMessage;
+			internal OnSoundCommandCallback onSoundCommand;
+		};
+
+		#endregion
+
+		#region Setup functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetConfig")]
+		internal static extern void SetConfig(ref Config config);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetPath")]
+		internal static extern void SetPath(ref FileType fileType, string path);
+		#endregion
+
+		#region Game library functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetGame")]
+		internal static extern Status GetGame(string name, GameCallback callback);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetGames")]
+		internal static extern Status GetGames(GameCallback callback);
+		#endregion
+
+		#region Options related functions
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetCheat")]
+		internal static extern int GetCheat();
+		
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetCheat")]
+		internal static extern int SetCheat(int cheat);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetHandleKeyboard")]
+		internal static extern int GetHandleKeyboard();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetHandleKeyboard")]
+		internal static extern void SetHandleKeyboard(int handleKeyboard);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetHandleMechanics")]
+		internal static extern int GetHandleMechanics();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetHandleMechanics")]
+		internal static extern void SetHandleMechanics(int handleMechanics);
+		#endregion
+
+		#region Game functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameRun")]
+		internal static extern Status Run(string name);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameIsRunning")]
+		internal static extern int IsRunning();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmamePause")]
+		internal static extern Status Pause(int pause);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameIsPaused")]
+		internal static extern int IsPaused();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameReset")]
+		internal static extern Status Reset();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameStop")]
+		internal static extern void Stop();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetTimeFence")]
+		internal static extern void SetTimeFence(double timeInS);
+		#endregion
+
+		#region Hardware related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetHardwareGen")]
+		internal static extern HardwareGen GetHardwareGen();
+		#endregion
+
+		#region Display and sound modes
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetDmdMode")]
+		internal static extern DmdMode GetDmdMode();
+		
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetDmdMode")]
+		internal static extern void SetDmdMode(DmdMode dmdMode);
+		
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetSoundMode")]
+		internal static extern SoundMode GetSoundMode();
+		
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetSoundMode")]
+		internal static extern void SetSoundMode(SoundMode dmdMode);
+
+		#endregion
+
+		#region Switch related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetSwitch")]
+		internal static extern int GetSwitch(int slot);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetSwitch")]
+		internal static extern void SetSwitch(int slot, int state);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetSwitches")]
+		internal static extern void SetSwitches(SwitchState[] states, int state, int numSwitches);
+		#endregion
+
+		#region Lamp related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetMaxLamps")]
+		internal static extern int GetMaxLamps();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetChangedLamps")]
+		internal static extern int GetChangedLamps(int[] changedStates);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetMaxLEDs")]
+		internal static extern int GetMaxLEDs();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetChangedLEDs")]
+		internal static extern int GetChangedLEDs(LEDState state, ulong mask, ulong mask2);
+		#endregion
+
+		#region Solenoid related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetSolenoidMask")]
+		internal static extern uint GetSolenoidMask(int low, uint mask);
+		
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetMaxSolenoids")]
+		internal static extern int GetMaxSolenoids();
+		
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetModOutputType")]
+		internal static extern ModOutputType GetModOutputType(int output, int no);
+		
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetModOutputType")]
+		internal static extern void SetModOutputType(int output, int no, ModOutputType type);
+		#endregion
+
+		#region GI strings related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetMaxGIs")]
+		internal static extern int GetMaxGIs();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetChangedGIs")]
+		internal static extern int GetChangedGIs(int[] changedStates);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetGI")]
+		internal static extern int GetGI(int giNo);
+		#endregion
+
+		#region Mech related functions
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetMaxMechs")]
+		internal static extern int GetMaxMechs();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetMech")]
+		internal static extern Status SetMech(int mechNo, ref MechConfig mechConfig);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetMech")]
+		internal static extern Status SetMech(int mechNo, IntPtr mechConfig);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetMech")]
+		internal static extern int GetMech(int mechNo);
+
+		#endregion
+
+		#region Sound related functions
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetMaxSoundCommands")]
+		internal static extern int GetMaxSoundCommands();
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetNewSoundCommands")]
+		internal static extern int GetNewSoundCommands(ref SoundCommand newCommand);
+
+		#endregion
+
+		#region DIP related functions
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetDIP")]
+		internal static extern int GetDIP(int dipBank);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetDIP")]
+		internal static extern void SetDIP(int dipBank, int value);
+
+		#endregion
+
+		#region NVRAM related function
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetNVRAM")]
+		internal static extern int GetNVRAM(NVRAMState[] states);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetChangedNVRAM")]
+		internal static extern void GetChangedNVRAM(NVRAMState[] states);
+
+		#endregion
+
+		[Obsolete("Not in libpinmame.h anymore")]
 		internal struct PinmameDmdLevels
 		{
 			internal static readonly Dictionary<byte, byte> Wpc = new Dictionary<byte, byte> {
@@ -324,190 +962,5 @@ namespace PinMame
 				{ 0x55, 12 }, { 0x5A, 13 }, { 0x5F, 14 }, { 0x64, 15 }
 			};
 		}
-
-		internal delegate void PinmameGameCallback(IntPtr gamePtr);
-		internal delegate void PinmameOnStateUpdatedCallback(int change);
-		internal delegate void PinmameOnDisplayAvailableCallback(int index, int displayCount, ref PinmameDisplayLayout displayLayout);
-		internal delegate void PinmameOnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinmameDisplayLayout displayLayout);
-		internal delegate int PinmameOnAudioAvailableCallback(ref PinmameAudioInfo audioInfo);
-		internal delegate int PinmameOnAudioUpdatedCallback(IntPtr bufferPtr, int samples);
-		internal delegate void PinmameOnMechAvailableCallback(int mechNo, ref PinmameMechInfo mechInfo);
-		internal delegate void PinmameOnMechUpdatedCallback(int mechNo, ref PinmameMechInfo mechInfo);
-		internal delegate void PinmameOnSolenoidUpdatedCallback(int solenoid, int isActive);
-		internal delegate void PinmameOnConsoleDataUpdatedCallback(IntPtr dataPtr, int size);
-		internal delegate int PinmameIsKeyPressedFunction(PinmameKeycode keycode);
-
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		internal readonly struct PinmameGame
-		{
-			internal readonly string name;
-			internal readonly string cloneOf;
-			internal readonly string description;
-			internal readonly string year;
-			internal readonly string manufacturer;
-			internal readonly uint flags;
-			internal readonly int found;
-		};
-
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		internal struct PinmameConfig
-		{
-			internal PinmameAudioFormat audioFormat;
-			internal int sampleRate;
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-			internal string vpmPath;
-			internal PinmameOnStateUpdatedCallback onStateUpdated;
-			internal PinmameOnDisplayAvailableCallback onDisplayAvailable;
-			internal PinmameOnDisplayUpdatedCallback onDisplayUpdated;
-			internal PinmameOnAudioAvailableCallback onAudioAvailable;
-			internal PinmameOnAudioUpdatedCallback onAudioUpdated;
-			internal PinmameOnMechAvailableCallback onMechAvailable;
-			internal PinmameOnMechUpdatedCallback onMechUpdated;
-			internal PinmameOnSolenoidUpdatedCallback onSolenoidUpdated;
-			internal PinmameOnConsoleDataUpdatedCallback onConsoleDataUpdated;
-			internal PinmameIsKeyPressedFunction isKeyPressed;
-		};
-
-
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		internal struct PinmameMechSwitchConfig
-		{
-			internal int swNo;
-			internal int startPos;
-			internal int endPos;
-			internal int pulse;
-		}
-
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		internal struct PinmameMechConfig
-		{
-			internal int type;
-			internal int sol1;
-			internal int sol2;
-			internal int length;
-			internal int steps;
-			internal int initialPos;
-			internal int acc;
-			internal int ret;
-			[MarshalAs(UnmanagedType.ByValArray, SizeConst = MaxMechSwitches)]
-			internal PinmameMechSwitchConfig[] sw;
-		}
-
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		internal readonly struct PinmameDisplayLayout
-		{
-			internal readonly PinmameDisplayType type;
-			internal readonly int top;
-			internal readonly int left;
-			internal readonly int length;
-			internal readonly int width;
-			internal readonly int height;
-			internal readonly int depth;
-		};
-
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		internal readonly struct PinmameAudioInfo
-		{
-			internal readonly PinmameAudioFormat format;
-			internal readonly int channels;
-			internal readonly double sampleRate;
-			internal readonly double framesPerSecond;
-			internal readonly int samplesPerFrame;
-			internal readonly int bufferSize;
-		};
-
-		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-		internal readonly struct PinmameMechInfo
-		{
-			internal readonly int type;
-			internal readonly int length;
-			internal readonly int steps;
-			internal readonly int pos;
-			internal readonly int speed;
-		};
-
-		#region Setup functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void PinmameSetConfig(ref PinmameConfig config);
-		#endregion
-
-		#region Game library functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern PinmameStatus PinmameGetGame(string name, PinmameGameCallback callback);
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern PinmameStatus PinmameGetGames(PinmameGameCallback callback);
-		#endregion
-
-		#region Options related functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetHandleKeyboard();
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void PinmameSetHandleKeyboard(int handleKeyboard);
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetHandleMechanics();
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void PinmameSetHandleMechanics(int handleMechanics);
-		#endregion
-
-		#region Game functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern PinmameStatus PinmameRun(string name);
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameIsRunning();
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern PinmameStatus PinmamePause(int pause);
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern PinmameStatus PinmameReset();
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void PinmameStop();
-		#endregion
-
-		#region Hardware related functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern PinmameHardwareGen PinmameGetHardwareGen();
-		#endregion
-
-		#region Switch related functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetSwitch(int slot);
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void PinmameSetSwitch(int slot, int state);
-		#endregion
-
-		#region Lamp related functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetMaxLamps();
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetChangedLamps(int[] changedStates);
-		#endregion
-
-		#region GI strings related functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetMaxGIs();
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetChangedGIs(int[] changedStates);
-		#endregion
-
-		#region Mech related functions
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int PinmameGetMaxMechs();
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern PinmameStatus PinmameSetMech(int mechNo, ref PinmameMechConfig mechConfig);
-
-		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern PinmameStatus PinmameSetMech(int mechNo, IntPtr mechConfig);
-		#endregion
 	}
 }

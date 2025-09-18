@@ -39,7 +39,7 @@ namespace PinMame
 		public readonly int Pos;
 		public readonly int Speed;
 
-		internal PinMameMechInfo(PinMameApi.PinmameMechInfo mechInfo)
+		internal PinMameMechInfo(PinMameApi.MechInfo mechInfo)
 		{
 			Type = (uint)mechInfo.type;
 			Length = mechInfo.length;

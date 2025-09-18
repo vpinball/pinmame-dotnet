@@ -44,7 +44,7 @@ namespace PinMame
 		public readonly int Depth;
 		public readonly Dictionary<byte, byte> Levels;
 
-		internal PinMameDisplayLayout(PinMameApi.PinmameDisplayLayout displayLayout)
+		internal PinMameDisplayLayout(PinMameApi.DisplayLayout displayLayout)
 		{
 			Type = (PinMameDisplayType)displayLayout.type;
 			Top = displayLayout.top;
@@ -56,7 +56,7 @@ namespace PinMame
 			Levels = null;
 		}
 
-		internal PinMameDisplayLayout(PinMameApi.PinmameDisplayLayout displayLayout, PinMameApi.PinmameHardwareGen hardwareGen)
+		internal PinMameDisplayLayout(PinMameApi.DisplayLayout displayLayout, PinMameApi.HardwareGen hardwareGen)
 		{
 			Type = (PinMameDisplayType)displayLayout.type;
 			Top = displayLayout.top;
@@ -75,7 +75,7 @@ namespace PinMame
 				Levels = PinMameApi.PinmameDmdLevels.Wpc;
 
 			} else {
-				Levels = (hardwareGen & (PinMameApi.PinmameHardwareGen.SAM | PinMameApi.PinmameHardwareGen.SPA)) != 0
+				Levels = (hardwareGen & (PinMameApi.HardwareGen.SAM | PinMameApi.HardwareGen.SPA)) != 0
 					? PinMameApi.PinmameDmdLevels.Sam
 					: PinMameApi.PinmameDmdLevels.Gts3;
 			}
