@@ -191,14 +191,26 @@ jobs:
           mkdir -p native/nuget/libpinmame-osx
           cd native/nuget
 
+          # Find the actual versioned dylib (use wildcard since version comes from pinmame)
+          X64_DYLIB=$(ls libpinmame-osx-x64/libpinmame.*.dylib 2>/dev/null | head -1)
+          ARM64_DYLIB=$(ls libpinmame-osx-arm64/libpinmame.*.dylib 2>/dev/null | head -1)
+
+          if [[ ! -f "$X64_DYLIB" || ! -f "$ARM64_DYLIB" ]]; then
+            echo "Error: Could not find dylib files"
+            ls -la libpinmame-osx-x64/
+            ls -la libpinmame-osx-arm64/
+            exit 1
+          fi
+
+          # Get the dylib name (should be same version for both)
+          DYLIB_NAME=$(basename "$X64_DYLIB")
+
           # Create universal dylib
-          lipo -create -output libpinmame-osx/libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib \
-            libpinmame-osx-x64/libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib \
-            libpinmame-osx-arm64/libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib
+          lipo -create -output "libpinmame-osx/$DYLIB_NAME" "$X64_DYLIB" "$ARM64_DYLIB"
 
           # Create symlink
           cd libpinmame-osx
-          ln -s libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib libpinmame.dylib
+          ln -s "$DYLIB_NAME" libpinmame.dylib
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
