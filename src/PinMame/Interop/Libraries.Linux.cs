@@ -33,6 +33,7 @@ namespace PinMame.Interop
 {
 	internal static partial class Libraries
 	{
-		internal const string PinMame = "libpinmame.so.3.5";
+		// Use unversioned symlink name to avoid version updates
+		internal const string PinMame = "libpinmame.so";
 	}
 }

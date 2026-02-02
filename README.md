@@ -8,7 +8,7 @@
 This NuGet package provides a .NET binding for [PinMAME](https://github.com/vpinball/pinmame),
 an emulator for solid state pinball machines. It uses the cross-platform [LibPinMAME](https://github.com/vpinball/pinmame/tree/master/src/libpinmame).
 
-This package is automatically built and published when the main project, PinMAME, is updated.
+This package is built from the pinmame git submodule and automatically published on each push to master.
 
 ## Supported Platforms
 
@@ -121,6 +121,36 @@ _pinMame.SetMech(0, null);
 ```
 
 See the [example project](https://github.com/VisualPinball/pinmame-dotnet/blob/master/src/PinMame.Example/Example.cs) for more information.
+
+## Building from Source
+
+This repository uses a git submodule for the PinMAME source. To clone and build:
+
+```bash
+# Clone with submodules
+git clone --recursive https://github.com/VisualPinball/pinmame-dotnet.git
+
+# Or if you already cloned without --recursive
+git submodule update --init --recursive
+```
+
+The GitHub Actions workflow `build-and-publish.yml` builds libpinmame for all platforms and creates NuGet packages. To build locally:
+
+```bash
+# Build libpinmame for your platform
+cd pinmame
+cp cmake/libpinmame/CMakeLists.txt .
+cmake -DPLATFORM=<platform> -DARCH=<arch> -DCMAKE_BUILD_TYPE=Release -B build
+cmake --build build
+
+# Build the .NET wrapper
+cd ../src/PinMame.Tests
+dotnet build -c Release -r <rid>
+dotnet test -r <rid>
+```
+
+Where `<platform>` is one of: `win`, `macos`, `linux`, `android`, `ios`
+And `<rid>` is one of: `win-x64`, `win-x86`, `osx-x64`, `osx-arm64`, `linux-x64`, `android-arm64-v8a`, `ios-arm64`
 
 ## License
 

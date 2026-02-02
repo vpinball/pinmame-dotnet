@@ -1,0 +1,3 @@
+[submodule "pinmame"]
+	path = pinmame
+	url = https://github.com/vpinball/pinmame.git

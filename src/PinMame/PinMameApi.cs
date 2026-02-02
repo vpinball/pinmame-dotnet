@@ -43,6 +43,12 @@ namespace PinMame
 
 	internal static class PinMameApi
 	{
+		static PinMameApi()
+		{
+			// Initialize native library resolver for Windows architecture-specific DLL selection
+			Interop.LibraryResolver.Initialize();
+		}
+
 		internal const int MaxMechSwitches = 20;
 
 		#region Enums

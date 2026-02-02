@@ -33,6 +33,7 @@ namespace PinMame.Interop
 {
 	internal static partial class Libraries
 	{
-		internal const string PinMame = "libpinmame.3.5.so";
+		// Android uses unversioned library name
+		internal const string PinMame = "libpinmame.so";
 	}
 }

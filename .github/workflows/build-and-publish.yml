@@ -1,0 +1,342 @@
+name: Build and Publish
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'PinMAME version (e.g., 3.7.0)'
+        required: true
+        default: '3.7.0'
+      publish:
+        description: 'Publish to NuGet'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  PINMAME_VERSION: ${{ github.event.inputs.version || '3.7.0' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  version:
+    name: Calculate Version
+    runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.version.outputs.semver }}
+      pinmame_version: ${{ steps.version.outputs.pinmame_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+      - id: version
+        run: |
+          # Get PinMAME version from submodule
+          cd pinmame
+          VERSION_MAJOR=$(grep -Eo "VERSION_MAJOR\s+[0-9]+" src/version.h | grep -Eo "[0-9]+")
+          VERSION_MINOR=$(grep -Eo "VERSION_MINOR\s+[0-9]+" src/version.h | grep -Eo "[0-9]+")
+          VERSION_REV=$(grep -Eo "VERSION_REV\s+[0-9]+" src/version.h | grep -Eo "[0-9]+")
+          PINMAME_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REV}"
+
+          # Calculate revision number
+          REVISION=$(git rev-list HEAD --count)
+          SEMVER="${PINMAME_VERSION}-preview.${REVISION}"
+
+          echo "pinmame_version=${PINMAME_VERSION}" >> $GITHUB_OUTPUT
+          echo "semver=${SEMVER}" >> $GITHUB_OUTPUT
+          echo "PinMAME Version: ${PINMAME_VERSION}"
+          echo "Package Version: ${SEMVER}"
+
+  build-pinmame:
+    name: Build libpinmame-${{ matrix.platform }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    needs: [ version ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-2025, platform: win, arch: x64, rid: win-x64 }
+          - { os: windows-2025, platform: win, arch: x86, rid: win-x86 }
+          - { os: macos-15, platform: macos, arch: x64, rid: osx-x64 }
+          - { os: macos-15, platform: macos, arch: arm64, rid: osx-arm64 }
+          - { os: ubuntu-24.04, platform: linux, arch: x64, rid: linux-x64 }
+          - { os: ubuntu-24.04, platform: android, arch: arm64-v8a, rid: android-arm64-v8a }
+          - { os: macos-15, platform: ios, arch: arm64, rid: ios-arm64 }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build libpinmame
+        run: |
+          cd pinmame
+          cp cmake/libpinmame/CMakeLists.txt .
+
+          if [[ "${{ matrix.platform }}" == "win" ]]; then
+             if [[ "${{ matrix.arch }}" == "x64" ]]; then
+                cmake -G "Visual Studio 17 2022" -DPLATFORM=${{ matrix.platform }} -DARCH=${{ matrix.arch }} -B build
+             elif [[ "${{ matrix.arch }}" == "x86" ]]; then
+                cmake -G "Visual Studio 17 2022" -A Win32 -DPLATFORM=${{ matrix.platform }} -DARCH=${{ matrix.arch }} -B build
+             fi
+             cmake --build build --config Release
+          else
+             if [[ "$(uname)" == "Darwin" ]]; then
+                NUM_PROCS=$(sysctl -n hw.ncpu)
+             else
+                NUM_PROCS=$(nproc)
+             fi
+             cmake -DPLATFORM=${{ matrix.platform }} -DARCH=${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Release -B build
+             cmake --build build -- -j${NUM_PROCS}
+          fi
+
+      - name: Prepare native libraries
+        run: |
+          mkdir -p native/nuget/libpinmame-${{ matrix.rid }}
+          cd pinmame
+
+          if [[ "${{ matrix.platform }}" == "win" ]]; then
+             if [[ "${{ matrix.arch }}" == "x64" ]]; then
+                # Windows x64: pinmame64.dll
+                cp build/Release/pinmame64.dll ../native/nuget/libpinmame-${{ matrix.rid }}/
+             else
+                # Windows x86: pinmame.dll
+                cp build/Release/pinmame.dll ../native/nuget/libpinmame-${{ matrix.rid }}/
+             fi
+          elif [[ "${{ matrix.platform }}" == "macos" ]]; then
+             # macOS: libpinmame.dylib symlinked to libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib
+             cp build/libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib ../native/nuget/libpinmame-${{ matrix.rid }}/
+             cd ../native/nuget/libpinmame-${{ matrix.rid }}/
+             ln -s libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib libpinmame.dylib
+          elif [[ "${{ matrix.platform }}" == "linux" ]]; then
+             # Linux: libpinmame.so symlinked to libpinmame.${{ needs.version.outputs.pinmame_version }}.so
+             cp build/libpinmame.so.${{ needs.version.outputs.pinmame_version }} ../native/nuget/libpinmame-${{ matrix.rid }}/
+             cd ../native/nuget/libpinmame-${{ matrix.rid }}/
+             ln -s libpinmame.so.${{ needs.version.outputs.pinmame_version }} libpinmame.so
+          elif [[ "${{ matrix.platform }}" == "android" ]]; then
+             # Android: libpinmame.so
+             cp build/libpinmame.so ../native/nuget/libpinmame-${{ matrix.rid }}/
+          elif [[ "${{ matrix.platform }}" == "ios" ]]; then
+             # iOS: libpinmame.a (static library)
+             cp build/libpinmame.a ../native/nuget/libpinmame-${{ matrix.rid }}/
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: libpinmame-${{ matrix.rid }}
+          path: native/nuget/libpinmame-${{ matrix.rid }}
+
+  build-pinmame-osx-universal:
+    name: Build libpinmame-osx (universal)
+    runs-on: macos-15
+    needs: [ version, build-pinmame ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: libpinmame-osx-x64
+          path: native/nuget/libpinmame-osx-x64
+      - uses: actions/download-artifact@v4
+        with:
+          name: libpinmame-osx-arm64
+          path: native/nuget/libpinmame-osx-arm64
+
+      - name: Create universal binary
+        run: |
+          mkdir -p native/nuget/libpinmame-osx
+          cd native/nuget
+
+          # Create universal dylib
+          lipo -create -output libpinmame-osx/libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib \
+            libpinmame-osx-x64/libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib \
+            libpinmame-osx-arm64/libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib
+
+          # Create symlink
+          cd libpinmame-osx
+          ln -s libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib libpinmame.dylib
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: libpinmame-osx
+          path: native/nuget/libpinmame-osx
+
+  build-dotnet:
+    name: Build .NET wrapper-${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    needs: [ version, build-pinmame ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, rid: win-x64, targetOS: Windows }
+          - { os: windows-latest, rid: win-x86, targetOS: Windows, skipTest: true }
+          - { os: macos-latest, rid: osx-x64, targetOS: OSX, skipTest: true }
+          - { os: macos-latest, rid: osx-arm64, targetOS: OSX, skipTest: true }
+          - { os: ubuntu-latest, rid: linux-x64, targetOS: Linux }
+          - { os: ubuntu-latest, rid: android-arm64-v8a, targetOS: Android, skipTest: true }
+          - { os: macos-latest, rid: ios-arm64, targetOS: iOS, skipTest: true }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '3.1.x'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: libpinmame-${{ matrix.rid }}
+          path: native/nuget/libpinmame-${{ matrix.rid }}
+
+      - name: Copy native libraries to build directory
+        run: |
+          # Copy native libraries to src/PinMame so they're available during build/test
+          if [[ "${{ matrix.rid }}" == "win-x64" ]]; then
+            cp native/nuget/libpinmame-${{ matrix.rid }}/pinmame64.dll src/PinMame/
+          elif [[ "${{ matrix.rid }}" == "win-x86" ]]; then
+            cp native/nuget/libpinmame-${{ matrix.rid }}/pinmame.dll src/PinMame/
+          elif [[ "${{ matrix.rid }}" == osx-* ]]; then
+            cp -a native/nuget/libpinmame-${{ matrix.rid }}/*.dylib src/PinMame/
+          elif [[ "${{ matrix.rid }}" == "linux-x64" ]]; then
+            cp -a native/nuget/libpinmame-${{ matrix.rid }}/*.so* src/PinMame/
+          elif [[ "${{ matrix.rid }}" == "android-arm64-v8a" ]]; then
+            cp native/nuget/libpinmame-${{ matrix.rid }}/libpinmame.so src/PinMame/
+          elif [[ "${{ matrix.rid }}" == "ios-arm64" ]]; then
+            cp native/nuget/libpinmame-${{ matrix.rid }}/libpinmame.a src/PinMame/
+          fi
+
+      - name: Build .NET wrapper
+        run: |
+          cd src/PinMame.Tests
+          if [[ "${{ matrix.targetOS }}" ]]; then
+            dotnet build -c Release -r ${{ matrix.rid }} /p:TargetOS=${{ matrix.targetOS }}
+          else
+            dotnet build -c Release -r ${{ matrix.rid }}
+          fi
+
+      - name: Test
+        if: matrix.skipTest != true
+        run: |
+          mkdir -p ~/.pinmame/roms
+          curl -sL https://www.ipdb.org/files/4032/mm_109c.zip -o ~/.pinmame/roms/mm_109c.zip
+          cd src/PinMame.Tests
+          dotnet test -r ${{ matrix.rid }}
+
+  pack-nuget:
+    name: Pack NuGet packages
+    runs-on: ubuntu-latest
+    needs: [ version, build-pinmame, build-pinmame-osx-universal, build-dotnet ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nuget/setup-nuget@v2
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: native/nuget
+
+      - name: List artifacts
+        run: ls -R native/nuget
+
+      - name: Update version in nuspec files
+        run: |
+          cd native/nuget
+          sed -i 's/__VERSION__/${{ needs.version.outputs.semver }}/g' *.nuspec
+
+      - name: Pack NuGet packages
+        run: |
+          cd native/nuget
+          nuget pack PinMame.Native.win-x64.nuspec -OutputDirectory nupkg
+          nuget pack PinMame.Native.win-x86.nuspec -OutputDirectory nupkg
+          nuget pack PinMame.Native.osx-x64.nuspec -OutputDirectory nupkg
+          nuget pack PinMame.Native.osx-arm64.nuspec -OutputDirectory nupkg
+          nuget pack PinMame.Native.osx.nuspec -OutputDirectory nupkg
+          nuget pack PinMame.Native.ios-arm64.nuspec -OutputDirectory nupkg
+          nuget pack PinMame.Native.linux-x64.nuspec -OutputDirectory nupkg
+          nuget pack PinMame.Native.android-arm64-v8a.nuspec -OutputDirectory nupkg
+          nuget pack PinMame.Native.nuspec -OutputDirectory nupkg
+
+      - name: Upload NuGet packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: native/nuget/nupkg
+
+  pack-dotnet:
+    name: Pack .NET wrapper
+    runs-on: ubuntu-latest
+    needs: [ version, build-dotnet ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '3.1.x'
+
+      - name: Build and pack .NET wrapper
+        run: |
+          cd src/PinMame
+          # Build for all platforms
+          dotnet build -c Release /p:TargetOS=Android
+          dotnet build -c Release /p:TargetOS=iOS
+          dotnet build -c Release /p:TargetOS=OSX
+          dotnet build -c Release /p:TargetOS=Linux
+
+          # Pack with version
+          dotnet pack -c Release /p:TargetOS=Windows /p:PackageVersion=${{ needs.version.outputs.semver }} -o nupkg
+
+      - name: Upload .NET wrapper package
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-nupkg
+          path: src/PinMame/nupkg
+
+  publish:
+    name: Publish to NuGet
+    runs-on: ubuntu-latest
+    needs: [ version, pack-nuget, pack-dotnet ]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') || github.event.inputs.publish == 'true'
+    steps:
+      - uses: nuget/setup-nuget@v2
+
+      - name: Download native packages
+        uses: actions/download-artifact@v4
+        with:
+          name: nupkg
+          path: nupkg
+
+      - name: Download .NET wrapper package
+        uses: actions/download-artifact@v4
+        with:
+          name: dotnet-nupkg
+          path: dotnet-nupkg
+
+      - name: Check if version exists on NuGet
+        id: check
+        run: |
+          EXISTS=$(curl -s https://api.nuget.org/v3-flatcontainer/pinmame.native/index.json | grep -q "${{ needs.version.outputs.semver }}" && echo "true" || echo "false")
+          echo "exists=${EXISTS}" >> $GITHUB_OUTPUT
+          echo "Package version ${{ needs.version.outputs.semver }} exists: ${EXISTS}"
+
+      - name: Publish native packages to NuGet
+        if: steps.check.outputs.exists != 'true'
+        run: |
+          cd nupkg
+          for file in *.nupkg; do
+            echo "Publishing $file"
+            nuget push "$file" -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
+          done
+
+      - name: Publish .NET wrapper to NuGet
+        if: steps.check.outputs.exists != 'true'
+        run: |
+          cd dotnet-nupkg
+          for file in *.nupkg; do
+            echo "Publishing $file"
+            nuget push "$file" -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
+          done
