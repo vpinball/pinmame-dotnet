@@ -72,12 +72,12 @@ namespace PinMame
 			}
 
 			if (Depth == 2) {
-				Levels = PinMameApi.PinmameDmdLevels.Wpc;
+				Levels = PinMameApi.DmdLevels.Wpc;
 
 			} else {
 				Levels = (hardwareGen & (PinMameApi.HardwareGen.SAM | PinMameApi.HardwareGen.SPA)) != 0
-					? PinMameApi.PinmameDmdLevels.Sam
-					: PinMameApi.PinmameDmdLevels.Gts3;
+					? PinMameApi.DmdLevels.Sam
+					: PinMameApi.DmdLevels.Gts3;
 			}
 		}
 

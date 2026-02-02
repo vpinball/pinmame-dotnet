@@ -943,8 +943,7 @@ namespace PinMame
 
 		#endregion
 
-		[Obsolete("Not in libpinmame.h anymore")]
-		internal struct PinmameDmdLevels
+		internal struct DmdLevels
 		{
 			internal static readonly Dictionary<byte, byte> Wpc = new Dictionary<byte, byte> {
 				{ 0x00, 0 },
