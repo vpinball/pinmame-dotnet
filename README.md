@@ -122,6 +122,35 @@ _pinMame.SetMech(0, null);
 
 See the [example project](https://github.com/VisualPinball/pinmame-dotnet/blob/master/src/PinMame.Example/Example.cs) for more information.
 
+## Versioning
+
+This project maintains **two separate versions**:
+
+### 1. PinMAME Native Version
+
+Defined in `Directory.Build.props` as `PinMameNativeVersion` (e.g., `3.7.0`)
+- Used for native DLL naming: `libpinmame.3.7.0.dylib`, `libpinmame.so.3.7.0`
+- Update this when updating the pinmame submodule to a new upstream release
+
+### 2. PinMameDotNet Version (Git Tag-Based)
+
+Automatically calculated from git tags:
+
+- **Release (tag pushed)**: `git tag v0.3.0 && git push origin v0.3.0`
+  - Builds as `0.3.0` and publishes to NuGet
+
+- **Development builds** (commits after tag):
+  - 1st commit after `v0.3.0` → `0.3.1.0`
+  - 2nd commit after `v0.3.0` → `0.3.1.1`
+  - 3rd commit after `v0.3.0` → `0.3.1.2`
+  - etc.
+
+- **Next release**: `git tag v0.4.0 && git push origin v0.4.0`
+  - Builds as `0.4.0` and publishes to NuGet
+  - Cycle repeats: `0.4.1.0`, `0.4.1.1`, etc.
+
+**Publishing:** Only releases (tagged versions) are published to NuGet automatically. Development builds are built and tested but not published.
+
 ## Building from Source
 
 This repository uses a git submodule for the PinMAME source. To clone and build:

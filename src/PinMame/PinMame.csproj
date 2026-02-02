@@ -12,12 +12,10 @@
     <PackOnBuild>true</PackOnBuild>
     <Copyright>Copyright 2022</Copyright>
     <AssemblyName>PinMame</AssemblyName>
-    <AssemblyVersion>0.2.0</AssemblyVersion>
+    <!-- Version comes from Directory.Build.props -->
     <PackageId>PinMame</PackageId>
-    <PackageVersion>0.2.0-preview.9</PackageVersion>
     <PackageProjectUrl>https://github.com/vpinball/pinmame-dotnet</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <InformationalVersion>$(AssemblyVersion)$(PackagePrereleaseIdentifier)</InformationalVersion>
   </PropertyGroup>
   <!-- Give an initial value based on the operating system where it's currently running on. -->
   <PropertyGroup Condition="'$(TargetOS)' == ''">

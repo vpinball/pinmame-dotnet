@@ -7,18 +7,11 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'PinMAME version (e.g., 3.7.0)'
-        required: true
-        default: '3.7.0'
       publish:
         description: 'Publish to NuGet'
         required: false
         type: boolean
         default: false
-
-env:
-  PINMAME_VERSION: ${{ github.event.inputs.version || '3.7.0' }}
 
 defaults:
   run:
@@ -29,8 +22,9 @@ jobs:
     name: Calculate Version
     runs-on: ubuntu-latest
     outputs:
-      semver: ${{ steps.version.outputs.semver }}
-      pinmame_version: ${{ steps.version.outputs.pinmame_version }}
+      pinmame_native_version: ${{ steps.version.outputs.pinmame_native_version }}
+      pinmame_dotnet_version: ${{ steps.version.outputs.pinmame_dotnet_version }}
+      is_release: ${{ steps.version.outputs.is_release }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,21 +32,50 @@ jobs:
           fetch-depth: 0
       - id: version
         run: |
-          # Get PinMAME version from submodule
-          cd pinmame
-          VERSION_MAJOR=$(grep -Eo "VERSION_MAJOR\s+[0-9]+" src/version.h | grep -Eo "[0-9]+")
-          VERSION_MINOR=$(grep -Eo "VERSION_MINOR\s+[0-9]+" src/version.h | grep -Eo "[0-9]+")
-          VERSION_REV=$(grep -Eo "VERSION_REV\s+[0-9]+" src/version.h | grep -Eo "[0-9]+")
-          PINMAME_VERSION="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_REV}"
+          # Read native version from Directory.Build.props
+          PINMAME_NATIVE_VERSION=$(grep -oP '(?<=<PinMameNativeVersion>)[^<]+' Directory.Build.props)
 
-          # Calculate revision number
-          REVISION=$(git rev-list HEAD --count)
-          SEMVER="${PINMAME_VERSION}-preview.${REVISION}"
+          # Get .NET wrapper version from git tags
+          # Get the last tag (e.g., v0.3.0 or 0.3.0)
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
 
-          echo "pinmame_version=${PINMAME_VERSION}" >> $GITHUB_OUTPUT
-          echo "semver=${SEMVER}" >> $GITHUB_OUTPUT
-          echo "PinMAME Version: ${PINMAME_VERSION}"
-          echo "Package Version: ${SEMVER}"
+          # Count commits since last tag
+          COMMITS_SINCE_TAG=$(git rev-list ${LAST_TAG}..HEAD --count)
+
+          # Parse tag version (strip 'v' prefix if present)
+          TAG_VERSION=${LAST_TAG#v}
+          if [[ $TAG_VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]}
+          else
+            MAJOR=0
+            MINOR=0
+            PATCH=0
+          fi
+
+          if [ "$COMMITS_SINCE_TAG" -eq "0" ]; then
+            # We're exactly on a tag - this is a release
+            PINMAME_DOTNET_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            IS_RELEASE=true
+          else
+            # We're past a tag - bump patch and add revision count
+            NEXT_PATCH=$((PATCH + 1))
+            # Revision starts at 0 for first commit after tag
+            REVISION=$((COMMITS_SINCE_TAG - 1))
+            PINMAME_DOTNET_VERSION="${MAJOR}.${MINOR}.${NEXT_PATCH}.${REVISION}"
+            IS_RELEASE=false
+          fi
+
+          echo "pinmame_native_version=${PINMAME_NATIVE_VERSION}" >> $GITHUB_OUTPUT
+          echo "pinmame_dotnet_version=${PINMAME_DOTNET_VERSION}" >> $GITHUB_OUTPUT
+          echo "is_release=${IS_RELEASE}" >> $GITHUB_OUTPUT
+
+          echo "PinMAME Native Version: ${PINMAME_NATIVE_VERSION}"
+          echo "PinMameDotNet Version: ${PINMAME_DOTNET_VERSION}"
+          echo "Is Release: ${IS_RELEASE}"
+          echo "Last Tag: ${LAST_TAG}"
+          echo "Commits Since Tag: ${COMMITS_SINCE_TAG}"
 
   build-pinmame:
     name: Build libpinmame-${{ matrix.platform }}-${{ matrix.arch }}
@@ -110,15 +133,15 @@ jobs:
                 cp build/Release/pinmame.dll ../native/nuget/libpinmame-${{ matrix.rid }}/
              fi
           elif [[ "${{ matrix.platform }}" == "macos" ]]; then
-             # macOS: libpinmame.dylib symlinked to libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib
-             cp build/libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib ../native/nuget/libpinmame-${{ matrix.rid }}/
+             # macOS: libpinmame.dylib symlinked to libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib
+             cp build/libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib ../native/nuget/libpinmame-${{ matrix.rid }}/
              cd ../native/nuget/libpinmame-${{ matrix.rid }}/
-             ln -s libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib libpinmame.dylib
+             ln -s libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib libpinmame.dylib
           elif [[ "${{ matrix.platform }}" == "linux" ]]; then
-             # Linux: libpinmame.so symlinked to libpinmame.${{ needs.version.outputs.pinmame_version }}.so
-             cp build/libpinmame.so.${{ needs.version.outputs.pinmame_version }} ../native/nuget/libpinmame-${{ matrix.rid }}/
+             # Linux: libpinmame.so symlinked to libpinmame.${{ needs.version.outputs.pinmame_native_version }}.so
+             cp build/libpinmame.so.${{ needs.version.outputs.pinmame_native_version }} ../native/nuget/libpinmame-${{ matrix.rid }}/
              cd ../native/nuget/libpinmame-${{ matrix.rid }}/
-             ln -s libpinmame.so.${{ needs.version.outputs.pinmame_version }} libpinmame.so
+             ln -s libpinmame.so.${{ needs.version.outputs.pinmame_native_version }} libpinmame.so
           elif [[ "${{ matrix.platform }}" == "android" ]]; then
              # Android: libpinmame.so
              cp build/libpinmame.so ../native/nuget/libpinmame-${{ matrix.rid }}/
@@ -154,13 +177,13 @@ jobs:
           cd native/nuget
 
           # Create universal dylib
-          lipo -create -output libpinmame-osx/libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib \
-            libpinmame-osx-x64/libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib \
-            libpinmame-osx-arm64/libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib
+          lipo -create -output libpinmame-osx/libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib \
+            libpinmame-osx-x64/libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib \
+            libpinmame-osx-arm64/libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib
 
           # Create symlink
           cd libpinmame-osx
-          ln -s libpinmame.${{ needs.version.outputs.pinmame_version }}.dylib libpinmame.dylib
+          ln -s libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib libpinmame.dylib
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -247,7 +270,7 @@ jobs:
       - name: Update version in nuspec files
         run: |
           cd native/nuget
-          sed -i 's/__VERSION__/${{ needs.version.outputs.semver }}/g' *.nuspec
+          sed -i 's/__VERSION__/${{ needs.version.outputs.pinmame_dotnet_version }}/g' *.nuspec
 
       - name: Pack NuGet packages
         run: |
@@ -288,7 +311,7 @@ jobs:
           dotnet build -c Release /p:TargetOS=Linux
 
           # Pack with version
-          dotnet pack -c Release /p:TargetOS=Windows /p:PackageVersion=${{ needs.version.outputs.semver }} -o nupkg
+          dotnet pack -c Release /p:TargetOS=Windows /p:PackageVersion=${{ needs.version.outputs.pinmame_dotnet_version }} -o nupkg
 
       - name: Upload .NET wrapper package
         uses: actions/upload-artifact@v4
@@ -300,7 +323,8 @@ jobs:
     name: Publish to NuGet
     runs-on: ubuntu-latest
     needs: [ version, pack-nuget, pack-dotnet ]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') || github.event.inputs.publish == 'true'
+    # Publish only when: 1) it's a release (tag push), 2) manually triggered with publish=true
+    if: needs.version.outputs.is_release == 'true' || github.event.inputs.publish == 'true'
     steps:
       - uses: nuget/setup-nuget@v2
 
@@ -319,9 +343,9 @@ jobs:
       - name: Check if version exists on NuGet
         id: check
         run: |
-          EXISTS=$(curl -s https://api.nuget.org/v3-flatcontainer/pinmame.native/index.json | grep -q "${{ needs.version.outputs.semver }}" && echo "true" || echo "false")
+          EXISTS=$(curl -s https://api.nuget.org/v3-flatcontainer/pinmame.native/index.json | grep -q "${{ needs.version.outputs.pinmame_dotnet_version }}" && echo "true" || echo "false")
           echo "exists=${EXISTS}" >> $GITHUB_OUTPUT
-          echo "Package version ${{ needs.version.outputs.semver }} exists: ${EXISTS}"
+          echo "Package version ${{ needs.version.outputs.pinmame_dotnet_version }} exists: ${EXISTS}"
 
       - name: Publish native packages to NuGet
         if: steps.check.outputs.exists != 'true'

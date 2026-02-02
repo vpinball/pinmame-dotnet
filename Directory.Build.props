@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- PinMAME native library version (for DLL naming: libpinmame.3.7.0.dylib) -->
+    <!-- Update this when updating the pinmame submodule to a new release -->
+    <PinMameNativeVersion>3.7.0-beta1</PinMameNativeVersion>
+  </PropertyGroup>
+
+  <!--
+    PinMameDotNet wrapper version is determined by git tags, not hardcoded here.
+    - Tag a release: git tag v0.3.0 && git push origin v0.3.0
+    - Builds after tag automatically become: 0.3.1.0, 0.3.1.1, etc.
+    See .github/workflows/build-and-publish.yml for version calculation logic.
+  -->
+</Project>
