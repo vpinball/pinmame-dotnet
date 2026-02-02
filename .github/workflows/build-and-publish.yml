@@ -281,13 +281,21 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.skipTest != true
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libssl3
+          sudo apt-get install -y libssl3t64
 
       - name: Test
         if: matrix.skipTest != true
+        shell: bash
         run: |
-          mkdir -p ~/.pinmame/roms
-          curl -sL https://www.ipdb.org/files/4032/mm_109c.zip -o ~/.pinmame/roms/mm_109c.zip
+          # Create ROM directory using .NET-compatible path
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            PINMAME_DIR="$USERPROFILE/.pinmame/roms"
+            mkdir -p "$PINMAME_DIR"
+            curl -sL https://www.ipdb.org/files/4032/mm_109c.zip -o "$PINMAME_DIR/mm_109c.zip"
+          else
+            mkdir -p ~/.pinmame/roms
+            curl -sL https://www.ipdb.org/files/4032/mm_109c.zip -o ~/.pinmame/roms/mm_109c.zip
+          fi
           cd src/PinMame.Tests
           dotnet test -r ${{ matrix.rid }}
 
