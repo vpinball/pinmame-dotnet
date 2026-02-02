@@ -270,7 +270,8 @@ jobs:
       - name: Update version in nuspec files
         run: |
           cd native/nuget
-          sed -i 's/__VERSION__/${{ needs.version.outputs.pinmame_dotnet_version }}/g' *.nuspec
+          # Native packages use native version
+          sed -i 's/__VERSION__/${{ needs.version.outputs.pinmame_native_version }}/g' *.nuspec
 
       - name: Pack NuGet packages
         run: |
@@ -310,8 +311,11 @@ jobs:
           dotnet build -c Release /p:TargetOS=OSX
           dotnet build -c Release /p:TargetOS=Linux
 
-          # Pack with version
-          dotnet pack -c Release /p:TargetOS=Windows /p:PackageVersion=${{ needs.version.outputs.pinmame_dotnet_version }} -o nupkg
+          # Pack with version and native package dependency
+          dotnet pack -c Release /p:TargetOS=Windows \
+            /p:PackageVersion=${{ needs.version.outputs.pinmame_dotnet_version }} \
+            /p:PinMameNativePackageVersion=${{ needs.version.outputs.pinmame_native_version }} \
+            -o nupkg
 
       - name: Upload .NET wrapper package
         uses: actions/upload-artifact@v4
@@ -340,27 +344,48 @@ jobs:
           name: dotnet-nupkg
           path: dotnet-nupkg
 
-      - name: Check if version exists on NuGet
-        id: check
+      - name: Check if native version exists on NuGet
+        id: check_native
         run: |
-          EXISTS=$(curl -s https://api.nuget.org/v3-flatcontainer/pinmame.native/index.json | grep -q "${{ needs.version.outputs.pinmame_dotnet_version }}" && echo "true" || echo "false")
-          echo "exists=${EXISTS}" >> $GITHUB_OUTPUT
-          echo "Package version ${{ needs.version.outputs.pinmame_dotnet_version }} exists: ${EXISTS}"
+          # Check if this native version was already published
+          NATIVE_EXISTS=$(curl -s https://api.nuget.org/v3-flatcontainer/pinmame.native/index.json | grep -q "${{ needs.version.outputs.pinmame_native_version }}" && echo "true" || echo "false")
+          echo "native_exists=${NATIVE_EXISTS}" >> $GITHUB_OUTPUT
+          echo "Native package version ${{ needs.version.outputs.pinmame_native_version }} exists: ${NATIVE_EXISTS}"
+
+      - name: Check if .NET version exists on NuGet
+        id: check_dotnet
+        run: |
+          # Check if this .NET wrapper version was already published
+          DOTNET_EXISTS=$(curl -s https://api.nuget.org/v3-flatcontainer/pinmame/index.json | grep -q "${{ needs.version.outputs.pinmame_dotnet_version }}" && echo "true" || echo "false")
+          echo "dotnet_exists=${DOTNET_EXISTS}" >> $GITHUB_OUTPUT
+          echo ".NET package version ${{ needs.version.outputs.pinmame_dotnet_version }} exists: ${DOTNET_EXISTS}"
 
       - name: Publish native packages to NuGet
-        if: steps.check.outputs.exists != 'true'
+        if: steps.check_native.outputs.native_exists != 'true'
         run: |
           cd nupkg
+          echo "Publishing native packages (version ${{ needs.version.outputs.pinmame_native_version }})"
           for file in *.nupkg; do
             echo "Publishing $file"
             nuget push "$file" -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
           done
 
+      - name: Skip native packages (already published)
+        if: steps.check_native.outputs.native_exists == 'true'
+        run: |
+          echo "Native packages version ${{ needs.version.outputs.pinmame_native_version }} already exists, skipping."
+
       - name: Publish .NET wrapper to NuGet
-        if: steps.check.outputs.exists != 'true'
+        if: steps.check_dotnet.outputs.dotnet_exists != 'true'
         run: |
           cd dotnet-nupkg
+          echo "Publishing .NET wrapper (version ${{ needs.version.outputs.pinmame_dotnet_version }})"
           for file in *.nupkg; do
             echo "Publishing $file"
             nuget push "$file" -ApiKey ${{ secrets.NUGET_KEY }} -src https://api.nuget.org/v3/index.json
           done
+
+      - name: Skip .NET wrapper (already published)
+        if: steps.check_dotnet.outputs.dotnet_exists == 'true'
+        run: |
+          echo ".NET wrapper version ${{ needs.version.outputs.pinmame_dotnet_version }} already exists, skipping."

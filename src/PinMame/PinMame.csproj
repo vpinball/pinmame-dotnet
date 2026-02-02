@@ -26,6 +26,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
     <PackageReference Include="NLog" Version="4.7.13" />
+    <!-- Dependency on native package - version injected at pack time -->
+    <PackageReference Include="PinMame.Native" Version="$(PinMameNativePackageVersion)" Condition="'$(PinMameNativePackageVersion)' != ''" />
   </ItemGroup>
   <!-- Append target operating system to output path -->
   <PropertyGroup>

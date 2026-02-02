@@ -151,6 +151,18 @@ Automatically calculated from git tags:
 
 **Publishing:** Only releases (tagged versions) are published to NuGet automatically. Development builds are built and tested but not published.
 
+### Native vs .NET Package Versions
+
+- **Native packages** (`PinMame.Native.*`) are versioned with `PinMameNativeVersion` (e.g., `3.7.0-beta1`)
+  - Only republished when the native version changes in `Directory.Build.props`
+  - Skipped if that native version already exists on NuGet
+
+- **.NET wrapper** (`PinMame`) is versioned with git tags (e.g., `0.3.0`)
+  - Has a dependency on the corresponding native package version
+  - Published on every tagged release
+
+This means you can release new .NET wrapper versions without rebuilding/republishing unchanged native libraries.
+
 ## Building from Source
 
 This repository uses a git submodule for the PinMAME source. To clone and build:
