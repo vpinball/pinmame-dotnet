@@ -133,15 +133,30 @@ jobs:
                 cp build/Release/pinmame.dll ../native/nuget/libpinmame-${{ matrix.rid }}/
              fi
           elif [[ "${{ matrix.platform }}" == "macos" ]]; then
-             # macOS: libpinmame.dylib symlinked to libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib
-             cp build/libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib ../native/nuget/libpinmame-${{ matrix.rid }}/
-             cd ../native/nuget/libpinmame-${{ matrix.rid }}/
-             ln -s libpinmame.${{ needs.version.outputs.pinmame_native_version }}.dylib libpinmame.dylib
+             # macOS: Copy actual built dylib (version comes from pinmame's version.h)
+             # Find and copy the versioned dylib
+             BUILT_DYLIB=$(ls build/libpinmame.*.dylib 2>/dev/null | head -1)
+             if [[ -f "$BUILT_DYLIB" ]]; then
+               cp "$BUILT_DYLIB" ../native/nuget/libpinmame-${{ matrix.rid }}/
+               cd ../native/nuget/libpinmame-${{ matrix.rid }}/
+               DYLIB_NAME=$(basename "$BUILT_DYLIB")
+               ln -s "$DYLIB_NAME" libpinmame.dylib
+             else
+               echo "Error: Could not find built dylib"
+               exit 1
+             fi
           elif [[ "${{ matrix.platform }}" == "linux" ]]; then
-             # Linux: libpinmame.so symlinked to libpinmame.${{ needs.version.outputs.pinmame_native_version }}.so
-             cp build/libpinmame.so.${{ needs.version.outputs.pinmame_native_version }} ../native/nuget/libpinmame-${{ matrix.rid }}/
-             cd ../native/nuget/libpinmame-${{ matrix.rid }}/
-             ln -s libpinmame.so.${{ needs.version.outputs.pinmame_native_version }} libpinmame.so
+             # Linux: Copy actual built so (version comes from pinmame's version.h)
+             BUILT_SO=$(ls build/libpinmame.so.* 2>/dev/null | head -1)
+             if [[ -f "$BUILT_SO" ]]; then
+               cp "$BUILT_SO" ../native/nuget/libpinmame-${{ matrix.rid }}/
+               cd ../native/nuget/libpinmame-${{ matrix.rid }}/
+               SO_NAME=$(basename "$BUILT_SO")
+               ln -s "$SO_NAME" libpinmame.so
+             else
+               echo "Error: Could not find built .so"
+               exit 1
+             fi
           elif [[ "${{ matrix.platform }}" == "android" ]]; then
              # Android: libpinmame.so
              cp build/libpinmame.so ../native/nuget/libpinmame-${{ matrix.rid }}/
