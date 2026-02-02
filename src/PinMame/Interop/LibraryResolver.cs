@@ -55,7 +55,7 @@ namespace PinMame.Interop
 
 			// Use reflection to call SetDllImportResolver if available at runtime
 			// This works when running on .NET Core 3.0+ or .NET 5+, even though we compile against netstandard2.1
-			TrySetDllImportResolverViaReflection();
+			var success = TrySetDllImportResolverViaReflection();
 		}
 
 		private static IntPtr ResolveDllImport(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
@@ -119,36 +119,42 @@ namespace PinMame.Interop
 			}
 		}
 
-		private static void TrySetDllImportResolverViaReflection()
+		private static bool TrySetDllImportResolverViaReflection()
 		{
 			try
 			{
 				// Try to get NativeLibrary type from System.Runtime.InteropServices
 				var nativeLibraryType = Type.GetType("System.Runtime.InteropServices.NativeLibrary, System.Runtime.InteropServices");
 				if (nativeLibraryType == null)
-					return;
+					return false;
 
-				// Get SetDllImportResolver method
+				// Get DllImportResolver delegate type
+				var dllImportResolverType = Type.GetType("System.Runtime.InteropServices.DllImportResolver, System.Runtime.InteropServices");
+				if (dllImportResolverType == null)
+					return false;
+
+				// Get SetDllImportResolver method - takes (Assembly, DllImportResolver)
 				var setResolverMethod = nativeLibraryType.GetMethod(
 					"SetDllImportResolver",
 					BindingFlags.Public | BindingFlags.Static,
 					null,
-					new[] { typeof(Assembly), typeof(Func<string, Assembly, DllImportSearchPath?, IntPtr>) },
+					new[] { typeof(Assembly), dllImportResolverType },
 					null);
 
 				if (setResolverMethod == null)
-					return;
+					return false;
 
-				// Create delegate for our resolver
-				Func<string, Assembly, DllImportSearchPath?, IntPtr> resolver = ResolveDllImport;
+				// Create delegate for our resolver using the DllImportResolver type
+				var resolver = Delegate.CreateDelegate(dllImportResolverType, typeof(LibraryResolver).GetMethod(nameof(ResolveDllImport), BindingFlags.Static | BindingFlags.NonPublic));
 
 				// Call SetDllImportResolver
 				setResolverMethod.Invoke(null, new object[] { typeof(LibraryResolver).Assembly, resolver });
+				return true;
 			}
-			catch
+			catch (Exception ex)
 			{
 				// If reflection fails, fall back to default behavior
-				// This is fine - it means we're on an older runtime that doesn't support DllImport resolvers
+				return false;
 			}
 		}
 	}
