@@ -11,7 +11,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackOnBuild>true</PackOnBuild>
     <Copyright>Copyright 2022</Copyright>
-    <AssemblyName>PinMame</AssemblyName>
+    <AssemblyName>PinMameDotNet</AssemblyName>
     <!-- Version comes from Directory.Build.props -->
     <PackageId>PinMame</PackageId>
     <PackageProjectUrl>https://github.com/vpinball/pinmame-dotnet</PackageProjectUrl>
