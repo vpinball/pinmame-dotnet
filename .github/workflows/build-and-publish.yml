@@ -270,6 +270,12 @@ jobs:
             dotnet build -c Release -r ${{ matrix.rid }}
           fi
 
+      - name: Install dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest' && matrix.skipTest != true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libssl3
+
       - name: Test
         if: matrix.skipTest != true
         run: |
