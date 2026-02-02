@@ -265,7 +265,7 @@ jobs:
         run: |
           cd src/PinMame.Tests
           if [[ "${{ matrix.targetOS }}" ]]; then
-            dotnet build -c Release -r ${{ matrix.rid }} /p:TargetOS=${{ matrix.targetOS }}
+            dotnet build -c Release -r ${{ matrix.rid }} -p:TargetOS=${{ matrix.targetOS }}
           else
             dotnet build -c Release -r ${{ matrix.rid }}
           fi
@@ -339,15 +339,15 @@ jobs:
         run: |
           cd src/PinMame
           # Build for all platforms
-          dotnet build -c Release /p:TargetOS=Android
-          dotnet build -c Release /p:TargetOS=iOS
-          dotnet build -c Release /p:TargetOS=OSX
-          dotnet build -c Release /p:TargetOS=Linux
+          dotnet build -c Release -p:TargetOS=Android
+          dotnet build -c Release -p:TargetOS=iOS
+          dotnet build -c Release -p:TargetOS=OSX
+          dotnet build -c Release -p:TargetOS=Linux
 
           # Pack with version and native package dependency
-          dotnet pack -c Release /p:TargetOS=Windows \
-            /p:PackageVersion=${{ needs.version.outputs.pinmame_dotnet_version }} \
-            /p:PinMameNativePackageVersion=${{ needs.version.outputs.pinmame_native_version }} \
+          dotnet pack -c Release -p:TargetOS=Windows \
+            -p:PackageVersion=${{ needs.version.outputs.pinmame_dotnet_version }} \
+            -p:PinMameNativePackageVersion=${{ needs.version.outputs.pinmame_native_version }} \
             -o nupkg
 
       - name: Upload .NET wrapper package
