@@ -55,7 +55,7 @@ namespace PinMame.Interop
 
 			// Use reflection to call SetDllImportResolver if available at runtime
 			// This works when running on .NET Core 3.0+ or .NET 5+, even though we compile against netstandard2.1
-			var success = TrySetDllImportResolverViaReflection();
+			TrySetDllImportResolverViaReflection();
 		}
 
 		private static IntPtr ResolveDllImport(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
@@ -64,22 +64,19 @@ namespace PinMame.Interop
 			if (libraryName != "pinmame")
 				return IntPtr.Zero;
 
-			string resolvedName = libraryName;
+			var resolvedName = libraryName;
 
 			// Windows: select architecture-specific DLL
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 				resolvedName = RuntimeInformation.ProcessArchitecture == Architecture.X64
 					? "pinmame64.dll"
 					: "pinmame.dll";
 			}
 			// Other platforms use the base name (extensions and symlinks are handled by the OS)
-			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-			{
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
 				resolvedName = "libpinmame.dylib";
-			}
-			else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-			{
+
+			} else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
 				resolvedName = "libpinmame.so";
 			}
 
@@ -89,8 +86,7 @@ namespace PinMame.Interop
 
 		private static IntPtr TryLoadLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
 		{
-			try
-			{
+			try {
 				// Try to get NativeLibrary.TryLoad method
 				var nativeLibraryType = Type.GetType("System.Runtime.InteropServices.NativeLibrary, System.Runtime.InteropServices");
 				if (nativeLibraryType == null)
@@ -111,27 +107,23 @@ namespace PinMame.Interop
 				var success = (bool)tryLoadMethod.Invoke(null, parameters);
 
 				return success ? (IntPtr)parameters[3] : IntPtr.Zero;
-			}
-			catch
-			{
+
+			} catch {
 				// If reflection fails, return IntPtr.Zero to use default behavior
 				return IntPtr.Zero;
 			}
 		}
 
-		private static bool TrySetDllImportResolverViaReflection()
+		private static void TrySetDllImportResolverViaReflection()
 		{
-			try
-			{
+			try {
 				// Try to get NativeLibrary type from System.Runtime.InteropServices
 				var nativeLibraryType = Type.GetType("System.Runtime.InteropServices.NativeLibrary, System.Runtime.InteropServices");
-				if (nativeLibraryType == null)
-					return false;
+				if (nativeLibraryType == null) return;
 
 				// Get DllImportResolver delegate type
 				var dllImportResolverType = Type.GetType("System.Runtime.InteropServices.DllImportResolver, System.Runtime.InteropServices");
-				if (dllImportResolverType == null)
-					return false;
+				if (dllImportResolverType == null) return;
 
 				// Get SetDllImportResolver method - takes (Assembly, DllImportResolver)
 				var setResolverMethod = nativeLibraryType.GetMethod(
@@ -141,20 +133,16 @@ namespace PinMame.Interop
 					new[] { typeof(Assembly), dllImportResolverType },
 					null);
 
-				if (setResolverMethod == null)
-					return false;
+				if (setResolverMethod == null) return;
 
 				// Create delegate for our resolver using the DllImportResolver type
 				var resolver = Delegate.CreateDelegate(dllImportResolverType, typeof(LibraryResolver).GetMethod(nameof(ResolveDllImport), BindingFlags.Static | BindingFlags.NonPublic));
 
 				// Call SetDllImportResolver
 				setResolverMethod.Invoke(null, new object[] { typeof(LibraryResolver).Assembly, resolver });
-				return true;
-			}
-			catch (Exception ex)
-			{
+				return;
+			} catch (Exception) {
 				// If reflection fails, fall back to default behavior
-				return false;
 			}
 		}
 	}

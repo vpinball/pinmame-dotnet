@@ -31,7 +31,7 @@
 
 namespace PinMame.Interop
 {
-	internal static partial class Libraries
+	internal static class Libraries
 	{
 		// Base library name - actual resolution happens at runtime
 		// See LibraryResolver for architecture-specific DLL selection
