@@ -1,14 +1,15 @@
 #include <winres.h>
-#include "../version.h"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
 //
+// VERSION_PLACEHOLDER will be replaced by the build script with actual version
+// from Directory.Build.props (e.g., 3.7.0.222)
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION PM_VERSION_DIGITS
- PRODUCTVERSION PM_VERSION_DIGITS
+ FILEVERSION VERSION_PLACEHOLDER
+ PRODUCTVERSION VERSION_PLACEHOLDER
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -25,7 +26,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "PinMAME Team"
             VALUE "FileDescription", "LibPinMAME - Pinball ROM Emulator Library"
-            VALUE "FileVersion", PM_VERSION_STRING_COMMAS
+            VALUE "FileVersion", "VERSION_STRING_PLACEHOLDER"
             VALUE "InternalName", "libpinmame"
             VALUE "LegalCopyright", "Copyright (C) 2000-2026 PinMAME Team"
 #ifdef _WIN64
@@ -34,7 +35,7 @@ BEGIN
             VALUE "OriginalFilename", "pinmame.dll"
 #endif
             VALUE "ProductName", "LibPinMAME"
-            VALUE "ProductVersion", PM_VERSION_STRING_POINTS
+            VALUE "ProductVersion", "VERSION_STRING_PLACEHOLDER"
         END
     END
     BLOCK "VarFileInfo"

@@ -104,7 +104,31 @@ jobs:
 
           # Copy version resource file and patch CMakeLists.txt on Windows
           if [[ "${{ matrix.platform }}" == "win" ]]; then
+             # Extract version from Directory.Build.props (e.g., "3.7.0-beta1")
+             VERSION=$(grep -oP '(?<=<PinMameNativeVersion>)[^<]+' ../Directory.Build.props)
+             echo "Using PinMameNativeVersion: $VERSION"
+
+             # Parse version components (handle -beta1 suffix)
+             VERSION_BASE=$(echo $VERSION | cut -d'-' -f1)
+             MAJOR=$(echo $VERSION_BASE | cut -d'.' -f1)
+             MINOR=$(echo $VERSION_BASE | cut -d'.' -f2)
+             PATCH=$(echo $VERSION_BASE | cut -d'.' -f3)
+
+             # Get git revision from pinmame submodule
+             REVISION=$(git rev-list --count HEAD)
+
+             # Create version strings
+             VERSION_DIGITS="$MAJOR,$MINOR,$PATCH,$REVISION"
+             VERSION_STRING="$MAJOR.$MINOR.$PATCH.$REVISION"
+
+             echo "Version digits: $VERSION_DIGITS"
+             echo "Version string: $VERSION_STRING"
+
+             # Copy and patch the resource file
              cp ../resources/libpinmame/libpinmame.rc src/libpinmame/
+             sed -i "s/VERSION_PLACEHOLDER/$VERSION_DIGITS/g" src/libpinmame/libpinmame.rc
+             sed -i "s/VERSION_STRING_PLACEHOLDER/$VERSION_STRING/g" src/libpinmame/libpinmame.rc
+
              # Add the resource file to Windows sources in CMakeLists.txt
              sed -i '/src\/windows\/ticker.c/a\      src/libpinmame/libpinmame.rc' CMakeLists.txt
           fi
