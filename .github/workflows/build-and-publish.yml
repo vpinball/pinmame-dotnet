@@ -105,7 +105,7 @@ jobs:
           # Copy version resource file and patch CMakeLists.txt on Windows
           if [[ "${{ matrix.platform }}" == "win" ]]; then
              # Extract version from Directory.Build.props (e.g., "3.7.0-beta1")
-             VERSION=$(grep -oP '(?<=<PinMameNativeVersion>)[^<]+' ../Directory.Build.props)
+             VERSION=$(grep '<PinMameNativeVersion>' ../Directory.Build.props | sed 's/.*<PinMameNativeVersion>\(.*\)<\/PinMameNativeVersion>.*/\1/')
              echo "Using PinMameNativeVersion: $VERSION"
 
              # Parse version components (handle -beta1 suffix)
