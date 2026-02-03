@@ -280,8 +280,10 @@ jobs:
       - name: Install dependencies (Linux)
         if: matrix.os == 'ubuntu-latest' && matrix.skipTest != true
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl3t64
+          # .NET Core 3.1 requires OpenSSL 1.1, but Ubuntu 24.04 only has OpenSSL 3
+          # Download and install libssl1.1 from Ubuntu 22.04
+          wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.23_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.23_amd64.deb
 
       - name: Test
         if: matrix.skipTest != true
