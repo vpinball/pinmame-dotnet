@@ -312,6 +312,12 @@ jobs:
         run: |
           mkdir -p ~/.pinmame/roms
           curl -sL https://archive.org/download/MAME_2015_arcade_romsets/roms.zip/roms/mm_109c.zip -o ~/.pinmame/roms/mm_109c.zip
+
+          # Set LD_LIBRARY_PATH for Linux to find native libraries
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            export LD_LIBRARY_PATH="$PWD/src/PinMame:$LD_LIBRARY_PATH"
+          fi
+
           cd src/PinMame.Tests
           dotnet test -r ${{ matrix.rid }}
 
