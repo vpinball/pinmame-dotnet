@@ -304,22 +304,108 @@ jobs:
       - name: Install dependencies (Linux)
         if: matrix.os == 'ubuntu-latest' && matrix.skipTest != true
         run: |
-          wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+          wget https://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
           sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb`
+
+      - name: Download ROM (Windows)
+        if: matrix.skipTest != true && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $romDir = Join-Path $env:USERPROFILE ".pinmame" "roms"
+          New-Item -ItemType Directory -Force -Path $romDir | Out-Null
+          $romPath = Join-Path $romDir "mm_109c.zip"
+
+          Write-Host "Downloading ROM to: $romPath"
+
+          # Download with retry logic
+          $maxRetries = 3
+          $retryCount = 0
+          $success = $false
+
+          while (-not $success -and $retryCount -lt $maxRetries) {
+            try {
+              Invoke-WebRequest -Uri "https://www.ipdb.org/files/4032/mm_109c.zip" -OutFile $romPath -UseBasicParsing
+
+              # Verify file was downloaded and has content
+              if (Test-Path $romPath) {
+                $fileSize = (Get-Item $romPath).Length
+                Write-Host "Downloaded file size: $fileSize bytes"
+                if ($fileSize -gt 1000) {
+                  $success = $true
+                  Write-Host "ROM downloaded successfully"
+                } else {
+                  Write-Host "Downloaded file is too small, retrying..."
+                  Remove-Item $romPath -ErrorAction SilentlyContinue
+                }
+              }
+            } catch {
+              Write-Host "Download attempt $($retryCount + 1) failed: $_"
+            }
+
+            if (-not $success) {
+              $retryCount++
+              if ($retryCount -lt $maxRetries) {
+                Write-Host "Waiting 2 seconds before retry..."
+                Start-Sleep -Seconds 2
+              }
+            }
+          }
+
+          if (-not $success) {
+            Write-Error "Failed to download ROM after $maxRetries attempts"
+            exit 1
+          }
+
+      - name: Download ROM (Unix)
+        if: matrix.skipTest != true && runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p ~/.pinmame/roms
+          ROM_PATH="$HOME/.pinmame/roms/mm_109c.zip"
+
+          echo "Downloading ROM to: $ROM_PATH"
+
+          # Download with retry logic
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          SUCCESS=false
+
+          while [ "$SUCCESS" = false ] && [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -fSL https://www.ipdb.org/files/4032/mm_109c.zip -o "$ROM_PATH"; then
+              # Verify file exists and has content
+              if [ -f "$ROM_PATH" ]; then
+                FILE_SIZE=$(stat -f%z "$ROM_PATH" 2>/dev/null || stat -c%s "$ROM_PATH" 2>/dev/null)
+                echo "Downloaded file size: $FILE_SIZE bytes"
+                if [ "$FILE_SIZE" -gt 1000 ]; then
+                  SUCCESS=true
+                  echo "ROM downloaded successfully"
+                else
+                  echo "Downloaded file is too small, retrying..."
+                  rm -f "$ROM_PATH"
+                fi
+              fi
+            else
+              echo "Download attempt $((RETRY_COUNT + 1)) failed"
+            fi
+
+            if [ "$SUCCESS" = false ]; then
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "Waiting 2 seconds before retry..."
+                sleep 2
+              fi
+            fi
+          done
+
+          if [ "$SUCCESS" = false ]; then
+            echo "Failed to download ROM after $MAX_RETRIES attempts"
+            exit 1
+          fi
 
       - name: Test
         if: matrix.skipTest != true
         shell: bash
         run: |
-          # Create ROM directory using .NET-compatible path
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            PINMAME_DIR="$USERPROFILE/.pinmame/roms"
-            mkdir -p "$PINMAME_DIR"
-            curl -sL https://www.ipdb.org/files/4032/mm_109c.zip -o "$PINMAME_DIR/mm_109c.zip"
-          else
-            mkdir -p ~/.pinmame/roms
-            curl -sL https://www.ipdb.org/files/4032/mm_109c.zip -o ~/.pinmame/roms/mm_109c.zip
-          fi
           cd src/PinMame.Tests
           dotnet test -r ${{ matrix.rid }}
 
