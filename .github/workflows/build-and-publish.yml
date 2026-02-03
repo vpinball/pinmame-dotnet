@@ -329,6 +329,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: nuget/setup-nuget@v2
 
+      - name: Install mono
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mono-complete
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
