@@ -119,7 +119,8 @@ jobs:
 
              # Create version strings
              VERSION_DIGITS="$MAJOR,$MINOR,$PATCH,$REVISION"
-             VERSION_STRING="$MAJOR.$MINOR.$PATCH.$REVISION"
+             # Use semantic version from Directory.Build.props for Windows Details -> Product version
+             VERSION_STRING="$VERSION"
 
              echo "Version digits: $VERSION_DIGITS"
              echo "Version string: $VERSION_STRING"
