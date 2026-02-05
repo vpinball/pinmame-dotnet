@@ -370,12 +370,18 @@ jobs:
   pack-dotnet:
     name: Pack .NET wrapper
     runs-on: ubuntu-latest
-    needs: [ version, build-dotnet ]
+    needs: [ version, build-dotnet, pack-nuget ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '3.1.x'
+
+      - name: Download native NuGet packages
+        uses: actions/download-artifact@v4
+        with:
+          name: nupkg
+          path: native/nuget/nupkg
 
       - name: Build and pack .NET wrapper
         run: |
@@ -390,6 +396,7 @@ jobs:
           dotnet pack -c Release -p:TargetOS=Windows \
             -p:PackageVersion=${{ needs.version.outputs.pinmame_dotnet_version }} \
             -p:PinMameNativePackageVersion=${{ needs.version.outputs.pinmame_native_version }} \
+            -p:RestoreSources="https://api.nuget.org/v3/index.json;$(pwd)/../../native/nuget/nupkg" \
             -o nupkg
 
       - name: Upload .NET wrapper package
