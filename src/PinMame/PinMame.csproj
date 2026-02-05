@@ -41,10 +41,10 @@
   </ItemGroup>
   <!-- Include .NET Standard packages on macOS, iOS, Linux, and Android -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\OSX\PinMame.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.1" />
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\iOS\PinMame.dll" Pack="true" PackagePath="runtimes\ios\lib\netstandard2.1" />
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\Linux\PinMame.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.1" />
-    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\Android\PinMame.dll" Pack="true" PackagePath="runtimes\android\lib\netstandard2.1" />
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\OSX\PinMameDotNet.dll" Pack="true" PackagePath="runtimes\osx\lib\netstandard2.1" />
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\iOS\PinMameDotNet.dll" Pack="true" PackagePath="runtimes\ios\lib\netstandard2.1" />
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\Linux\PinMameDotNet.dll" Pack="true" PackagePath="runtimes\linux\lib\netstandard2.1" />
+    <None Include="$(MSBuildThisFileDirectory)bin\$(Platform)\$(Configuration)\netstandard2.1\Android\PinMameDotNet.dll" Pack="true" PackagePath="runtimes\android\lib\netstandard2.1" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt" />
