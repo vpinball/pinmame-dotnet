@@ -20,6 +20,7 @@ defaults:
     shell: bash
 
 jobs:
+
   version:
     name: Calculate Version
     runs-on: ubuntu-latest
@@ -77,7 +78,7 @@ jobs:
           echo "PinMameDotNet Version: ${PINMAME_DOTNET_VERSION}"
           echo "Is Release: ${IS_RELEASE}"
           echo "Last Tag: ${LAST_TAG}"
-          echo "Commits Since Tag: ${COMMITS_SINCE_TAG}"
+          echo "Commits Since Tag: ${COMMITS_SINCE_TAG}" 
 
   build-pinmame:
     name: Build libpinmame-${{ matrix.platform }}-${{ matrix.arch }}
@@ -325,6 +326,7 @@ jobs:
 
           cd src/PinMame.Tests
           dotnet test -r ${{ matrix.rid }}
+
 
   pack-nuget:
     name: Pack NuGet packages
