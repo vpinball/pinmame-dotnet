@@ -1,6 +1,6 @@
 # PinMAME for .NET
 
-[![CI status (x64 Linux, Android, iOS, macOS and Windows)](https://github.com/vpinball/pinmame-dotnet/actions/workflows/build-and-publish.yml/badge.svg?branch=master)](https://github.com/VisualPinball/pinmame-dotnet/actions) 
+[![CI status (x64 Linux, Android, iOS, macOS and Windows)](https://github.com/vpinball/pinmame-dotnet/actions/workflows/build-and-publish.yml/badge.svg?branch=master)](https://github.com/vpinball/pinmame-dotnet/actions) 
 [![NuGet](https://img.shields.io/nuget/vpre/PinMame.svg)](https://www.nuget.org/packages/PinMame)
 
 *Add PinMAME support to any .NET application*
@@ -120,7 +120,7 @@ To remove a mech:
 _pinMame.SetMech(0, null);
 ```
 
-See the [example project](https://github.com/VisualPinball/pinmame-dotnet/blob/master/src/PinMame.Example/Example.cs) for more information.
+See the [example project](https://github.com/vpinball/pinmame-dotnet/blob/master/src/PinMame.Example/Example.cs) for more information.
 
 ## Versioning
 
@@ -169,7 +169,7 @@ This repository uses a git submodule for the PinMAME source. To clone and build:
 
 ```bash
 # Clone with submodules
-git clone --recursive https://github.com/VisualPinball/pinmame-dotnet.git
+git clone --recursive https://github.com/vpinball/pinmame-dotnet.git
 
 # Or if you already cloned without --recursive
 git submodule update --init --recursive
