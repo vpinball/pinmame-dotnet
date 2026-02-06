@@ -409,6 +409,20 @@ namespace PinMame
 		}
 
 		/// <summary>
+		/// Best-effort stop without requiring an initialized managed instance.
+		/// Useful in Unity editor playmode transitions where the scripting domain may reload.
+		/// </summary>
+		public static void StopRunningGame()
+		{
+			try {
+				PinMameApi.Stop();
+			}
+			catch {
+				// Best effort; native library may not be loaded.
+			}
+		}
+
+		/// <summary>
 		/// Pauses a game.
 		/// </summary>
 		/// <exception cref="InvalidOperationException"></exception>
