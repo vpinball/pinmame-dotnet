@@ -363,3 +363,6 @@ FodyWeavers.xsd
 .DS_Store
 
 Build
+.idea
+.claude
+CLAUDE.md

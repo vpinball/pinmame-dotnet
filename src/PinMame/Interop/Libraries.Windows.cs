@@ -31,8 +31,10 @@
 
 namespace PinMame.Interop
 {
-	internal static partial class Libraries
+	internal static class Libraries
 	{
-		internal const string PinMame = "libpinmame-3.5.dll";
+		// Base library name - actual resolution happens at runtime
+		// See LibraryResolver for architecture-specific DLL selection
+		internal const string PinMame = "pinmame";
 	}
 }

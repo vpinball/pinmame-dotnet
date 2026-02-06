@@ -8,7 +8,7 @@
 This NuGet package provides a .NET binding for [PinMAME](https://github.com/vpinball/pinmame),
 an emulator for solid state pinball machines. It uses the cross-platform [LibPinMAME](https://github.com/vpinball/pinmame/tree/master/src/libpinmame).
 
-This package is automatically built and published when the main project, PinMAME, is updated.
+This package is built from the pinmame git submodule and automatically published on each push to master.
 
 ## Supported Platforms
 
@@ -121,6 +121,77 @@ _pinMame.SetMech(0, null);
 ```
 
 See the [example project](https://github.com/VisualPinball/pinmame-dotnet/blob/master/src/PinMame.Example/Example.cs) for more information.
+
+## Versioning
+
+This project maintains **two separate versions**:
+
+### 1. PinMAME Native Version
+
+Defined in `Directory.Build.props` as `PinMameNativeVersion` (e.g., `3.7.0`)
+- Used for native DLL naming: `libpinmame.3.7.0.dylib`, `libpinmame.so.3.7.0`
+- Update this when updating the pinmame submodule to a new upstream release
+
+### 2. PinMameDotNet Version (Git Tag-Based)
+
+Automatically calculated from git tags:
+
+- **Release (tag pushed)**: `git tag v0.3.0 && git push origin v0.3.0`
+  - Builds as `0.3.0` and publishes to NuGet
+
+- **Development builds** (commits after tag):
+  - 1st commit after `v0.3.0` → `0.3.1.0`
+  - 2nd commit after `v0.3.0` → `0.3.1.1`
+  - 3rd commit after `v0.3.0` → `0.3.1.2`
+  - etc.
+
+- **Next release**: `git tag v0.4.0 && git push origin v0.4.0`
+  - Builds as `0.4.0` and publishes to NuGet
+  - Cycle repeats: `0.4.1.0`, `0.4.1.1`, etc.
+
+**Publishing:** Only releases (tagged versions) are published to NuGet automatically. Development builds are built and tested but not published.
+
+### Native vs .NET Package Versions
+
+- **Native packages** (`PinMame.Native.*`) are versioned with `PinMameNativeVersion` (e.g., `3.7.0-beta1`)
+  - Only republished when the native version changes in `Directory.Build.props`
+  - Skipped if that native version already exists on NuGet
+
+- **.NET wrapper** (`PinMame`) is versioned with git tags (e.g., `0.3.0`)
+  - Has a dependency on the corresponding native package version
+  - Published on every tagged release
+
+This means you can release new .NET wrapper versions without rebuilding/republishing unchanged native libraries.
+
+## Building from Source
+
+This repository uses a git submodule for the PinMAME source. To clone and build:
+
+```bash
+# Clone with submodules
+git clone --recursive https://github.com/VisualPinball/pinmame-dotnet.git
+
+# Or if you already cloned without --recursive
+git submodule update --init --recursive
+```
+
+The GitHub Actions workflow `build-and-publish.yml` builds libpinmame for all platforms and creates NuGet packages. To build locally:
+
+```bash
+# Build libpinmame for your platform
+cd pinmame
+cp cmake/libpinmame/CMakeLists.txt .
+cmake -DPLATFORM=<platform> -DARCH=<arch> -DCMAKE_BUILD_TYPE=Release -B build
+cmake --build build
+
+# Build the .NET wrapper
+cd ../src/PinMame.Tests
+dotnet build -c Release -r <rid>
+dotnet test -r <rid>
+```
+
+Where `<platform>` is one of: `win`, `macos`, `linux`, `android`, `ios`
+And `<rid>` is one of: `win-x64`, `win-x86`, `osx-x64`, `osx-arm64`, `linux-x64`, `android-arm64-v8a`, `ios-arm64`
 
 ## License
 

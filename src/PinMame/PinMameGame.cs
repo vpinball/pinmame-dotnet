@@ -90,7 +90,7 @@ namespace PinMame
 
 		internal PinMameGame(IntPtr gamePtr)
 		{
-			var game = (PinMameApi.PinmameGame)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.PinmameGame));
+			var game = (PinMameApi.Game)Marshal.PtrToStructure(gamePtr, typeof(PinMameApi.Game));
 
 			Name = game.name;
 			Description = game.description;
