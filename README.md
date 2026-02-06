@@ -1,6 +1,6 @@
 # PinMAME for .NET
 
-[![CI status (x64 Linux, Android, iOS, macOS and Windows)](https://github.com/VisualPinball/pinmame-dotnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/VisualPinball/pinmame-dotnet/actions) 
+[![CI status (x64 Linux, Android, iOS, macOS and Windows)](https://github.com/vpinball/pinmame-dotnet/actions/workflows/build-and-publish.yml/badge.svg?branch=master)](https://github.com/VisualPinball/pinmame-dotnet/actions) 
 [![NuGet](https://img.shields.io/nuget/vpre/PinMame.svg)](https://www.nuget.org/packages/PinMame)
 
 *Add PinMAME support to any .NET application*
@@ -132,7 +132,7 @@ Defined in `Directory.Build.props` as `PinMameNativeVersion` (e.g., `3.7.0`)
 - Used for native DLL naming: `libpinmame.3.7.0.dylib`, `libpinmame.so.3.7.0`
 - Update this when updating the pinmame submodule to a new upstream release
 
-### 2. PinMameDotNet Version (Git Tag-Based)
+### 2. PinMameDotNet Version (git tag-based)
 
 Automatically calculated from git tags:
 
