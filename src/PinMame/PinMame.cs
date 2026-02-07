@@ -33,6 +33,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -182,7 +183,11 @@ namespace PinMame
 		/// <summary>
 		/// Returns whether a game is currently running.
 		/// </summary>
-		public static bool IsRunning => PinMameApi.IsRunning() == 1;
+		// LibPinMAME's PinmameIsRunning() returns a run state, not a strict boolean.
+		// Observed states: 0 = stopped, 1 = running, 3 = stopping.
+		public static bool IsRunning => PinMameApi.IsRunning() != 0;
+
+		public static int RunState => PinMameApi.IsRunning();
 
 		/// <summary>
 		/// Returns the hardware generation
@@ -190,12 +195,22 @@ namespace PinMame
 		/// <returns>Value of the hardware generation</returns>
 		public static PinMameHardwareGen CurrentHardwareGen => (PinMameHardwareGen)PinMameApi.GetHardwareGen();
 
-		private readonly PinMameApi.Config _config;
+		private PinMameApi.Config _config;
 		private int[] _changedLamps;
 		private int[] _changedGIs;
 		private readonly Dictionary<int, PinMameDisplayLayout> _availableDisplays = new Dictionary<int, PinMameDisplayLayout>();
 
 		private static PinMame _instance;
+
+		/// <summary>
+		/// Resets the managed singleton instance.
+		/// Intended for long-lived hosts (e.g. Unity Editor) where the process stays alive across sessions.
+		/// Native PinMAME is still a singleton; this only forces a fresh managed wrapper + config.
+		/// </summary>
+		public static void ResetInstance()
+		{
+			_instance = null;
+		}
 		private CancellationTokenSource _availableDisplaysToken;
 
 		private const int DisplayAvailableTimeoutMs = 1000;
@@ -241,6 +256,15 @@ namespace PinMame
 				onConsoleDataUpdated = OnConsoleDataUpdatedCallbackPInvoke,
 				isKeyPressed = IsKeyPressedFunctionPInvoke,
 			};
+			PinMameApi.SetConfig(ref _config);
+		}
+
+		/// <summary>
+		/// Re-applies the current config to the native library.
+		/// Useful when the hosting runtime keeps the process alive across sessions (e.g. Unity Editor with Domain Reload disabled).
+		/// </summary>
+		public void ApplyConfig()
+		{
 			PinMameApi.SetConfig(ref _config);
 		}
 
@@ -405,7 +429,7 @@ namespace PinMame
 		public void StopGame()
 		{
 			Logger.Info("StopGame");
-			PinMameApi.Stop();
+			StopCore();
 		}
 
 		/// <summary>
@@ -414,11 +438,32 @@ namespace PinMame
 		/// </summary>
 		public static void StopRunningGame()
 		{
+			StopCore();
+		}
+
+		private static int _stopInProgress;
+
+		public static bool IsStopInProgress => System.Threading.Volatile.Read(ref _stopInProgress) != 0;
+
+		private static void StopCore()
+		{
+			// PinMAME is process-global; Stop can block and must not run concurrently.
+			// If another stop is in-flight, wait a little and then try to stop again.
+			var sw = Stopwatch.StartNew();
+			while (System.Threading.Interlocked.CompareExchange(ref _stopInProgress, 1, 0) != 0) {
+				if (sw.ElapsedMilliseconds > 5000) {
+					return;
+				}
+				System.Threading.Thread.Sleep(1);
+			}
 			try {
 				PinMameApi.Stop();
 			}
 			catch {
 				// Best effort; native library may not be loaded.
+			}
+			finally {
+				System.Threading.Volatile.Write(ref _stopInProgress, 0);
 			}
 		}
 
