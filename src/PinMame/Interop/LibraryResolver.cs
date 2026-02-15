@@ -32,6 +32,7 @@
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using NLog;
 
 namespace PinMame.Interop
 {
@@ -41,6 +42,10 @@ namespace PinMame.Interop
 	/// </summary>
 	internal static class LibraryResolver
 	{
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+		private const string LogPrefix = "[PinMAME]";
+		private static int _loggedResolved;
+
 		private static bool _isInitialized;
 
 		// These types/methods only exist on some runtimes (.NET Core 3+/ .NET 5+).
@@ -77,11 +82,41 @@ namespace PinMame.Interop
 				return IntPtr.Zero;
 			}
 
+			// Default behavior: pinmame64.dll on x64, pinmame.dll otherwise.
 			var resolvedName = RuntimeInformation.ProcessArchitecture == Architecture.X64
 				? "pinmame64.dll"
 				: "pinmame.dll";
 
-			return TryLoadLibrary(resolvedName, assembly, searchPath);
+			var handle = TryLoadLibrary(resolvedName, assembly, searchPath);
+			if (handle != IntPtr.Zero) {
+				LogResolvedOnce(resolvedName, handle);
+			}
+			return handle;
+		}
+
+		private static void LogResolvedOnce(string libraryName, IntPtr handle)
+		{
+			if (System.Threading.Interlocked.Exchange(ref _loggedResolved, 1) != 0) {
+				return;
+			}
+			try {
+				var path = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+					? GetWindowsModulePath(handle)
+					: null;
+				Logger.Info($"{LogPrefix} [pinmame-dotnet] Resolved native '{libraryName}' => '{path ?? "<unknown>"}' (0x{handle.ToInt64():X})");
+			} catch {
+				// ignore
+			}
+		}
+
+		[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+		private static extern uint GetModuleFileNameW(IntPtr hModule, char[] lpFilename, uint nSize);
+
+		private static string GetWindowsModulePath(IntPtr hModule)
+		{
+			var buffer = new char[2048];
+			var len = GetModuleFileNameW(hModule, buffer, (uint)buffer.Length);
+			return len == 0 ? null : new string(buffer, 0, (int)len);
 		}
 
 		private static IntPtr TryLoadLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
