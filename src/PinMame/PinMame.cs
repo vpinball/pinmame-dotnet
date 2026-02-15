@@ -230,7 +230,7 @@ namespace PinMame
 
 		private PinMame(PinMameAudioFormat audioFormat, int sampleRate, string vpmPath)
 		{
-			Logger.Info($"PinMame - audioFormat={audioFormat}, sampleRate={sampleRate}, vpmPath={vpmPath}");
+			Logger.Info($"PinMame - audioFormat={audioFormat}, sampleRate={sampleRate}, vpmPath={vpmPath}, callbackAbi=v2-userdata-stdcall");
 
 			var path = vpmPath ?? GetVpmPath();
 			if (path == null) {
@@ -346,9 +346,9 @@ namespace PinMame
 			Logger.Info($"GetGame: name={name}");
 
 			PinMameGame game = null;
-			var status = PinMameApi.GetGame(name, gamePtr => {
+			var status = PinMameApi.GetGame(name, (gamePtr, userData) => {
 				game = new PinMameGame(gamePtr);
-			});
+			}, IntPtr.Zero);
 
 			if (status != PinMameApi.Status.OK) {
 				throw new InvalidOperationException($"Unable to get game, name={name}, status={status}");
@@ -366,7 +366,7 @@ namespace PinMame
 			var games = new Dictionary<string, PinMameGame>(); // game name -> game
 			var clones = new List<(string, PinMameGame)>();    // parent game name -> game
 
-			var status = PinMameApi.GetGames(gamePtr => {
+			var status = PinMameApi.GetGames((gamePtr, userData) => {
 				var game = new PinMameGame(gamePtr);
 
 				if (string.IsNullOrEmpty(game.CloneOf)) {
@@ -375,7 +375,7 @@ namespace PinMame
 				} else {
 					clones.Add((game.CloneOf, game));
 				}
-			});
+			}, IntPtr.Zero);
 
 			if (status != PinMameApi.Status.OK) {
 				throw new InvalidOperationException($"Unable to get games, status={status}");
@@ -400,12 +400,12 @@ namespace PinMame
 		public IEnumerable<PinMameGame> GetFoundGames()
 		{
 			var games = new List<PinMameGame>();
-			var status = PinMameApi.GetGames(gamePtr => {
+			var status = PinMameApi.GetGames((gamePtr, userData) => {
 				var game = new PinMameGame(gamePtr);
 				if (game.RomFound) {
 					games.Add(game);
 				}
-			});
+			}, IntPtr.Zero);
 
 			if (status != PinMameApi.Status.OK) {
 				throw new InvalidOperationException($"Unable to get games, status={status}");
@@ -452,14 +452,31 @@ namespace PinMame
 			var sw = Stopwatch.StartNew();
 			while (System.Threading.Interlocked.CompareExchange(ref _stopInProgress, 1, 0) != 0) {
 				if (sw.ElapsedMilliseconds > 5000) {
+					Logger.Warn("Stop skipped after waiting 5000ms for another stop to finish.");
 					return;
 				}
 				System.Threading.Thread.Sleep(1);
 			}
 			try {
-				PinMameApi.Stop();
+				var attempt = 0;
+				do {
+					attempt++;
+					PinMameApi.Stop();
+					if (!IsRunning) {
+						break;
+					}
+					if (attempt == 1 || attempt % 10 == 0) {
+						Logger.Warn($"Stop attempt {attempt} returned but run state is still {RunState}.");
+					}
+					System.Threading.Thread.Sleep(10);
+				} while (sw.ElapsedMilliseconds < 5000);
+
+				if (IsRunning) {
+					Logger.Error($"Stop timed out after {sw.ElapsedMilliseconds}ms with run state {RunState}.");
+				}
 			}
-			catch {
+			catch (Exception e) {
+				Logger.Warn(e, "Stop raised an exception.");
 				// Best effort; native library may not be loaded.
 			}
 			finally {
@@ -496,7 +513,7 @@ namespace PinMame
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.OnStateUpdatedCallback))]
-		private static void OnStateUpdatedCallbackPInvoke(int state)
+		private static void OnStateUpdatedCallbackPInvoke(int state, IntPtr userData)
 		{
 			_instance.OnStateUpdatedCallback(state);
 		}
@@ -518,7 +535,7 @@ namespace PinMame
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.OnDisplayAvailableCallback))]
-		private static void OnDisplayAvailableCallbackPInvoke(int index, int displayCount, ref PinMameApi.DisplayLayout displayLayoutRef)
+		private static void OnDisplayAvailableCallbackPInvoke(int index, int displayCount, ref PinMameApi.DisplayLayout displayLayoutRef, IntPtr userData)
 		{
 			_instance.OnDisplayAvailableCallback(index, displayCount, ref displayLayoutRef);
 		}
@@ -533,22 +550,27 @@ namespace PinMame
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.OnDisplayUpdatedCallback))]
-		private static void OnDisplayUpdatedCallbackPInvoke(int index, IntPtr framePtr, ref PinMameApi.DisplayLayout displayLayoutRef)
+		private static void OnDisplayUpdatedCallbackPInvoke(int index, IntPtr framePtr, ref PinMameApi.DisplayLayout displayLayoutRef, IntPtr userData)
 		{
 			_instance.OnDisplayUpdatedCallback(index, framePtr, ref displayLayoutRef);
 		}
 
 		private void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref PinMameApi.DisplayLayout displayLayoutRef)
 		{
-			var displayLayout = new PinMameDisplayLayout(displayLayoutRef);
+			try {
+				var displayLayout = new PinMameDisplayLayout(displayLayoutRef);
 
-			Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayLayout={displayLayout}");
+				Logger.Trace($"OnDisplayUpdatedCallback - index={index}, displayLayout={displayLayout}");
 
-			OnDisplayUpdated?.Invoke(index, framePtr, displayLayout);
+				OnDisplayUpdated?.Invoke(index, framePtr, displayLayout);
+			}
+			catch (Exception e) {
+				Logger.Error(e, $"OnDisplayUpdated callback failed. index={index}");
+			}
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.OnAudioAvailableCallback))]
-		private static int OnAudioAvailableCallbackPInvoke(ref PinMameApi.AudioInfo audioInfoRef)
+		private static int OnAudioAvailableCallbackPInvoke(ref PinMameApi.AudioInfo audioInfoRef, IntPtr userData)
 		{
 			return _instance.OnAudioAvailableCallback(ref audioInfoRef);
 		}
@@ -563,20 +585,26 @@ namespace PinMame
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.OnAudioUpdatedCallback))]
-		private static int OnAudioUpdatedCallbackPInvoke(IntPtr bufferPtr, int samples)
+		private static int OnAudioUpdatedCallbackPInvoke(IntPtr bufferPtr, int samples, IntPtr userData)
 		{
 			return _instance.OnAudioUpdatedCallback(bufferPtr, samples);
 		}
 
 		private int OnAudioUpdatedCallback(IntPtr bufferPtr, int samples)
 		{
-			Logger.Trace($"OnAudioUpdatedCallback - samples={samples}");
+			try {
+				Logger.Trace($"OnAudioUpdatedCallback - samples={samples}");
 
-			return OnAudioUpdated?.Invoke(bufferPtr, samples) ?? 0;
+				return OnAudioUpdated?.Invoke(bufferPtr, samples) ?? 0;
+			}
+			catch (Exception e) {
+				Logger.Error(e, $"OnAudioUpdated callback failed. samples={samples}");
+				return 0;
+			}
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.OnMechAvailableCallback))]
-		private static void OnMechAvailableCallbackPInvoke(int mechNo, ref PinMameApi.MechInfo mechInfoRef)
+		private static void OnMechAvailableCallbackPInvoke(int mechNo, ref PinMameApi.MechInfo mechInfoRef, IntPtr userData)
 		{
 			_instance.OnMechAvailableCallback(mechNo, ref mechInfoRef);
 		}
@@ -591,7 +619,7 @@ namespace PinMame
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.OnMechUpdatedCallback))]
-		private static void OnMechUpdatedCallbackPInvoke(int mechNo, ref PinMameApi.MechInfo mechInfoRef)
+		private static void OnMechUpdatedCallbackPInvoke(int mechNo, ref PinMameApi.MechInfo mechInfoRef, IntPtr userData)
 		{
 			_instance.OnMechUpdatedCallback(mechNo, ref mechInfoRef);
 		}
@@ -606,20 +634,25 @@ namespace PinMame
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.OnSolenoidUpdatedCallback))]
-		private static void OnSolenoidUpdatedCallbackPInvoke(int solenoid, int isActive)
+		private static void OnSolenoidUpdatedCallbackPInvoke(ref PinMameApi.SolenoidState solenoidState, IntPtr userData)
 		{
-			_instance.OnSolenoidUpdatedCallback(solenoid, isActive);
+			_instance.OnSolenoidUpdatedCallback(solenoidState.solNo, solenoidState.state);
 		}
 
 		private void OnSolenoidUpdatedCallback(int solenoid, int isActive)
 		{ 
-			Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
+			try {
+				Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
 
-			OnSolenoidUpdated?.Invoke(solenoid, isActive == 1);
+				OnSolenoidUpdated?.Invoke(solenoid, isActive == 1);
+			}
+			catch (Exception e) {
+				Logger.Error(e, $"OnSolenoidUpdated callback failed. solenoid={solenoid}");
+			}
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.OnConsoleDataUpdatedCallback))]
-		private static void OnConsoleDataUpdatedCallbackPInvoke(IntPtr dataPtr, int size)
+		private static void OnConsoleDataUpdatedCallbackPInvoke(IntPtr dataPtr, int size, IntPtr userData)
 		{
 			_instance.OnConsoleDataUpdatedCallback(dataPtr, size);
 		}
@@ -632,7 +665,7 @@ namespace PinMame
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.IsKeyPressedFunction))]
-		private static int IsKeyPressedFunctionPInvoke(PinMameApi.Keycode keycode)
+		private static int IsKeyPressedFunctionPInvoke(PinMameApi.Keycode keycode, IntPtr userData)
 		{
 			return _instance.IsKeyPressedFunction(keycode);
 		}

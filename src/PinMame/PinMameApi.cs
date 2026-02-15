@@ -726,19 +726,34 @@ namespace PinMame
 
 		#region Delegates
 
-		internal delegate void GameCallback(IntPtr gamePtr);
-		internal delegate void OnStateUpdatedCallback(int change);
-		internal delegate void OnDisplayAvailableCallback(int index, int displayCount, ref DisplayLayout displayLayout);
-		internal delegate void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref DisplayLayout displayLayout);
-		internal delegate int OnAudioAvailableCallback(ref AudioInfo audioInfo);
-		internal delegate int OnAudioUpdatedCallback(IntPtr bufferPtr, int samples);
-		internal delegate void OnMechAvailableCallback(int mechNo, ref MechInfo mechInfo);
-		internal delegate void OnMechUpdatedCallback(int mechNo, ref MechInfo mechInfo);
-		internal delegate void OnSolenoidUpdatedCallback(int solenoid, int isActive);
-		internal delegate void OnConsoleDataUpdatedCallback(IntPtr dataPtr, int size);
-		internal delegate int IsKeyPressedFunction(Keycode keycode);
-		internal delegate void OnLogMessageCallback(LogLevel logLevel, string format, string args);
-		internal delegate void OnSoundCommandCallback(int boardNo, int cmd);
+		// NOTE: LibPinMAME callback ABI (Windows): __stdcall and includes a trailing userData pointer.
+		// See pinmame/src/libpinmame/libpinmame.h (PINMAMECALLBACK).
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void GameCallback(IntPtr gamePtr, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void OnStateUpdatedCallback(int change, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void OnDisplayAvailableCallback(int index, int displayCount, ref DisplayLayout displayLayout, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void OnDisplayUpdatedCallback(int index, IntPtr framePtr, ref DisplayLayout displayLayout, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate int OnAudioAvailableCallback(ref AudioInfo audioInfo, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate int OnAudioUpdatedCallback(IntPtr bufferPtr, int samples, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void OnMechAvailableCallback(int mechNo, ref MechInfo mechInfo, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void OnMechUpdatedCallback(int mechNo, ref MechInfo mechInfo, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void OnSolenoidUpdatedCallback(ref SolenoidState solenoidState, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void OnConsoleDataUpdatedCallback(IntPtr dataPtr, int size, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate int IsKeyPressedFunction(Keycode keycode, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void OnLogMessageCallback(LogLevel logLevel, string format, IntPtr args, IntPtr userData);
+		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
+		internal delegate void OnSoundCommandCallback(int boardNo, int cmd, IntPtr userData);
 
 		#endregion
 
@@ -777,10 +792,10 @@ namespace PinMame
 
 		#region Game library functions
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetGame")]
-		internal static extern Status GetGame(string name, GameCallback callback);
+		internal static extern Status GetGame(string name, GameCallback callback, IntPtr userData);
 
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetGames")]
-		internal static extern Status GetGames(GameCallback callback);
+		internal static extern Status GetGames(GameCallback callback, IntPtr userData);
 		#endregion
 
 		#region Options related functions
