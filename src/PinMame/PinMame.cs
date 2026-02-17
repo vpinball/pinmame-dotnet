@@ -190,6 +190,12 @@ namespace PinMame
 		public static int RunState => PinMameApi.IsRunning();
 
 		/// <summary>
+		/// Sets a time fence where emulation is suspended when reached until the fence moves forward.
+		/// </summary>
+		/// <param name="timeInS">Absolute fence time in seconds.</param>
+		public static void SetTimeFence(double timeInS) => PinMameApi.SetTimeFence(timeInS);
+
+		/// <summary>
 		/// Returns the hardware generation
 		/// </summary>
 		/// <returns>Value of the hardware generation</returns>
