@@ -301,6 +301,17 @@ namespace PinMame
 		public void SetHandleMechanics(int handleMechanics) => PinMameApi.SetHandleMechanics(handleMechanics);
 
 		/// <summary>
+		/// Returns the DMD frame data mode.
+		/// </summary>
+		public PinMameDmdMode GetDmdMode() => (PinMameDmdMode)PinMameApi.GetDmdMode();
+
+		/// <summary>
+		/// Sets whether DMD callbacks return brightness or raw frame data.
+		/// </summary>
+		/// <param name="dmdMode">New DMD frame data mode.</param>
+		public void SetDmdMode(PinMameDmdMode dmdMode) => PinMameApi.SetDmdMode((PinMameApi.DmdMode)dmdMode);
+
+		/// <summary>
 		/// Starts a new game. <p/>
 		///
 		/// When the game has successfully started, the <see cref="OnGameStarted"/> event is triggered.

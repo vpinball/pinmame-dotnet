@@ -44,6 +44,12 @@ namespace PinMame
 		AudioFormatFloat = PinMameApi.AudioFormat.FLOAT
 	}
 
+	public enum PinMameDmdMode
+	{
+		Brightness = PinMameApi.DmdMode.BRIGHTNESS,
+		Raw = PinMameApi.DmdMode.RAW
+	}
+
 	[Flags]
 	public enum PinMameDisplayType
 	{
