@@ -138,10 +138,13 @@ jobs:
           fi
 
           if [[ "${{ matrix.platform }}" == "win" ]]; then
+             # Let CMake pick the default (newest installed) Visual Studio generator on
+             # the runner instead of hardcoding one, so a runner-image bump that drops an
+             # older VS toolset doesn't break the build. -A selects the target platform.
              if [[ "${{ matrix.arch }}" == "x64" ]]; then
-                cmake -G "Visual Studio 17 2022" -DPLATFORM=${{ matrix.platform }} -DARCH=${{ matrix.arch }} -B build
+                cmake -A x64 -DPLATFORM=${{ matrix.platform }} -DARCH=${{ matrix.arch }} -B build
              elif [[ "${{ matrix.arch }}" == "x86" ]]; then
-                cmake -G "Visual Studio 17 2022" -A Win32 -DPLATFORM=${{ matrix.platform }} -DARCH=${{ matrix.arch }} -B build
+                cmake -A Win32 -DPLATFORM=${{ matrix.platform }} -DARCH=${{ matrix.arch }} -B build
              fi
              cmake --build build --config Release
           else
