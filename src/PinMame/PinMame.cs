@@ -92,9 +92,13 @@ namespace PinMame
 		public delegate void OnMechUpdatedEventHandler(int mechNo, PinMameMechInfo mechInfo);
 
 		/// <summary>
-		/// A delegate, called when a solenoid is updated.
+		/// A delegate, called when a solenoid is updated. <paramref name="value"/> is the
+		/// raw PinMAME output state: 0/1 for binary solenoids, or 0-255 for PWM-integrated
+		/// (modulated) solenoids when the driver enables modulated solenoid output (e.g.
+		/// WPC/SAM). Treat <c>value &gt; 0</c> as energized; the magnitude is the duty-cycle
+		/// strength.
 		/// </summary>
-		public delegate void OnSolenoidUpdatedEventHandler(int solenoid, bool isActive);
+		public delegate void OnSolenoidUpdatedEventHandler(int solenoid, int value);
 
 		/// <summary>
 		/// A delegate, called when console data is updated.
@@ -645,12 +649,12 @@ namespace PinMame
 			_instance.OnSolenoidUpdatedCallback(solenoidState.solNo, solenoidState.state);
 		}
 
-		private void OnSolenoidUpdatedCallback(int solenoid, int isActive)
-		{ 
+		private void OnSolenoidUpdatedCallback(int solenoid, int value)
+		{
 			try {
-				Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, isActive={isActive}");
+				Logger.Debug($"OnSolenoidUpdatedCallback - solenoid={solenoid}, value={value}");
 
-				OnSolenoidUpdated?.Invoke(solenoid, isActive == 1);
+				OnSolenoidUpdated?.Invoke(solenoid, value);
 			}
 			catch (Exception e) {
 				Logger.Error(e, $"OnSolenoidUpdated callback failed. solenoid={solenoid}");

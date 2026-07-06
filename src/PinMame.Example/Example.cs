@@ -240,9 +240,9 @@ namespace PinMame
 			Logger.Info($"OnMechUpdated: mechNo={mechNo}, mechInfo={mechInfo}, sw33={_pinMame.GetSwitch(33)}, sw32={_pinMame.GetSwitch(32)}");
 		}
 
-		static void OnSolenoidUpdated(int solenoid, bool isActive)
+		static void OnSolenoidUpdated(int solenoid, int value)
 		{
-			Logger.Info($"OnSolenoidUpdated: solenoid={solenoid}, isActive={isActive}");
+			Logger.Info($"OnSolenoidUpdated: solenoid={solenoid}, value={value}");
 		}
 
 		static void OnConsoleDataUpdated(IntPtr dataPtr, int size)
