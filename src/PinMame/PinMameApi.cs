@@ -68,7 +68,8 @@ namespace PinMame
 			GAME_ALREADY_RUNNING = 3,
 			EMULATOR_NOT_RUNNING = 4,
 			MECH_HANDLE_MECHANICS = 5,
-			MECH_NO_INVALID = 6
+			MECH_NO_INVALID = 6,
+			FILE_TYPE_INVALID = 7
 		}
 
 		internal enum FileType
@@ -787,7 +788,10 @@ namespace PinMame
 		internal static extern void SetConfig(ref Config config);
 
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetPath")]
-		internal static extern void SetPath(ref FileType fileType, string path);
+		internal static extern Status SetPath(FileType fileType, string path);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetPath")]
+		internal static extern IntPtr GetPath(FileType fileType);
 		#endregion
 
 		#region Game library functions

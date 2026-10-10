@@ -65,6 +65,17 @@ var _pinMame = PinMame.PinMame.Instance();
 _pinMame.StartGame("t2_l8");
 ```
 
+Without arguments, `Instance()` uses the folder Visual PinMAME is installed with. To be independent of it, pass your own folder, which holds `roms`, `nvram`, `cfg` etc., and optionally move single folders elsewhere:
+
+```cs
+var _pinMame = PinMame.PinMame.Instance(vpmPath: @"C:\MyApp\PinMAME");
+
+// ROMs from a separate folder, e.g. the one Visual PinMAME uses, if any
+_pinMame.RomPath = PinMame.PinMame.FindVpmRomPath() ?? @"D:\ROMs";
+```
+
+Paths set this way are kept when the config is re-applied, and setting `null` goes back to the default below `vpmPath`. `SetPath()` and `GetPath()` do the same for NVRAM, samples, config and high scores.
+
 You can add event handlers for:
 
 - `OnGameStarted`
