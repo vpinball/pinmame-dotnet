@@ -71,7 +71,7 @@ Without arguments, `Instance()` uses the folder Visual PinMAME is installed with
 var _pinMame = PinMame.PinMame.Instance(vpmPath: @"C:\MyApp\PinMAME");
 
 // ROMs from a separate folder, e.g. the one Visual PinMAME uses, if any
-_pinMame.RomPath = PinMame.PinMame.FindVpmRomPath() ?? @"D:\ROMs";
+_pinMame.RomPath = PinMame.PinMame.FindVpmPath(PinMameFileType.Roms) ?? @"D:\ROMs";
 ```
 
 Paths set this way are kept when the config is re-applied, and setting `null` goes back to the default below `vpmPath`. `SetPath()` and `GetPath()` do the same for NVRAM, samples, config and high scores.
