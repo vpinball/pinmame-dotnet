@@ -140,14 +140,16 @@ namespace PinMame
 		}
 
 		[TestMethod]
-		public void FindVpmRomPathOnlyReturnsExistingFolders()
+		public void FindVpmPathOnlyReturnsExistingFolders()
 		{
-			var romPath = PinMame.FindVpmRomPath();
-			if (romPath == null) {
-				return;
-			}
-			foreach (var folder in romPath.Split(';')) {
-				Assert.IsTrue(Directory.Exists(folder), folder);
+			foreach (PinMameFileType fileType in Enum.GetValues(typeof(PinMameFileType))) {
+				var path = PinMame.FindVpmPath(fileType);
+				if (path == null) {
+					continue;
+				}
+				foreach (var folder in path.Split(';')) {
+					Assert.IsTrue(Directory.Exists(folder), $"{fileType}: {folder}");
+				}
 			}
 		}
 	}

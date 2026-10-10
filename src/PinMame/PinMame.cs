@@ -341,26 +341,38 @@ namespace PinMame
 		public string GetPath(PinMameFileType fileType) => Marshal.PtrToStringAnsi(PinMameApi.GetPath((PinMameApi.FileType)fileType));
 
 		/// <summary>
-		/// Returns the ROM folder(s) Visual PinMAME is configured with, so a host can offer it as
-		/// default. Only reads the setting. Visual PinMAME doesn't need to be registered, and the
-		/// result doesn't depend on its folder layout.
+		/// Returns the folder(s) Visual PinMAME is configured with for a file type, so a host can
+		/// offer them as defaults or carry over VPM's NVRAM and high scores. Only reads VPM's
+		/// settings: VPM doesn't need to be registered, and each folder is read on its own, since
+		/// they don't have to sit next to each other.
 		/// </summary>
-		/// <returns>The existing folders of VPM's ROM path, separated by ';', or null when not on
-		/// Windows, not configured, or none of them exists.</returns>
-		public static string FindVpmRomPath()
+		/// <param name="fileType">Which folder to return.</param>
+		/// <returns>The existing folders, separated by ';', or null when not on Windows, not
+		/// configured, or none of them exists.</returns>
+		public static string FindVpmPath(PinMameFileType fileType)
 		{
 			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
 				return null;
 			}
 
+			string valueName;
+			switch (fileType) {
+				case PinMameFileType.Roms: valueName = "rompath"; break;
+				case PinMameFileType.Nvram: valueName = "nvram_directory"; break;
+				case PinMameFileType.Samples: valueName = "samplepath"; break;
+				case PinMameFileType.Config: valueName = "cfg_directory"; break;
+				case PinMameFileType.HighScore: valueName = "hiscore_directory"; break;
+				default: throw new ArgumentOutOfRangeException(nameof(fileType), fileType, null);
+			}
+
 			try {
 				using (var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Freeware\Visual PinMame\globals")) {
-					if (!(key?.GetValue("rompath") is string romPath)) {
+					if (!(key?.GetValue(valueName) is string path)) {
 						return null;
 					}
 
 					var folders = new List<string>();
-					foreach (var entry in Environment.ExpandEnvironmentVariables(romPath).Split(';')) {
+					foreach (var entry in Environment.ExpandEnvironmentVariables(path).Split(';')) {
 						var folder = entry.Trim();
 						if (folder.Length > 0 && Directory.Exists(folder)) {
 							folders.Add(folder);
@@ -370,7 +382,7 @@ namespace PinMame
 				}
 
 			} catch (Exception e) {
-				Logger.Warn($"Could not read the VPM ROM path: {e.Message}");
+				Logger.Warn($"Could not read VPM's {valueName}: {e.Message}");
 				return null;
 			}
 		}
