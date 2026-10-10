@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- PinMAME native library version (for DLL naming: libpinmame.3.7.0.dylib) -->
     <!-- Update this when updating the pinmame submodule to a new release -->
-    <PinMameNativeVersion>3.7.0-beta1</PinMameNativeVersion>
+    <PinMameNativeVersion>3.7.0-beta2</PinMameNativeVersion>
   </PropertyGroup>
 
   <!--
