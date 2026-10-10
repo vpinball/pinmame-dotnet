@@ -50,6 +50,38 @@ namespace PinMame
 		Raw = PinMameApi.DmdMode.RAW
 	}
 
+	/// <summary>
+	/// The kinds of files whose folder can be changed with <see cref="PinMame.SetPath"/>. Without
+	/// an override, each one is a folder below the VPM path.
+	/// </summary>
+	public enum PinMameFileType
+	{
+		/// <summary>
+		/// ROM sets, "roms" below the VPM path by default.
+		/// </summary>
+		Roms = PinMameApi.FileType.ROMS,
+
+		/// <summary>
+		/// Non-volatile RAM, "nvram" below the VPM path by default.
+		/// </summary>
+		Nvram = PinMameApi.FileType.NVRAM,
+
+		/// <summary>
+		/// Sound samples, "samples" below the VPM path by default.
+		/// </summary>
+		Samples = PinMameApi.FileType.SAMPLES,
+
+		/// <summary>
+		/// Per-game configuration, "cfg" below the VPM path by default.
+		/// </summary>
+		Config = PinMameApi.FileType.CONFIG,
+
+		/// <summary>
+		/// High scores, "hi" below the VPM path by default.
+		/// </summary>
+		HighScore = PinMameApi.FileType.HIGHSCORE
+	}
+
 	[Flags]
 	public enum PinMameDisplayType
 	{

@@ -175,9 +175,15 @@ namespace PinMame
 		public event IsKeyPressedEventHandler IsKeyPressed;
 
 		/// <summary>
-		/// Retrieves rom path which is vpmPath + roms.
+		/// The folder(s) searched for ROM sets, separated by ';'. That's "roms" below the VPM path
+		/// unless set otherwise. Setting null or an empty string goes back to that default.
 		/// </summary>
-		public string RomPath => _config.vpmPath + "roms";
+		/// <exception cref="InvalidOperationException">When set while a game is running.</exception>
+		public string RomPath
+		{
+			get => GetPath(PinMameFileType.Roms);
+			set => SetPath(PinMameFileType.Roms, value);
+		}
 
 		/// <summary>
 		/// The currently running game
@@ -233,7 +239,8 @@ namespace PinMame
 		/// </summary>
 		/// <param name="audioFormat">Audio format (Int16 / Float)</param>
 		/// <param name="sampleRate">Audio sample rate</param>
-		/// <param name="vpmPath">Fallback path for VPM folder, if VPM is not registered</param>
+		/// <param name="vpmPath">The folder holding roms, nvram, cfg etc. When null, Visual PinMAME's is used, if installed.
+		/// Single folders can be moved elsewhere with <see cref="SetPath"/>.</param>
 		/// <exception cref="ArgumentException">If VPM cannot be found</exception>
 		public static PinMame Instance(PinMameAudioFormat audioFormat = PinMameAudioFormat.AudioFormatInt16, int sampleRate = 48000, string vpmPath = null) =>
 			_instance ?? (_instance = new PinMame(audioFormat, sampleRate, vpmPath));
@@ -310,6 +317,63 @@ namespace PinMame
 		/// </summary>
 		/// <param name="dmdMode">New DMD frame data mode.</param>
 		public void SetDmdMode(PinMameDmdMode dmdMode) => PinMameApi.SetDmdMode((PinMameApi.DmdMode)dmdMode);
+
+		/// <summary>
+		/// Overrides the folder searched for a file type, instead of its folder below the VPM path.
+		/// Several folders can be given separated by ';'. The override is kept when the config is
+		/// re-applied, and null or an empty string removes it again.
+		/// </summary>
+		/// <param name="fileType">Which files the folder is for.</param>
+		/// <param name="path">The folder(s), or null for the default below the VPM path.</param>
+		/// <exception cref="InvalidOperationException">When a game is running.</exception>
+		public void SetPath(PinMameFileType fileType, string path)
+		{
+			var status = PinMameApi.SetPath((PinMameApi.FileType)fileType, path);
+			if (status != PinMameApi.Status.OK) {
+				throw new InvalidOperationException($"Unable to set path, fileType={fileType}, path={path}, status={status}");
+			}
+		}
+
+		/// <summary>
+		/// Returns the folder(s) currently searched for a file type, separated by ';'.
+		/// </summary>
+		/// <param name="fileType">Which files to return the folder for.</param>
+		public string GetPath(PinMameFileType fileType) => Marshal.PtrToStringAnsi(PinMameApi.GetPath((PinMameApi.FileType)fileType));
+
+		/// <summary>
+		/// Returns the ROM folder(s) Visual PinMAME is configured with, so a host can offer it as
+		/// default. Only reads the setting. Visual PinMAME doesn't need to be registered, and the
+		/// result doesn't depend on its folder layout.
+		/// </summary>
+		/// <returns>The existing folders of VPM's ROM path, separated by ';', or null when not on
+		/// Windows, not configured, or none of them exists.</returns>
+		public static string FindVpmRomPath()
+		{
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+				return null;
+			}
+
+			try {
+				using (var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Freeware\Visual PinMame\globals")) {
+					if (!(key?.GetValue("rompath") is string romPath)) {
+						return null;
+					}
+
+					var folders = new List<string>();
+					foreach (var entry in Environment.ExpandEnvironmentVariables(romPath).Split(';')) {
+						var folder = entry.Trim();
+						if (folder.Length > 0 && Directory.Exists(folder)) {
+							folders.Add(folder);
+						}
+					}
+					return folders.Count > 0 ? string.Join(";", folders) : null;
+				}
+
+			} catch (Exception e) {
+				Logger.Warn($"Could not read the VPM ROM path: {e.Message}");
+				return null;
+			}
+		}
 
 		/// <summary>
 		/// Starts a new game. <p/>
