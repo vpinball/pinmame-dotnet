@@ -511,6 +511,129 @@ namespace PinMame
 		NotADriver = PinMameApi.GameDriverFlag.NOT_A_DRIVER,
 	}
 
+	/// <summary>
+	/// Which outputs PinMAME reports as physical, PWM-integrated levels instead of binary states. This is
+	/// the bit mask of <c>PinmameSetSolenoidMask(2, mask)</c>, which VPX tables set with
+	/// <c>UseVPMModSol = 2</c> (<c>Controller.SolMask(2)</c>).
+	/// </summary>
+	/// <remarks>
+	/// In physical mode PinMAME runs each output's PWM signal through a model of the connected device
+	/// (an incandescent bulb's filament, a LED, a solenoid) and reports 0-255, where 255 is the device's
+	/// rated brightness or full power. The device type of each output comes from the game driver and can
+	/// be changed with <see cref="PinMame.SetModOutputType"/>.
+	/// </remarks>
+	[Flags]
+	public enum PinMamePhysicalOutputs : uint
+	{
+		/// <summary>
+		/// Binary outputs (lamps 0/1, GI 0-8, solenoids 0/1). PinMAME's default.
+		/// </summary>
+		None = 0,
+
+		/// <summary>
+		/// The legacy modulated solenoids of WPC and SAM (0-255, plain duty cycle).
+		/// </summary>
+		LegacyModulatedSolenoids = 0x01,
+
+		/// <summary>
+		/// Lamp matrix and other lamp outputs.
+		/// </summary>
+		Lamps = 0x04,
+
+		/// <summary>
+		/// General illumination strings.
+		/// </summary>
+		GI = 0x08,
+
+		/// <summary>
+		/// Solenoid outputs, including flashers driven by solenoid drivers.
+		/// </summary>
+		Solenoids = 0x10,
+
+		/// <summary>
+		/// Alphanumeric display segments.
+		/// </summary>
+		AlphaSegments = 0x20,
+
+		/// <summary>
+		/// Lamps, GI, solenoids and alphanumeric segments, like <c>UseVPMModSol = 2</c> in VPX.
+		/// </summary>
+		All = Lamps | GI | Solenoids | AlphaSegments,
+	}
+
+	/// <summary>
+	/// The output class of an output whose device type is read or changed with
+	/// <see cref="PinMame.GetModOutputType"/> and <see cref="PinMame.SetModOutputType"/>.
+	/// </summary>
+	public enum PinMameModOutput
+	{
+		Solenoid = PinMameApi.ModOutputType.SOLENOID,
+		Lamp = PinMameApi.ModOutputType.LAMP,
+		GI = PinMameApi.ModOutputType.GI,
+		AlphaSegment = PinMameApi.ModOutputType.ALPHASEG,
+	}
+
+	/// <summary>
+	/// The device PinMAME models on an output in physical mode (<c>CORE_MODOUT_*</c> in PinMAME's core.h,
+	/// <c>VPM_MODOUT_*</c> in VPX's core.vbs). Game drivers set these per output; values not listed here can
+	/// still be cast from an int.
+	/// </summary>
+	public enum PinMameModOutputType
+	{
+		/// <summary>No integration, the driver's value is kept unchanged.</summary>
+		None = 0,
+		/// <summary>No integration, the raw pulse state.</summary>
+		Pulse = 1,
+		/// <summary>Solenoid: on as soon as it is pulsed, off when no pulse was seen for 60 ms.</summary>
+		Solenoid2State = 2,
+		/// <summary>The driver's custom solenoid implementation.</summary>
+		SolenoidCustom = 3,
+		/// <summary>The driver's custom integrator.</summary>
+		CustomIntegrator = 4,
+		/// <summary>Like <see cref="Solenoid2State"/>, but reported after a few VBlanks.</summary>
+		LegacySolenoid2State = 50,
+		/// <summary>#44/#555 bulb on 6.3 V AC, common for GI.</summary>
+		Bulb44_6_3V_AC = 100,
+		/// <summary>#47 bulb on 6.3 V AC.</summary>
+		Bulb47_6_3V_AC = 101,
+		/// <summary>#86 bulb on 6.3 V AC.</summary>
+		Bulb86_6_3V_AC = 102,
+		/// <summary>#44/#555 bulb on 5.7 V AC (Whitestar and SAM GI).</summary>
+		Bulb44_5_7V_AC = 103,
+		/// <summary>#44/#555 bulb on 6.3 V AC through a relay inverter (1 is off, 0 is on).</summary>
+		Bulb44_6_3V_AC_Rev = 104,
+		/// <summary>#44/#555 bulb on 18 V DC, WPC lamp matrix.</summary>
+		Bulb44_18V_DC_WPC = 201,
+		/// <summary>#44/#555 bulb on 20 V DC, GTS3 lamp matrix.</summary>
+		Bulb44_20V_DC_GTS3 = 202,
+		/// <summary>#44/#555 bulb on 18 V DC, System 11 lamp matrix.</summary>
+		Bulb44_18V_DC_S11 = 203,
+		/// <summary>#44/#555 bulb on 18 V DC, Sega/Data East lamp matrix.</summary>
+		Bulb44_18V_DC_SE = 204,
+		/// <summary>#44/#555 bulb on 20 V DC, Capcom lamp matrix.</summary>
+		Bulb44_20V_DC_CC = 205,
+		/// <summary>#89 bulb on 20 V DC, WPC flashers.</summary>
+		Bulb89_20V_DC_WPC = 301,
+		/// <summary>#89 bulb on 20 V DC, GTS3 flashers.</summary>
+		Bulb89_20V_DC_GTS3 = 302,
+		/// <summary>#89 bulb on 32 V DC, System 11 flashers.</summary>
+		Bulb89_32V_DC_S11 = 303,
+		/// <summary>#89 bulb on 25 V DC, System 11 flashers.</summary>
+		Bulb89_25V_DC_S11 = 304,
+		/// <summary>#906 bulb on 20 V DC, WPC flashers.</summary>
+		Bulb906_20V_DC_WPC = 311,
+		/// <summary>#906 bulb on 20 V DC, GTS3 flashers.</summary>
+		Bulb906_20V_DC_GTS3 = 312,
+		/// <summary>#906 bulb on 32 V DC, System 11 flashers.</summary>
+		Bulb906_32V_DC_S11 = 313,
+		/// <summary>#906 bulb on 25 V DC, System 11 flashers.</summary>
+		Bulb906_25V_DC_S11 = 314,
+		/// <summary>LED (mostly the eye's response, a LED itself is near instant).</summary>
+		Led = 400,
+		/// <summary>LED strobed 1 ms over 10 ms for full power.</summary>
+		LedStrobe1_10ms = 401,
+	}
+
 	public enum PinMameMechFlag : uint
 	{
 		Linear = PinMameApi.MechFlag.LINEAR,

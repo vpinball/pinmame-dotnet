@@ -83,6 +83,22 @@ namespace PinMame
 		}
 
 		[TestMethod]
+		public void PhysicalOutputs()
+		{
+			_pinMame.SetPhysicalOutputs(PinMamePhysicalOutputs.Lamps | PinMamePhysicalOutputs.GI);
+			Assert.AreEqual(PinMamePhysicalOutputs.Lamps | PinMamePhysicalOutputs.GI, _pinMame.GetPhysicalOutputs());
+			Assert.AreEqual(0x0Cu, _pinMame.GetSolenoidMask(2));
+
+			// VPinMAME's SolMask(2) = 2 means all physical outputs
+			_pinMame.SetSolenoidMask(2, 2);
+			Assert.AreEqual(PinMamePhysicalOutputs.All, _pinMame.GetPhysicalOutputs());
+
+			// ApplyConfig resets PinMAME's options
+			_pinMame.ApplyConfig();
+			Assert.AreEqual(PinMamePhysicalOutputs.None, _pinMame.GetPhysicalOutputs());
+		}
+
+		[TestMethod]
 		public void Start()
 		{
 			_pinMame.StartGame("mm_109c");
