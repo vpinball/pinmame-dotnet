@@ -214,6 +214,7 @@ namespace PinMame
 		private PinMameApi.Config _config;
 		private int[] _changedLamps;
 		private int[] _changedGIs;
+		private int[] _changedSolenoids;
 		private readonly Dictionary<int, PinMameDisplayLayout> _availableDisplays = new Dictionary<int, PinMameDisplayLayout>();
 
 		private static PinMame _instance;
@@ -622,6 +623,7 @@ namespace PinMame
 			if (state == 1) {
 				_changedLamps = new int[PinMameApi.GetMaxLamps() * 2];
 				_changedGIs = new int[PinMameApi.GetMaxGIs() * 2];
+				_changedSolenoids = new int[PinMameApi.GetMaxSolenoids() * 2];
 
 				OnGameStarted?.Invoke();
 			}
@@ -925,6 +927,7 @@ namespace PinMame
 		/// <param name="list">List to write the result to.</param>
 		public void GetChangedGIs(List<PinMameLampInfo> list)
 		{
+			list.Clear();
 			var num = PinMameApi.GetChangedGIs(_changedGIs);
 			for (var index = 0; index < num; index++) {
 				list.Add(new PinMameLampInfo(_changedGIs[index * 2], _changedGIs[(index * 2) + 1]));
@@ -948,6 +951,123 @@ namespace PinMame
 				array[index] = new PinMameLampInfo(_changedGIs[index * 2], _changedGIs[(index * 2) + 1]);
 			}
 
+			return array;
+		}
+
+		/// <summary>
+		/// Returns which outputs PinMAME reports as physical, PWM-integrated levels.
+		/// </summary>
+		/// <returns>The physical output mask, <see cref="PinMamePhysicalOutputs.None"/> by default.</returns>
+		public PinMamePhysicalOutputs GetPhysicalOutputs() => (PinMamePhysicalOutputs)PinMameApi.GetSolenoidMask(2);
+
+		/// <summary>
+		/// Sets which outputs PinMAME reports as physical, PWM-integrated levels (0-255) instead of binary
+		/// states. Same as <c>Controller.SolMask(2)</c> in VPinMAME.
+		/// </summary>
+		/// <remarks>
+		/// Call it after <see cref="ApplyConfig"/> (which resets PinMAME's options), before or after starting
+		/// the game. <p/>
+		///
+		/// libpinmame integrates physical outputs on request only: <see cref="GetChangedLamps(List{PinMameLampInfo})"/>,
+		/// <see cref="GetChangedGIs(List{PinMameLampInfo})"/> and <see cref="GetChangedSolenoids(List{PinMameSolenoidInfo})"/>
+		/// update the levels they return. The <see cref="OnSolenoidUpdated"/> event reports the solenoid levels as
+		/// they were at the last such call, so with <see cref="PinMamePhysicalOutputs.Solenoids"/> a client that
+		/// relies on the event must still call <see cref="GetChangedSolenoids(List{PinMameSolenoidInfo})"/>
+		/// regularly (e.g. once per physics tick), or the event never fires.
+		/// </remarks>
+		/// <param name="outputs">Outputs to report as physical levels.</param>
+		public void SetPhysicalOutputs(PinMamePhysicalOutputs outputs) => PinMameApi.SetSolenoidMask(2, (uint)outputs);
+
+		/// <summary>
+		/// Returns a solenoid mask value, like <c>Controller.SolMask(low)</c> in VPinMAME.
+		/// </summary>
+		/// <remarks>
+		/// 0 and 1 are the binary masks of solenoids 1-32 and 33-64, 2 is the physical output mask (see
+		/// <see cref="GetPhysicalOutputs"/>), and 1001+, 1201+, 1301+ and 2001+ read the device type of
+		/// solenoid, GI, lamp and alphanumeric segment outputs (see <see cref="GetModOutputType"/>).
+		/// </remarks>
+		/// <param name="low">Which mask to read</param>
+		/// <returns>Mask value</returns>
+		public uint GetSolenoidMask(int low) => PinMameApi.GetSolenoidMask(low);
+
+		/// <summary>
+		/// Sets a solenoid mask value, like <c>Controller.SolMask(low) = mask</c> in VPinMAME. See
+		/// <see cref="GetSolenoidMask"/> for the meaning of <paramref name="low"/>.
+		/// </summary>
+		/// <param name="low">Which mask to write</param>
+		/// <param name="mask">New value</param>
+		public void SetSolenoidMask(int low, uint mask) => PinMameApi.SetSolenoidMask(low, mask);
+
+		/// <summary>
+		/// Returns the device PinMAME models on an output in physical mode.
+		/// </summary>
+		/// <remarks>
+		/// The game driver sets the types when the game starts, so call this while a game is running.
+		/// </remarks>
+		/// <param name="output">Output class</param>
+		/// <param name="no">Output number, starting at 1</param>
+		/// <returns>Device type</returns>
+		public PinMameModOutputType GetModOutputType(PinMameModOutput output, int no)
+			=> (PinMameModOutputType)PinMameApi.GetModOutputType((PinMameApi.ModOutputType)output, no);
+
+		/// <summary>
+		/// Changes the device PinMAME models on an output in physical mode, for example a flasher with a
+		/// #906 bulb instead of the driver's #89.
+		/// </summary>
+		/// <remarks>
+		/// The game driver sets the types when the game starts and would overwrite earlier changes, so call
+		/// this after the game has started.
+		/// </remarks>
+		/// <param name="output">Output class</param>
+		/// <param name="no">Output number, starting at 1</param>
+		/// <param name="type">New device type</param>
+		public void SetModOutputType(PinMameModOutput output, int no, PinMameModOutputType type)
+			=> PinMameApi.SetModOutputType((PinMameApi.ModOutputType)output, no, (int)type);
+
+		/// <summary>
+		/// Returns the maximal supported number of solenoids.
+		/// </summary>
+		/// <returns>Number of solenoids</returns>
+		public int GetMaxSolenoids() => PinMameApi.GetMaxSolenoids();
+
+		/// <summary>
+		/// Returns the state of a solenoid: 0 or 1, or 0-255 with physical or modulated solenoids.
+		/// </summary>
+		/// <param name="solNo">Solenoid number, starting at 1</param>
+		/// <returns>Solenoid state</returns>
+		public int GetSolenoid(int solNo) => PinMameApi.GetSolenoid(solNo);
+
+		/// <summary>
+		/// Clears and updates a list with all solenoids that changed since the last call. With physical
+		/// solenoids, this also brings their levels up to date, see <see cref="SetPhysicalOutputs"/>.
+		/// </summary>
+		/// <remarks>
+		/// This API allows to perform a GC-free operation. See also <see cref="GetChangedSolenoids()"/>.
+		/// </remarks>
+		/// <param name="list">List to write the result to.</param>
+		public void GetChangedSolenoids(List<PinMameSolenoidInfo> list)
+		{
+			list.Clear();
+			var num = PinMameApi.GetChangedSolenoids(_changedSolenoids);
+			for (var index = 0; index < num; index++) {
+				list.Add(new PinMameSolenoidInfo(_changedSolenoids[index * 2], _changedSolenoids[(index * 2) + 1]));
+			}
+		}
+
+		/// <summary>
+		/// Returns an array of all solenoids that changed since the last call.
+		/// </summary>
+		/// <remarks>
+		/// This call produces a little bit of garbage, since the result array is created on each call.
+		/// </remarks>
+		/// <returns>Array of Id/Value pairs.</returns>
+		public PinMameSolenoidInfo[] GetChangedSolenoids()
+		{
+			var num = PinMameApi.GetChangedSolenoids(_changedSolenoids);
+			var array = new PinMameSolenoidInfo[System.Math.Max(num, 0)];
+			for (var index = 0; index < num; index++) {
+				array[index] = new PinMameSolenoidInfo(_changedSolenoids[index * 2], _changedSolenoids[(index * 2) + 1]);
+			}
 			return array;
 		}
 

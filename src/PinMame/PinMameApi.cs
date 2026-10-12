@@ -197,6 +197,9 @@ namespace PinMame
 			SEG7SCH = SEG7SC| SEGHIBIT
 		}
 
+		/// <summary>
+		/// The output class of PinmameGet/SetModOutputType (PINMAME_MOD_OUTPUT_TYPE in libpinmame.h).
+		/// </summary>
 		internal enum ModOutputType
 		{
 			/// <summary>
@@ -894,16 +897,27 @@ namespace PinMame
 
 		#region Solenoid related functions
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetSolenoidMask")]
-		internal static extern uint GetSolenoidMask(int low, uint mask);
-		
+		internal static extern uint GetSolenoidMask(int low);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetSolenoidMask")]
+		internal static extern void SetSolenoidMask(int low, uint mask);
+
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetMaxSolenoids")]
 		internal static extern int GetMaxSolenoids();
-		
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetSolenoid")]
+		internal static extern int GetSolenoid(int solNo);
+
+		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetChangedSolenoids")]
+		internal static extern int GetChangedSolenoids(int[] changedStates);
+
+		// The native signature types the device type as PINMAME_MOD_OUTPUT_TYPE, but the value is one of
+		// PinMAME's CORE_MODOUT_* device types (e.g. 301), not the output class, so it is marshalled as int.
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameGetModOutputType")]
-		internal static extern ModOutputType GetModOutputType(int output, int no);
-		
+		internal static extern int GetModOutputType(ModOutputType output, int no);
+
 		[DllImport(Libraries.PinMame, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl, EntryPoint = "PinmameSetModOutputType")]
-		internal static extern void SetModOutputType(int output, int no, ModOutputType type);
+		internal static extern void SetModOutputType(ModOutputType output, int no, int type);
 		#endregion
 
 		#region GI strings related functions
