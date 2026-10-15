@@ -115,6 +115,13 @@ namespace PinMame
 		/// </summary>
 		public delegate int IsKeyPressedEventHandler(PinMameKeycode keycode);
 
+		/// <summary>
+		/// A log message from libpinmame, already formatted.
+		/// </summary>
+		/// <param name="level">How serious it is</param>
+		/// <param name="message">The message, without a trailing line break</param>
+		public delegate void OnLogMessageEventHandler(PinMameLogLevel level, string message);
+
 		#endregion
 
 		/// <summary>
@@ -173,6 +180,12 @@ namespace PinMame
 		/// The game has ended.
 		/// </summary>
 		public event IsKeyPressedEventHandler IsKeyPressed;
+
+		/// <summary>
+		/// libpinmame logged something. Raised on the emulation thread, synchronously, so
+		/// handlers should hand the message off rather than do work.
+		/// </summary>
+		public event OnLogMessageEventHandler OnLogMessage;
 
 		/// <summary>
 		/// The folder(s) searched for ROM sets, separated by ';'. That's "roms" below the VPM path
@@ -272,6 +285,7 @@ namespace PinMame
 				onSolenoidUpdated = OnSolenoidUpdatedCallbackPInvoke,
 				onConsoleDataUpdated = OnConsoleDataUpdatedCallbackPInvoke,
 				isKeyPressed = IsKeyPressedFunctionPInvoke,
+				onLogMessage = OnLogMessageCallbackPInvoke,
 			};
 			PinMameApi.SetConfig(ref _config);
 		}
@@ -772,6 +786,24 @@ namespace PinMame
 			Logger.Trace($"IsKeyPressedFunction - keycode={keycode}");
 
 			return IsKeyPressed?.Invoke((PinMameKeycode)keycode) ?? 0;
+		}
+
+		[MonoPInvokeCallback(typeof(PinMameApi.OnLogMessageCallback))]
+		private static void OnLogMessageCallbackPInvoke(PinMameApi.LogLevel logLevel, IntPtr format, IntPtr args, IntPtr userData)
+		{
+			// the va_list is only valid now, so it's formatted before anything else
+			var instance = _instance;
+			if (instance?.OnLogMessage == null) {
+				return;
+			}
+			try {
+				var message = PinMameLogFormatter.Format(format, args);
+				instance.OnLogMessage((PinMameLogLevel)logLevel, message);
+			}
+			catch (Exception e) {
+				// never let an exception unwind into native code
+				Logger.Error(e, "OnLogMessage callback failed.");
+			}
 		}
 
 		/// <summary>

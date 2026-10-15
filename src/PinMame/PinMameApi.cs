@@ -752,7 +752,7 @@ namespace PinMame
 		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
 		internal delegate int IsKeyPressedFunction(Keycode keycode, IntPtr userData);
 		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
-		internal delegate void OnLogMessageCallback(LogLevel logLevel, string format, IntPtr args, IntPtr userData);
+		internal delegate void OnLogMessageCallback(LogLevel logLevel, IntPtr format, IntPtr args, IntPtr userData);
 		[UnmanagedFunctionPointer(CallingConvention.StdCall)]
 		internal delegate void OnSoundCommandCallback(int boardNo, int cmd, IntPtr userData);
 
