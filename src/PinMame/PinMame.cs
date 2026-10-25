@@ -106,6 +106,13 @@ namespace PinMame
 		public delegate void OnConsoleDataUpdatedEventHandler(IntPtr dataPtr, int size);
 
 		/// <summary>
+		/// A delegate, called when the CPU board sends a command to a sound board.
+		/// </summary>
+		/// <param name="boardNo">The sound board, 0 for machines with a single one</param>
+		/// <param name="cmd">The command byte, as the sound board receives it</param>
+		public delegate void OnSoundCommandEventHandler(int boardNo, int cmd);
+
+		/// <summary>
 		/// A delegate, called when a game ends.
 		/// </summary>
 		public delegate void OnGameEndedEventHandler();
@@ -170,6 +177,13 @@ namespace PinMame
 		/// Console data has changed.
 		/// </summary>
 		public event OnConsoleDataUpdatedEventHandler OnConsoleDataUpdated;
+
+		/// <summary>
+		/// The CPU board sent a command to a sound board, such as for AltSound or other sample-based
+		/// replacements of the ROM's audio. Raised on the emulation thread, synchronously and in order,
+		/// so handlers should be quick.
+		/// </summary>
+		public event OnSoundCommandEventHandler OnSoundCommand;
 
 		/// <summary>
 		/// The game has ended.
@@ -286,6 +300,7 @@ namespace PinMame
 				onConsoleDataUpdated = OnConsoleDataUpdatedCallbackPInvoke,
 				isKeyPressed = IsKeyPressedFunctionPInvoke,
 				onLogMessage = OnLogMessageCallbackPInvoke,
+				onSoundCommand = OnSoundCommandCallbackPInvoke,
 			};
 			PinMameApi.SetConfig(ref _config);
 		}
@@ -773,6 +788,22 @@ namespace PinMame
 			Logger.Debug($"OnConsoleDataUpdatedCallback - size={size}");
 
 			OnConsoleDataUpdated?.Invoke(dataPtr, size);
+		}
+
+		[MonoPInvokeCallback(typeof(PinMameApi.OnSoundCommandCallback))]
+		private static void OnSoundCommandCallbackPInvoke(int boardNo, int cmd, IntPtr userData)
+		{
+			_instance?.OnSoundCommandCallback(boardNo, cmd);
+		}
+
+		private void OnSoundCommandCallback(int boardNo, int cmd)
+		{
+			try {
+				OnSoundCommand?.Invoke(boardNo, cmd);
+			}
+			catch (Exception e) {
+				Logger.Error(e, $"OnSoundCommand callback failed. boardNo={boardNo}, cmd={cmd}");
+			}
 		}
 
 		[MonoPInvokeCallback(typeof(PinMameApi.IsKeyPressedFunction))]
