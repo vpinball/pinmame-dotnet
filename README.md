@@ -87,6 +87,7 @@ You can add event handlers for:
 - `OnMechUpdated`
 - `OnSolenoidUpdated`
 - `OnConsoleDataUpdated`
+- `OnSoundCommand`
 - `OnGameEnded`
 - `IsKeyPressed`
 
