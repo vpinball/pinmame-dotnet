@@ -318,6 +318,9 @@ jobs:
       - name: Test
         if: matrix.skipTest != true
         shell: bash
+        env:
+          # The .NET Core 3.1 test host doesn't know the ICU of current Ubuntu images and aborts; the tests need no culture data.
+          DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
         run: |
           mkdir -p ~/.pinmame/roms
           curl -sL https://archive.org/download/MAME_2015_arcade_romsets/roms.zip/roms/mm_109c.zip -o ~/.pinmame/roms/mm_109c.zip
