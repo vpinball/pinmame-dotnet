@@ -429,6 +429,9 @@ jobs:
     needs: [ version, pack-nuget, pack-dotnet ]
     # Publish only on version tag pushes (e.g., refs/tags/v0.3.0)
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      id-token: write # trusted publishing: GitHub's OIDC token buys a NuGet API key for an hour
     steps:
       - uses: actions/setup-dotnet@v4
         with:
@@ -462,6 +465,13 @@ jobs:
           echo "dotnet_exists=${DOTNET_EXISTS}" >> $GITHUB_OUTPUT
           echo ".NET package version ${{ needs.version.outputs.pinmame_dotnet_version }} exists: ${DOTNET_EXISTS}"
 
+      - name: Log into NuGet
+        id: login
+        if: steps.check_native.outputs.native_exists != 'true' || steps.check_dotnet.outputs.dotnet_exists != 'true'
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Publish native packages to NuGet
         if: steps.check_native.outputs.native_exists != 'true'
         run: |
@@ -469,7 +479,7 @@ jobs:
           echo "Publishing native packages (version ${{ needs.version.outputs.pinmame_native_version }})"
           for file in *.nupkg; do
             echo "Publishing $file"
-            dotnet nuget push "$file" --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+            dotnet nuget push "$file" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
           done
 
       - name: Skip native packages (already published)
@@ -484,7 +494,7 @@ jobs:
           echo "Publishing .NET wrapper (version ${{ needs.version.outputs.pinmame_dotnet_version }})"
           for file in *.nupkg; do
             echo "Publishing $file"
-            dotnet nuget push "$file" --api-key ${{ secrets.NUGET_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+            dotnet nuget push "$file" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
           done
 
       - name: Skip .NET wrapper (already published)
